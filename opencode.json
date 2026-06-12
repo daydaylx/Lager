@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "rules": [
+    "Lies zuerst AGENTS.md, dann TASKS.md, dann PROJECT_STATUS.md bevor du arbeitest.",
+    "Aktuelle Phase: 1 – App-Grundgerüst. Nur Aufgaben aus dieser Phase implementieren.",
+    "Flutter-Pfad: /home/d/flutter/bin/flutter — nicht 'flutter' allein (nicht im PATH).",
+    "Nach jeder Dart-Datei-Änderung: /home/d/flutter/bin/flutter analyze — muss 0 Issues zeigen.",
+    "Datenmodell-Referenz: docs/DATA_MODEL.md (Enums, Models, Zieldateistruktur).",
+    "Tätigkeitskatalog und Akzeptanzkriterien: docs/AGENT_IMPLEMENTATION_PROMPT.md.",
+    "NICHT bauen: PDF, Cloud, Login, Backend, KI, iOS, BLoC/Riverpod/Provider ohne Bedarf.",
+    "Imports innerhalb von lib/ immer relativ, nie als package:berichtsheft_merker/...",
+    "Theme immer via Theme.of(context) — nie buildAppTheme() direkt aufrufen.",
+    "Architekturentscheidungen stehen in DECISIONS.md — nicht erneut diskutieren."
+  ]
+}
