@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 0: Projektsetup** — abgeschlossen am 2026-06-12
+**Phase 3: Heute-Screen** — NÄCHSTE PHASE
 
 ---
 
@@ -18,37 +18,39 @@
 - [x] Flutter-Projektstruktur (`pubspec.yaml`, `lib/`, `test/`) angelegt
 - [x] Platzhalter-Screens für alle 4 Tabs erstellt
 - [x] Bottom Navigation Shell eingerichtet
-- [ ] `flutter pub get` — ausstehend (Flutter SDK nicht installiert)
-- [ ] `flutter analyze` — ausstehend (Flutter SDK nicht installiert)
+- [x] `flutter pub get`
+- [x] `flutter analyze` — 0 Issues
 
 ---
 
-## Phase 1: App-Grundgerüst — NÄCHSTE PHASE
+## Phase 1: App-Grundgerüst ✅
 
 Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
-- [ ] Flutter SDK installieren (siehe README)
-- [ ] `flutter pub get` ausführen
-- [ ] `flutter analyze` — 0 Fehler
-- [ ] App startet auf Android-Emulator oder Gerät
-- [ ] Bottom Navigation funktioniert (4 Tabs)
-- [ ] Alle Platzhalter-Screens erreichbar
-- [ ] Onboarding-Flow: einfacher erster Start (Name, Ausbildungsberuf)
-- [ ] Onboarding wird nur beim ersten Start gezeigt (SharedPreferences-Flag)
+- [x] Flutter SDK installieren (siehe README)
+- [x] `flutter pub get` ausführen
+- [x] `flutter analyze` — 0 Fehler
+- [x] App-Start strukturell durch Widget-Tests geprüft; manuelle Android-Prüfung auf Nutzerwunsch übersprungen
+- [x] Bottom Navigation funktioniert (4 Tabs)
+- [x] Alle Platzhalter-Screens erreichbar
+- [x] Onboarding-Flow: einfacher erster Start (optionaler Name, Ausbildungsberuf)
+- [x] Onboarding wird nur beim ersten Start gezeigt (SharedPreferences-Flag)
 
 ---
 
-## Phase 2: Onboarding
+## Phase 2: Onboarding erweitern ✅
 
-- [ ] Screen: Name eingeben
-- [ ] Screen: Ausbildungsberuf wählen (Fachlagerist/in oder Fachkraft für Lagerlogistik)
-- [ ] Screen: Ausbildungsjahr wählen (1, 2, 3)
-- [ ] Daten lokal speichern (SharedPreferences)
-- [ ] Weiterleitung zum Heute-Screen nach Abschluss
+- [x] Name optional eingeben (bereits in Phase 1)
+- [x] Ausbildungsberuf wählen (bereits in Phase 1)
+- [x] Screen: Ausbildungsjahr wählen (1, 2, 3)
+- [x] Optionalen Betrieb erfassen
+- [x] Bestehende Profildaten ergänzen und bearbeiten
+- [x] Erweiterte Profildaten lokal speichern (SharedPreferences)
+- [x] Weiterleitung zum Heute-Screen nach Abschluss
 
 ---
 
-## Phase 3: Heute-Screen
+## Phase 3: Heute-Screen — NÄCHSTE PHASE
 
 - [ ] Tageseintrag erstellen (Datum, Tagtyp, Bereich, Tätigkeiten, Notizen)
 - [ ] Tagtypen: Betrieb, Berufsschule, Frei, Urlaub, Krank, Feiertag, Sonstiges
@@ -88,7 +90,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ## Phase 7: Profil-Screen
 
-- [ ] Profilname und Ausbildungsdaten bearbeiten
+- [x] Profilname und Ausbildungsdaten bearbeiten (bereits in Phase 2)
 - [ ] App-Version anzeigen
 - [ ] Alle Daten löschen (mit Bestätigung)
 

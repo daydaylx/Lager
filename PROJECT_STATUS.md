@@ -4,7 +4,7 @@ Zuletzt aktualisiert: 2026-06-12
 
 ## Aktueller Stand
 
-**Phase 0: Projektsetup vollständig abgeschlossen. Alle Checks grün.**
+**Phase 2 vollständig abgeschlossen. Phase 3 ist der nächste Schritt.**
 
 ---
 
@@ -19,18 +19,21 @@ Zuletzt aktualisiert: 2026-06-12
 - `analysis_options.yaml`
 - `android/` — vollständig generiert (Kotlin, Gradle, AndroidManifest)
 - Flutter-Ordnerstruktur unter `lib/`:
-  - `lib/main.dart`
-  - `lib/app/app.dart` — MaterialApp + NavigationBar Shell (M3, IndexedStack)
+  - `lib/main.dart` — liest beim Start das vollständige Ausbildungsprofil
+  - `lib/app/app.dart` — MaterialApp + Onboarding-Gate + NavigationBar Shell (M3, IndexedStack)
   - `lib/app/theme.dart` — Material 3, ColorScheme.fromSeed grün-teal
   - `lib/app/router.dart` — Route-Konstanten
-  - `lib/core/constants.dart` — Textkonstanten
-  - `lib/features/onboarding/onboarding_screen.dart` — Platzhalter
+  - `lib/core/constants.dart` — Text-, SharedPreferences-, Berufs- und Ausbildungsjahr-Konstanten
+  - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für das Ausbildungsprofil
+  - `lib/features/onboarding/onboarding_screen.dart` — kompakter Erststart mit vollständigem Ausbildungsprofil
   - `lib/features/today/today_screen.dart` — Platzhalter "Heute"
   - `lib/features/week/week_screen.dart` — Platzhalter "Woche"
   - `lib/features/templates/templates_screen.dart` — Platzhalter "Vorlagen"
-  - `lib/features/profile/profile_screen.dart` — Platzhalter "Profil"
+  - `lib/features/profile/profile_screen.dart` — Ausbildungsprofil anzeigen und bearbeiten
   - `lib/shared/widgets/placeholder_screen.dart` — wiederverwendbarer leerer Screen
-- `test/widget_test.dart` — Smoke-Test (bestanden)
+- `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
+- `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
+- `test/widget_test.dart` — Onboarding-, Persistenz- und Navigationstests
 
 ## Ausgeführte Checks
 
@@ -39,27 +42,22 @@ Zuletzt aktualisiert: 2026-06-12
 | `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
 | `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
 | `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 1/1 Tests bestanden                   |
+| `flutter test`                         | 6/6 Tests bestanden                   |
+| `flutter build apk --debug`            | Auf Nutzerwunsch übersprungen         |
+| Start auf Android-Gerät oder Emulator  | Auf Nutzerwunsch übersprungen         |
 
 ## Bewusst noch nicht gebaut
 
-Alles aus Phase 1–8:
+Alles aus Phase 3–8:
 
-- Onboarding-Logik (nur Platzhalter)
 - Tageseintrag-Funktion
 - Lokale Datenbank (Hive)
 - Wochenübersicht
 - Vorlagenverwaltung
-- Profil-Bearbeitung
+- App-Version und lokale Datenlöschung im Profil
 - PDF-Export (nicht geplant)
 - Cloud/Backend (nicht geplant)
 
 ## Nächster Schritt
 
-Phase 1 starten (siehe `TASKS.md`):
-
-```bash
-flutter run   # App auf Gerät/Emulator starten
-```
-
-Dann Onboarding-Logik implementieren (Phase 1 → Phase 2).
+Phase 3 umsetzen: schnelle Tagesnotiz im Heute-Screen.

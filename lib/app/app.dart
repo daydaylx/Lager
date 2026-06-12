@@ -1,20 +1,75 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
 import '../core/constants.dart';
+import '../core/profile_storage.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
 import '../features/templates/templates_screen.dart';
 import '../features/profile/profile_screen.dart';
 
-class BerichtsheftApp extends StatelessWidget {
-  const BerichtsheftApp({super.key});
+class BerichtsheftApp extends StatefulWidget {
+  final bool initialOnboardingCompleted;
+  final String? initialName;
+  final String? initialCompany;
+  final String? initialOccupation;
+  final int? initialTrainingYear;
+
+  const BerichtsheftApp({
+    super.key,
+    required this.initialOnboardingCompleted,
+    this.initialName,
+    this.initialCompany,
+    this.initialOccupation,
+    this.initialTrainingYear,
+  });
+
+  @override
+  State<BerichtsheftApp> createState() => _BerichtsheftAppState();
+}
+
+class _BerichtsheftAppState extends State<BerichtsheftApp> {
+  late bool _onboardingCompleted;
+
+  @override
+  void initState() {
+    super.initState();
+    _onboardingCompleted = widget.initialOnboardingCompleted;
+  }
+
+  Future<void> _completeOnboarding({
+    String? name,
+    String? company,
+    required String occupation,
+    required int trainingYear,
+  }) async {
+    await ProfileStorage.save(
+      name: name,
+      company: company,
+      occupation: occupation,
+      trainingYear: trainingYear,
+      completeOnboarding: true,
+    );
+
+    if (mounted) {
+      setState(() => _onboardingCompleted = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: AppStrings.appName,
       theme: buildAppTheme(),
-      home: const MainShell(),
+      home: _onboardingCompleted
+          ? const MainShell()
+          : OnboardingScreen(
+              initialName: widget.initialName,
+              initialCompany: widget.initialCompany,
+              initialOccupation: widget.initialOccupation,
+              initialTrainingYear: widget.initialTrainingYear,
+              onComplete: _completeOnboarding,
+            ),
       debugShowCheckedModeBanner: false,
     );
   }

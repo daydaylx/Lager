@@ -5,3 +5,25 @@ class AppStrings {
   static const String tabTemplates = 'Vorlagen';
   static const String tabProfile = 'Profil';
 }
+
+class PreferenceKeys {
+  static const String onboardingCompleted = 'onboarding_completed';
+  static const String profileName = 'profile_name';
+  static const String profileCompany = 'profile_company';
+  static const String trainingOccupation = 'training_occupation';
+  static const String trainingYear = 'training_year';
+}
+
+class TrainingOccupationValues {
+  static const String fachlagerist = 'fachlagerist';
+  static const String fachkraftLagerlogistik = 'fachkraft_lagerlogistik';
+
+  static const List<String> all = [
+    fachlagerist,
+    fachkraftLagerlogistik,
+  ];
+}
+
+class TrainingYearValues {
+  static const List<int> all = [1, 2, 3];
+}
