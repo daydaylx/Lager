@@ -15,15 +15,16 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Pflichtlektüre vor der Arbeit
 
-| Dokument                              | Inhalt                                                          |
-| ------------------------------------- | --------------------------------------------------------------- |
-| `TASKS.md`                            | Aktuelle Phase und offene Aufgaben — immer zuerst lesen         |
-| `PROJECT_STATUS.md`                   | Was existiert, was noch fehlt                                   |
-| `docs/DATA_MODEL.md`                  | Datenmodell-Referenz: Enums, Models, Dateistruktur              |
-| `docs/PRODUCT_CONCEPT.md`             | Was die App kann, welche Features in welcher Phase              |
-| `docs/UI_UX_SPEC.md`                  | Wie die App aussehen soll, Screen-Layouts                       |
-| `docs/AGENT_IMPLEMENTATION_PROMPT.md` | Technische Umsetzungsdetails, Akzeptanzkriterien                |
-| `DECISIONS.md`                        | Getroffene Architekturentscheidungen — nicht erneut diskutieren |
+| Dokument                              | Inhalt                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| `TASKS.md`                            | Aktuelle Phase und offene Aufgaben — immer zuerst lesen                              |
+| `docs/CURRENT_STATUS.md`              | Agent-Handoff: aktiver Stand, letzte Checks, nächster Schritt                        |
+| `docs/CODEMAP.md`                     | Alle Dateien, Pfade, Einstiegspunkte — Schnellreferenz                               |
+| `docs/AGENT_CONTEXT_PACKS.md`         | Aufgabenbezogene Dateilisten → direkt zur richtigen Datei                            |
+| `docs/DATA_MODEL.md`                  | Datenmodell-Referenz: Enums, Models, Dateistruktur                                   |
+| `docs/UI_UX_SPEC.md`                  | Wie die App aussehen soll, Screen-Layouts                                            |
+| `DECISIONS.md`                        | Getroffene Architekturentscheidungen — nicht erneut diskutieren                      |
+| `docs/AGENT_IMPLEMENTATION_PROMPT.md` | ⚠️ **Historisch** — Bootstrap-Dokument vor Implementierung; nur zur Konzept-Referenz |
 
 ---
 
@@ -54,10 +55,13 @@ lib/features/templates/templates_screen.dart     → Platzhalter — aktive Phas
 lib/features/profile/profile_screen.dart         → Ausbildungsprofil anzeigen und bearbeiten
 lib/shared/widgets/profile_form.dart             → Gemeinsame Profilmaske
 lib/shared/widgets/placeholder_screen.dart       → Wiederverwendbar: Icon + Titel + Beschreibung
+docs/CODEMAP.md                                  → Schnellreferenz alle Dateien und Einstiegspunkte
+docs/AGENT_CONTEXT_PACKS.md                      → Aufgabenbezogene Dateilisten
+docs/VALIDATION_MATRIX.md                        → Mindestprüfungen pro Änderungstyp
+docs/CURRENT_STATUS.md                           → Agent-Handoff: aktiver Stand
 docs/DATA_MODEL.md                               → Enums, Model-Konzepte, Zieldateistruktur
-docs/PRODUCT_CONCEPT.md                          → Fachliche Spezifikation
 docs/UI_UX_SPEC.md                               → Design-Vorgaben
-docs/AGENT_IMPLEMENTATION_PROMPT.md              → Technische Umsetzung, Tätigkeitskatalog
+docs/AGENT_IMPLEMENTATION_PROMPT.md              → ⚠️ Historisch (Bootstrap-Dokument, nur Konzept-Referenz)
 ```
 
 ---
@@ -103,7 +107,7 @@ Tageseinträge werden über `DailyEntryStorage` in Hive CE gespeichert; das Prof
 5. **Keine Dependencies ohne Grund.** Pakete nur hinzufügen wenn konkret benötigt.
 6. **UI/UX respektieren.** Material 3, Bottom Navigation, große Touchflächen, kein Web-App-Feel.
 7. **Analyze nach jeder Dart-Änderung.** 0 Issues ist Pflicht.
-8. **Docs aktuell halten.** Nach Phase-Abschluss `PROJECT_STATUS.md` und `TASKS.md` aktualisieren.
+8. **Docs aktuell halten.** Nach Phase-Abschluss `PROJECT_STATUS.md`, `TASKS.md` und `docs/CURRENT_STATUS.md` aktualisieren.
 
 ---
 

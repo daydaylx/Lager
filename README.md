@@ -20,24 +20,26 @@ Auszubildende im Bereich Lagerlogistik (Fachlagerist/in, Fachkraft für Lagerlog
 Flutter SDK installieren: https://docs.flutter.dev/get-started/install
 
 ```bash
-flutter pub get
-flutter run
+/home/d/flutter/bin/flutter pub get
+/home/d/flutter/bin/flutter run
 ```
+
+Flutter liegt unter `/home/d/flutter/bin/flutter` — nicht im System-PATH.
 
 Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
 ## Projektdokumente
 
-| Datei                                 | Inhalt                                            |
-| ------------------------------------- | ------------------------------------------------- |
-| `docs/PRODUCT_CONCEPT.md`             | Fachliche Spezifikation, Features, Phasen         |
-| `docs/UI_UX_SPEC.md`                  | Design-Richtlinien, Screen-Layouts                |
-| `docs/AGENT_IMPLEMENTATION_PROMPT.md` | Technische Umsetzungsanleitung für Coding-Agenten |
-| `TASKS.md`                            | Aktueller Arbeitsstand nach Phasen                |
-| `PROJECT_STATUS.md`                   | Was existiert, was fehlt noch                     |
-| `AGENTS.md`                           | Regeln für alle Coding-Agenten                    |
-| `CLAUDE.md`                           | Kurzregeln für Claude Code                        |
-| `DECISIONS.md`                        | Architekturentscheidungen                         |
+| Datei                                 | Inhalt                                                       |
+| ------------------------------------- | ------------------------------------------------------------ |
+| `docs/PRODUCT_CONCEPT.md`             | Fachliche Spezifikation, Features, Phasen                    |
+| `docs/UI_UX_SPEC.md`                  | Design-Richtlinien, Screen-Layouts                           |
+| `docs/AGENT_IMPLEMENTATION_PROMPT.md` | ⚠️ Historisch — Bootstrap-Dokument; nur zur Konzept-Referenz |
+| `TASKS.md`                            | Aktueller Arbeitsstand nach Phasen                           |
+| `PROJECT_STATUS.md`                   | Was existiert, was fehlt noch                                |
+| `AGENTS.md`                           | Regeln für alle Coding-Agenten                               |
+| `CLAUDE.md`                           | Kurzregeln für Claude Code                                   |
+| `DECISIONS.md`                        | Architekturentscheidungen                                    |
 
 ## Nicht in dieser App
 

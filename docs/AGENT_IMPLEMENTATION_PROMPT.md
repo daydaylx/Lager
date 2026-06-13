@@ -1,5 +1,12 @@
-# AGENT_IMPLEMENTATION_PROMPT.md  
-# Prompt für Coding-Agenten
+> ⚠️ **HISTORISCHES DOKUMENT** — Dieser Prompt wurde verwendet, um die App initial zu bootstrappen.
+> Die App ist bereits implementiert (Phase 5 abgeschlossen). Dieses Dokument nicht als Bauanweisung lesen.
+> Für den aktuellen Stand: `docs/CURRENT_STATUS.md` → `TASKS.md` → `docs/AGENT_CONTEXT_PACKS.md`
+
+---
+
+# AGENT_IMPLEMENTATION_PROMPT.md
+
+# Ursprünglicher Bootstrap-Prompt (Konzept-Referenz)
 
 ## Rolle
 

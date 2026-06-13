@@ -3,7 +3,7 @@
 Dieses Dokument beschreibt die Dart-Datenstrukturen und ihre geplanten Erweiterungen.
 **Status: Phase-3-Modelle und Enums implementiert. DailyEntry wird seit Phase 4 mit Hive CE persistiert.**
 
-Vollständiger Tätigkeitskatalog (87 Einträge): `docs/AGENT_IMPLEMENTATION_PROMPT.md`
+Vollständiger Tätigkeitskatalog (87 Einträge): `lib/core/data/default_activities.dart`
 
 ---
 
