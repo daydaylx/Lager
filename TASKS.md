@@ -107,3 +107,17 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 - [ ] Ladezeiten und Performance prüfen
 - [x] Leere Zustände (Empty States) überall vorhanden
 - [x] Fehlermeldungen verständlich
+
+---
+
+## Phase 9: Lokale Erinnerungen (Reminder) 🔨
+
+- [x] `ReminderSettings`-Modell mit Defaults (20:00 Uhr, Mo–Fr)
+- [x] `ReminderStorage` (SharedPreferences, JSON-Serialisierung)
+- [x] `NotificationScheduler`-Interface + `NoOpNotificationScheduler` (Tests) + `FlutterLocalNotificationScheduler` (Produktiv)
+- [x] Profil-Screen: Erinnerungen-Sektion (Toggle, Zeiten, Wochentage)
+- [x] Android-Permissions: `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM`, `POST_NOTIFICATIONS`
+- [x] `flutter_local_notifications` + `timezone` in pubspec.yaml
+- [x] Tests: `reminder_settings_test.dart`, `reminder_storage_test.dart`, `profile_reminder_screen_test.dart`
+- [ ] `flutter pub get` → `flutter analyze` → `flutter test` → `flutter build apk --debug` auf Entwicklermaschine ausführen
+- [ ] Manuelle Tests auf echtem Android-Gerät (Permission-Dialog, Notification erscheint)
