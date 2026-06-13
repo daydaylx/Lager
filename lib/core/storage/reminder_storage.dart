@@ -11,16 +11,31 @@ class ReminderStorage {
     final timesJson = prefs.getString(PreferenceKeys.reminderTimes);
     final List<ReminderTime> times;
     if (timesJson == null) {
-      times = ReminderSettings.defaults.times.toList();
+      times = ReminderSettings.defaults.times;
     } else {
       final decoded = jsonDecode(timesJson) as List<dynamic>;
-      times = decoded.map((s) => ReminderTime.fromString(s as String)).toList();
+      if (decoded.isEmpty) {
+        times = [];
+      } else {
+        final parsed = decoded
+            .map((s) {
+              try {
+                return ReminderTime.fromString(s as String);
+              } on FormatException {
+                return null;
+              }
+            })
+            .whereType<ReminderTime>()
+            .toList();
+        // Fall back to defaults only when every entry was corrupt.
+        times = parsed.isEmpty ? ReminderSettings.defaults.times : parsed;
+      }
     }
 
     final weekdaysJson = prefs.getString(PreferenceKeys.reminderWeekdays);
     final List<int> weekdays;
     if (weekdaysJson == null) {
-      weekdays = ReminderSettings.defaults.weekdays.toList();
+      weekdays = ReminderSettings.defaults.weekdays;
     } else {
       final decoded = jsonDecode(weekdaysJson) as List<dynamic>;
       weekdays = decoded.map((e) => e as int).toList();

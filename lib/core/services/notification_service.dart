@@ -80,6 +80,8 @@ class FlutterLocalNotificationScheduler implements NotificationScheduler {
           details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
         );
       }
     }

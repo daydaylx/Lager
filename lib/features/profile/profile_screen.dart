@@ -81,6 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _deleteTime(int index) async {
+    if (_reminderSettings.times.length <= 1) return;
     final times = [..._reminderSettings.times]..removeAt(index);
     await _saveAndReschedule(_reminderSettings.copyWith(times: times));
   }
@@ -96,6 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _toggleWeekday(int weekday) async {
     final current = List<int>.from(_reminderSettings.weekdays);
     if (current.contains(weekday)) {
+      if (current.length <= 1) return;
       current.remove(weekday);
     } else {
       current.add(weekday);
