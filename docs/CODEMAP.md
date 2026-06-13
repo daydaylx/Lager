@@ -1,6 +1,6 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phase 5 abgeschlossen, Phase 6 aktiv.
+Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–8 abgeschlossen, Phase 9 (Erinnerungen) in Arbeit.
 
 ---
 
@@ -44,6 +44,7 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 | ------------------------------- | -------------------------------------------------------------------------------------------- |
 | `models/daily_entry.dart`       | `DailyEntry` — id, date, dayType, area?, selectedActivities, specialFlags, note?, timestamps |
 | `models/activity_template.dart` | `ActivityTemplate` — id (stabil!), title, category                                           |
+| `models/reminder_settings.dart` | `ReminderTime` + `ReminderSettings` (enabled, times, weekdays, defaults, copyWith)           |
 
 ### Storage
 
@@ -53,6 +54,13 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 | `storage/daily_entry_adapter.dart`           | Hive-CE-Adapter, handgeschrieben (typeId: 0) |
 | `storage/hive_daily_entry_storage.dart`      | Produktiv-Impl., Box `entries`               |
 | `storage/in_memory_daily_entry_storage.dart` | Test-Mock                                    |
+| `storage/reminder_storage.dart`              | Reminder-Einstellungen in SharedPreferences  |
+
+### Services
+
+| Datei                              | Inhalt                                                                              |
+| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| `services/notification_service.dart` | `NotificationScheduler` (Interface), `NoOpNotificationScheduler` (Tests), `FlutterLocalNotificationScheduler` (Produktiv) |
 
 ### Sonstiges Core
 
@@ -88,6 +96,13 @@ Profil:
     → profile_storage.dart
     → SharedPreferences
 
+Erinnerungen:
+  profile_screen.dart (_buildReminderSection)
+    → reminder_storage.dart
+    → SharedPreferences (reminder_enabled, reminder_times, reminder_weekdays)
+    → notification_service.dart (FlutterLocalNotificationScheduler)
+    → flutter_local_notifications
+
 Onboarding-Flag:
   main.dart / constants.dart (SharedPreferences-Key)
 ```
@@ -98,14 +113,17 @@ Onboarding-Flag:
 
 | Datei                                | Getestet                           |
 | ------------------------------------ | ---------------------------------- |
-| `widget_test.dart`                   | Onboarding, Navigation, Profil     |
-| `today_screen_test.dart`             | Formular, Speicherung, Bearbeitung |
-| `week_screen_test.dart`              | Wochenstatus, Navigation           |
-| `week_utils_test.dart`               | ISO-Kalenderwochen, Jahreswechsel  |
-| `default_activities_test.dart`       | 87 Einträge, eindeutige IDs        |
-| `hive_daily_entry_storage_test.dart` | Persistenz über Box-Neuöffnung     |
+| `widget_test.dart`                      | Onboarding, Navigation, Profil                    |
+| `today_screen_test.dart`                | Formular, Speicherung, Bearbeitung                |
+| `week_screen_test.dart`                 | Wochenstatus, Navigation                          |
+| `week_utils_test.dart`                  | ISO-Kalenderwochen, Jahreswechsel                 |
+| `default_activities_test.dart`          | 87 Einträge, eindeutige IDs                       |
+| `hive_daily_entry_storage_test.dart`    | Persistenz über Box-Neuöffnung                    |
+| `reminder_settings_test.dart`           | Modell-Defaults, Gleichheit, Serialisierung       |
+| `reminder_storage_test.dart`            | SharedPreferences-Roundtrip, mehrere Zeiten/Tage  |
+| `profile_reminder_screen_test.dart`     | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage) |
 
-Letzter Lauf: 28/28 bestanden.
+Letzter Lauf (Phase 8): 35/35 bestanden. Phase-9-Tests noch nicht auf Entwicklermaschine geprüft.
 
 ---
 
