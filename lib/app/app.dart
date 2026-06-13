@@ -36,11 +36,19 @@ class BerichtsheftApp extends StatefulWidget {
 
 class _BerichtsheftAppState extends State<BerichtsheftApp> {
   late bool _onboardingCompleted;
+  String? _name;
+  String? _company;
+  String? _occupation;
+  int? _trainingYear;
 
   @override
   void initState() {
     super.initState();
     _onboardingCompleted = widget.initialOnboardingCompleted;
+    _name = widget.initialName;
+    _company = widget.initialCompany;
+    _occupation = widget.initialOccupation;
+    _trainingYear = widget.initialTrainingYear;
   }
 
   Future<void> _completeOnboarding({
@@ -58,7 +66,29 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     );
 
     if (mounted) {
-      setState(() => _onboardingCompleted = true);
+      setState(() {
+        _onboardingCompleted = true;
+        _name = name;
+        _company = company;
+        _occupation = occupation;
+        _trainingYear = trainingYear;
+      });
+    }
+  }
+
+  Future<void> _resetAll() async {
+    await widget.dailyEntryStorage.clearAll();
+    await widget.templateStorage.clearAll();
+    await ProfileStorage.clearAll();
+
+    if (mounted) {
+      setState(() {
+        _onboardingCompleted = false;
+        _name = null;
+        _company = null;
+        _occupation = null;
+        _trainingYear = null;
+      });
     }
   }
 
@@ -71,12 +101,13 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
           ? MainShell(
               dailyEntryStorage: widget.dailyEntryStorage,
               templateStorage: widget.templateStorage,
+              onDataCleared: _resetAll,
             )
           : OnboardingScreen(
-              initialName: widget.initialName,
-              initialCompany: widget.initialCompany,
-              initialOccupation: widget.initialOccupation,
-              initialTrainingYear: widget.initialTrainingYear,
+              initialName: _name,
+              initialCompany: _company,
+              initialOccupation: _occupation,
+              initialTrainingYear: _trainingYear,
               onComplete: _completeOnboarding,
             ),
       debugShowCheckedModeBanner: false,
@@ -87,11 +118,13 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
 class MainShell extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final Future<void> Function() onDataCleared;
 
   const MainShell({
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
+    required this.onDataCleared,
   });
 
   @override
@@ -114,7 +147,7 @@ class _MainShellState extends State<MainShell> {
             refreshSignal: _weekRefreshSignal,
           ),
           TemplatesScreen(storage: widget.templateStorage),
-          const ProfileScreen(),
+          ProfileScreen(onDataCleared: widget.onDataCleared),
         ],
       ),
       bottomNavigationBar: NavigationBar(

@@ -20,4 +20,9 @@ class InMemoryDailyEntryStorage implements DailyEntryStorage {
   Future<void> save(DailyEntry entry) async {
     _entries[DailyEntry.idForDate(entry.date)] = entry;
   }
+
+  @override
+  Future<void> clearAll() async {
+    _entries.clear();
+  }
 }

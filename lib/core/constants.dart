@@ -1,3 +1,5 @@
+const String kAppVersion = '1.0.0';
+
 class AppStrings {
   static const String appName = 'Berichtsheft-Merker';
   static const String tabToday = 'Heute';

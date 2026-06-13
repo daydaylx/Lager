@@ -79,6 +79,11 @@ class ControlledDailyEntryStorage implements DailyEntryStorage {
     lastSavedEntry = entry;
     this.entry = entry;
   }
+
+  @override
+  Future<void> clearAll() async {
+    entry = null;
+  }
 }
 
 Future<void> pumpToday(

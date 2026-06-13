@@ -38,4 +38,9 @@ class HiveDailyEntryStorage implements DailyEntryStorage {
   Future<void> save(DailyEntry entry) async {
     await _box.put(DailyEntry.idForDate(entry.date), entry);
   }
+
+  @override
+  Future<void> clearAll() async {
+    await _box.clear();
+  }
 }

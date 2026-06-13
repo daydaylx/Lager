@@ -69,6 +69,11 @@ class ControlledWeekStorage implements DailyEntryStorage {
   Future<void> save(DailyEntry entry) async {
     entries[DailyEntry.idForDate(entry.date)] = entry;
   }
+
+  @override
+  Future<void> clearAll() async {
+    entries.clear();
+  }
 }
 
 void main() {

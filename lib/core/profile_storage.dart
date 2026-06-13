@@ -61,6 +61,11 @@ class ProfileStorage {
     }
   }
 
+  static Future<void> clearAll() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.clear();
+  }
+
   static Future<void> _writeOptionalString(
     SharedPreferences preferences, {
     required String key,
