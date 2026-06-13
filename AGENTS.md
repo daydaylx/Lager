@@ -30,7 +30,7 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Aktuelle Phase
 
-**Phase 6: Vorlagenverwaltung** — vordefinierte und eigene Tätigkeitsvorlagen verwalten.
+**Phase 8: Polishing und Android-Build** — App-Icon, Splash Screen, APK-Build, manuelle Gerätetests.
 
 ---
 
@@ -181,14 +181,15 @@ Every implementation handoff must include:
 ```md
 ## Documentation Freshness Check
 
-| Area | Docs affected? | Action |
-|---|---:|---|
-| README / setup | yes/no | updated / not needed |
-| Agent context | yes/no | updated / not needed |
-| Validation matrix | yes/no | updated / not needed |
-| UI / data / security / deployment docs | yes/no | updated / not needed |
+| Area                                   | Docs affected? | Action               |
+| -------------------------------------- | -------------: | -------------------- |
+| README / setup                         |         yes/no | updated / not needed |
+| Agent context                          |         yes/no | updated / not needed |
+| Validation matrix                      |         yes/no | updated / not needed |
+| UI / data / security / deployment docs |         yes/no | updated / not needed |
 
 Result:
+
 - `No documentation update needed`
 - or `Documentation updated`
 - or `Documentation update still required`

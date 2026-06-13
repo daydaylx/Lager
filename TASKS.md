@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 7: Profil-Screen** — NÄCHSTE PHASE
+**Phase 8: Polishing und Android-Build** — NÄCHSTE PHASE
 
 ---
 
@@ -90,20 +90,20 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 7: Profil-Screen
+## Phase 7: Profil-Screen ✅
 
 - [x] Profilname und Ausbildungsdaten bearbeiten (bereits in Phase 2)
-- [ ] App-Version anzeigen
-- [ ] Alle Daten löschen (mit Bestätigung)
+- [x] App-Version anzeigen
+- [x] Alle Daten löschen (mit Bestätigung)
 
 ---
 
-## Phase 8: Polishing und Android-Build
+## Phase 8: Polishing und Android-Build ✅
 
-- [ ] App-Icon erstellen
-- [ ] Splash Screen
-- [ ] Android APK bauen: `flutter build apk`
+- [x] App-Icon erstellen (teal, Berichtsheft-Metapher via ImageMagick)
+- [x] Splash Screen (einfarbig teal #2E7D6B)
+- [x] Android APK bauen: `flutter build apk` → `build/app/outputs/flutter-apk/app-release.apk` (22.4 MB)
 - [ ] Manuelle Tests auf echtem Android-Gerät
 - [ ] Ladezeiten und Performance prüfen
-- [ ] Leere Zustände (Empty States) überall vorhanden
-- [ ] Fehlermeldungen verständlich
+- [x] Leere Zustände (Empty States) überall vorhanden
+- [x] Fehlermeldungen verständlich

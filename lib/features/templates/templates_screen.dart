@@ -19,6 +19,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   ActivityCategory? _selectedCategory;
   List<ActivityTemplate> _customTemplates = [];
   bool _isLoading = true;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() { _isLoading = false; _loadFailed = true; });
     }
   }
 
@@ -61,8 +62,16 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   }
 
   Future<void> _deleteCustom(String id) async {
-    await widget.storage.delete(id);
-    setState(() => _customTemplates.removeWhere((t) => t.id == id));
+    try {
+      await widget.storage.delete(id);
+      if (mounted) setState(() => _customTemplates.removeWhere((t) => t.id == id));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Die Tätigkeit konnte nicht gelöscht werden.')),
+        );
+      }
+    }
   }
 
   Future<void> _showAddDialog() async {
@@ -122,11 +131,19 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   category: selectedCategory,
                   isCustom: true,
                 );
-                await widget.storage.save(template);
-                if (mounted) {
-                  setState(
-                    () => _customTemplates = [..._customTemplates, template],
-                  );
+                try {
+                  await widget.storage.save(template);
+                  if (mounted) {
+                    setState(() => _customTemplates = [..._customTemplates, template]);
+                  }
+                } catch (_) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Die Tätigkeit konnte nicht gespeichert werden.'),
+                      ),
+                    );
+                  }
                 }
               },
               child: const Text('Hinzufügen'),
@@ -160,15 +177,49 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : isEmpty
+                : _loadFailed
                     ? Center(
-                        child: Text(
-                          'Keine Tätigkeiten in dieser Kategorie.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.error_outline, size: 48),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Eigene Tätigkeiten konnten nicht geladen werden.',
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              FilledButton.icon(
+                                onPressed: _loadCustom,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Erneut versuchen'),
+                              ),
+                            ],
                           ),
                         ),
                       )
+                    : isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.search_off_outlined,
+                                  size: 48,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Keine Tätigkeiten in dieser Kategorie.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
                     : SingleChildScrollView(
                         padding: const EdgeInsets.only(bottom: 88),
                         child: Column(
