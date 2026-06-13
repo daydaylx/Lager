@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 6: Vorlagenverwaltung** — NÄCHSTE PHASE
+**Phase 7: Profil-Screen** — NÄCHSTE PHASE
 
 ---
 
@@ -81,12 +81,12 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 6: Vorlagenverwaltung — NÄCHSTE PHASE
+## Phase 6: Vorlagenverwaltung ✅
 
-- [ ] Vordefinierte Tätigkeiten pro Kategorie anzeigen
-- [ ] Eigene Tätigkeit hinzufügen
-- [ ] Eigene Tätigkeit löschen
-- [ ] Kategorie-Filter
+- [x] Vordefinierte Tätigkeiten pro Kategorie anzeigen
+- [x] Eigene Tätigkeit hinzufügen
+- [x] Eigene Tätigkeit löschen
+- [x] Kategorie-Filter
 
 ---
 

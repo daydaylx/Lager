@@ -8,6 +8,7 @@ import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/storage/daily_entry_storage.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/today/today_screen.dart';
 
@@ -290,6 +291,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: true,
       ),
     );

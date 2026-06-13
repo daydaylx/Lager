@@ -4,7 +4,7 @@ Zuletzt aktualisiert: 2026-06-13
 
 ## Aktueller Stand
 
-**Phase 5 vollständig abgeschlossen. Phase 6 ist der nächste Schritt.**
+**Phase 6 vollständig abgeschlossen. Phase 7 ist der nächste Schritt.**
 
 ---
 
@@ -33,7 +33,7 @@ Zuletzt aktualisiert: 2026-06-13
   - `lib/features/onboarding/onboarding_screen.dart` — kompakter Erststart mit vollständigem Ausbildungsprofil
   - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Lade- und Fehlerzuständen
   - `lib/features/week/week_screen.dart` — Wochenwechsel, Tagesstatus, Fortschritt und Wochenzusammenfassung
-  - `lib/features/templates/templates_screen.dart` — Platzhalter "Vorlagen"
+  - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung (Phase 6)
   - `lib/features/profile/profile_screen.dart` — Ausbildungsprofil anzeigen und bearbeiten
   - `lib/shared/widgets/placeholder_screen.dart` — wiederverwendbarer leerer Screen
 - `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
@@ -53,19 +53,18 @@ Zuletzt aktualisiert: 2026-06-13
 | `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
 | `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
 | `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 28/28 Tests bestanden                 |
+| `flutter test`                         | 35/35 Tests bestanden                 |
 | `flutter build apk --debug`            | Auf Nutzerwunsch übersprungen         |
 | Start auf Android-Gerät oder Emulator  | Auf Nutzerwunsch übersprungen         |
 
 ## Bewusst noch nicht gebaut
 
-Alles aus Phase 6–8:
+Alles aus Phase 7–8:
 
-- Eigene Tätigkeiten und Vorlagenverwaltung
 - App-Version und lokale Datenlöschung im Profil
 - PDF-Export (nicht geplant)
 - Cloud/Backend (nicht geplant)
 
 ## Nächster Schritt
 
-Phase 6 umsetzen: Tätigkeitsvorlagen anzeigen und eigene Vorlagen verwalten.
+Phase 7 umsetzen: App-Version anzeigen, alle Daten löschen (mit Bestätigung).

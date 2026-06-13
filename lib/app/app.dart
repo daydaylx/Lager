@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import '../core/constants.dart';
 import '../core/profile_storage.dart';
+import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/today/today_screen.dart';
@@ -11,6 +12,7 @@ import '../features/profile/profile_screen.dart';
 
 class BerichtsheftApp extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
+  final ActivityTemplateStorage templateStorage;
   final bool initialOnboardingCompleted;
   final String? initialName;
   final String? initialCompany;
@@ -20,6 +22,7 @@ class BerichtsheftApp extends StatefulWidget {
   const BerichtsheftApp({
     super.key,
     required this.dailyEntryStorage,
+    required this.templateStorage,
     required this.initialOnboardingCompleted,
     this.initialName,
     this.initialCompany,
@@ -65,7 +68,10 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
       title: AppStrings.appName,
       theme: buildAppTheme(),
       home: _onboardingCompleted
-          ? MainShell(dailyEntryStorage: widget.dailyEntryStorage)
+          ? MainShell(
+              dailyEntryStorage: widget.dailyEntryStorage,
+              templateStorage: widget.templateStorage,
+            )
           : OnboardingScreen(
               initialName: widget.initialName,
               initialCompany: widget.initialCompany,
@@ -80,10 +86,12 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
 
 class MainShell extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
+  final ActivityTemplateStorage templateStorage;
 
   const MainShell({
     super.key,
     required this.dailyEntryStorage,
+    required this.templateStorage,
   });
 
   @override
@@ -105,7 +113,7 @@ class _MainShellState extends State<MainShell> {
             storage: widget.dailyEntryStorage,
             refreshSignal: _weekRefreshSignal,
           ),
-          const TemplatesScreen(),
+          TemplatesScreen(storage: widget.templateStorage),
           const ProfileScreen(),
         ],
       ),

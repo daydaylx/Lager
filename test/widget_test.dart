@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/app/app.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/onboarding/onboarding_screen.dart';
 
@@ -22,6 +23,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: false,
       ),
     );
@@ -43,6 +45,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: false,
       ),
     );
@@ -97,6 +100,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: false,
         initialName: 'Lara Lager',
         initialOccupation: TrainingOccupationValues.fachlagerist,
@@ -117,6 +121,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: true,
       ),
     );
@@ -141,6 +146,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: true,
       ),
     );
@@ -190,6 +196,7 @@ void main() {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         initialOnboardingCompleted: true,
       ),
     );
@@ -203,13 +210,8 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabTemplates));
     await tester.pumpAndSettle();
-    expect(
-      find.text(
-        'Vordefinierte Tätigkeiten für deinen Ausbildungsbereich.\n'
-        'Eigene Vorlagen hinzufügen.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Vorlagen'), findsWidgets);
+    expect(find.text('Alle'), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
