@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import '../core/constants.dart';
 import '../core/profile_storage.dart';
+import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -18,6 +19,7 @@ class BerichtsheftApp extends StatefulWidget {
   final String? initialCompany;
   final String? initialOccupation;
   final int? initialTrainingYear;
+  final NotificationScheduler? notificationScheduler;
 
   const BerichtsheftApp({
     super.key,
@@ -28,6 +30,7 @@ class BerichtsheftApp extends StatefulWidget {
     this.initialCompany,
     this.initialOccupation,
     this.initialTrainingYear,
+    this.notificationScheduler,
   });
 
   @override
@@ -40,6 +43,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   String? _company;
   String? _occupation;
   int? _trainingYear;
+  late final NotificationScheduler _notificationScheduler;
 
   @override
   void initState() {
@@ -49,6 +53,8 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     _company = widget.initialCompany;
     _occupation = widget.initialOccupation;
     _trainingYear = widget.initialTrainingYear;
+    _notificationScheduler = widget.notificationScheduler ??
+        const FlutterLocalNotificationScheduler();
   }
 
   Future<void> _completeOnboarding({
@@ -77,6 +83,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   }
 
   Future<void> _resetAll() async {
+    await _notificationScheduler.cancelAll();
     await widget.dailyEntryStorage.clearAll();
     await widget.templateStorage.clearAll();
     await ProfileStorage.clearAll();
@@ -102,6 +109,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               dailyEntryStorage: widget.dailyEntryStorage,
               templateStorage: widget.templateStorage,
               onDataCleared: _resetAll,
+              notificationScheduler: _notificationScheduler,
             )
           : OnboardingScreen(
               initialName: _name,
@@ -119,12 +127,14 @@ class MainShell extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
   final Future<void> Function() onDataCleared;
+  final NotificationScheduler notificationScheduler;
 
   const MainShell({
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
     required this.onDataCleared,
+    required this.notificationScheduler,
   });
 
   @override
@@ -134,6 +144,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   int _weekRefreshSignal = 0;
+  int _templateRefreshSignal = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -141,13 +152,28 @@ class _MainShellState extends State<MainShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          TodayScreen(storage: widget.dailyEntryStorage),
+          TodayScreen(
+            storage: widget.dailyEntryStorage,
+            templateStorage: widget.templateStorage,
+            templateRefreshSignal: _templateRefreshSignal,
+            protectBackNavigation: _currentIndex == 0,
+          ),
           WeekScreen(
             storage: widget.dailyEntryStorage,
+            templateStorage: widget.templateStorage,
             refreshSignal: _weekRefreshSignal,
+            templateRefreshSignal: _templateRefreshSignal,
           ),
-          TemplatesScreen(storage: widget.templateStorage),
-          ProfileScreen(onDataCleared: widget.onDataCleared),
+          TemplatesScreen(
+            storage: widget.templateStorage,
+            onTemplatesChanged: () {
+              setState(() => _templateRefreshSignal++);
+            },
+          ),
+          ProfileScreen(
+            onDataCleared: widget.onDataCleared,
+            notificationScheduler: widget.notificationScheduler,
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(

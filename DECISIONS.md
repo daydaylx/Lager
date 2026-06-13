@@ -54,5 +54,12 @@ Die App ist eine Merkhilfe, kein offizielles Dokument. PDF-Generierung ist kompl
 **Kein Onboarding-Wizard mit vielen Schritten**
 Einfache Profil-Eingabe beim ersten Start reicht. Keine Tutorial-Slides, keine Berechtigungs-Dialoge, kein Onboarding-Karussel.
 
-**Keine Erinnerungs-Notifications in V1**
-Nützlich, aber nicht kritisch für MVP. Kann in Phase 8 oder danach ergänzt werden.
+**Lokale Erinnerungs-Notifications ohne Cloud**
+Erinnerungen werden ausschließlich auf dem Android-Gerät geplant. Sie verwenden
+die Gerätezeitzone, benötigen keine Push-Infrastruktur und werden beim Löschen
+aller Daten abgebrochen.
+
+**Eigene Tätigkeiten deaktivieren statt hart löschen**
+Tageseinträge speichern Tätigkeit-IDs. Eigene Tätigkeiten bleiben deshalb mit
+stabiler ID und Titel erhalten; deaktivierte Vorlagen verschwinden nur aus neuen
+Auswahlen und bleiben für historische Einträge lesbar.

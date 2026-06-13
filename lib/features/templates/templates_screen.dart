@@ -6,8 +6,13 @@ import '../../core/storage/activity_template_storage.dart';
 
 class TemplatesScreen extends StatefulWidget {
   final ActivityTemplateStorage storage;
+  final VoidCallback? onTemplatesChanged;
 
-  const TemplatesScreen({super.key, required this.storage});
+  const TemplatesScreen({
+    super.key,
+    required this.storage,
+    this.onTemplatesChanged,
+  });
 
   @override
   State<TemplatesScreen> createState() => _TemplatesScreenState();
@@ -40,10 +45,16 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         setState(() {
           _customTemplates = templates;
           _isLoading = false;
+          _loadFailed = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() { _isLoading = false; _loadFailed = true; });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadFailed = true;
+        });
+      }
     }
   }
 
@@ -61,14 +72,28 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         .toList();
   }
 
-  Future<void> _deleteCustom(String id) async {
+  Future<void> _toggleCustom(ActivityTemplate template) async {
+    final updated = template.copyWith(isActive: !template.isActive);
     try {
-      await widget.storage.delete(id);
-      if (mounted) setState(() => _customTemplates.removeWhere((t) => t.id == id));
+      await widget.storage.save(updated);
+      if (mounted) {
+        setState(() {
+          _customTemplates = _customTemplates
+              .map((item) => item.id == updated.id ? updated : item)
+              .toList(growable: false);
+        });
+        widget.onTemplatesChanged?.call();
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Die Tätigkeit konnte nicht gelöscht werden.')),
+          SnackBar(
+            content: Text(
+              template.isActive
+                  ? 'Die Tätigkeit konnte nicht deaktiviert werden.'
+                  : 'Die Tätigkeit konnte nicht aktiviert werden.',
+            ),
+          ),
         );
       }
     }
@@ -78,6 +103,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     _addController.clear();
     ActivityCategory selectedCategory =
         _selectedCategory ?? ActivityCategory.values.first;
+    String? titleError;
 
     await showDialog<void>(
       context: context,
@@ -92,10 +118,16 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 controller: _addController,
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Bezeichnung',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  errorText: titleError,
                 ),
+                onChanged: (_) {
+                  if (titleError != null) {
+                    setDialogState(() => titleError = null);
+                  }
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ActivityCategory>(
@@ -123,7 +155,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             FilledButton(
               onPressed: () async {
                 final title = _addController.text.trim();
-                if (title.isEmpty) return;
+                if (title.isEmpty) {
+                  setDialogState(
+                    () => titleError = 'Gib eine Bezeichnung ein.',
+                  );
+                  return;
+                }
                 Navigator.of(ctx).pop();
                 final template = ActivityTemplate(
                   id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
@@ -134,13 +171,17 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 try {
                   await widget.storage.save(template);
                   if (mounted) {
-                    setState(() => _customTemplates = [..._customTemplates, template]);
+                    setState(
+                      () => _customTemplates = [..._customTemplates, template],
+                    );
+                    widget.onTemplatesChanged?.call();
                   }
                 } catch (_) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Die Tätigkeit konnte nicht gespeichert werden.'),
+                        content: Text(
+                            'Die Tätigkeit konnte nicht gespeichert werden.'),
                       ),
                     );
                   }
@@ -220,42 +261,80 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                               ],
                             ),
                           )
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 88),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (filteredDefaults.isNotEmpty)
-                              _SectionHeader(
-                                'Vordefiniert (${filteredDefaults.length})',
-                              ),
-                            ...filteredDefaults.map(
-                              (t) => ListTile(
-                                title: Text(t.title),
-                                dense: true,
-                              ),
-                            ),
-                            if (filteredCustom.isNotEmpty)
-                              _SectionHeader(
-                                'Eigene (${filteredCustom.length})',
-                              ),
-                            ...filteredCustom.map(
-                              (t) => ListTile(
-                                title: Text(t.title),
-                                dense: true,
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline),
-                                  tooltip: 'Löschen',
-                                  onPressed: () => _deleteCustom(t.id),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                        : _TemplateList(
+                            defaults: filteredDefaults,
+                            custom: filteredCustom,
+                            onToggleCustom: _toggleCustom,
+                          ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TemplateList extends StatelessWidget {
+  final List<ActivityTemplate> defaults;
+  final List<ActivityTemplate> custom;
+  final ValueChanged<ActivityTemplate> onToggleCustom;
+
+  const _TemplateList({
+    required this.defaults,
+    required this.custom,
+    required this.onToggleCustom,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final customLength = custom.isEmpty ? 0 : custom.length + 1;
+    final defaultLength = defaults.isEmpty ? 0 : defaults.length + 1;
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 88),
+      itemCount: customLength + defaultLength,
+      itemBuilder: (context, index) {
+        if (custom.isNotEmpty) {
+          if (index == 0) {
+            return _SectionHeader('Eigene (${custom.length})');
+          }
+          if (index <= custom.length) {
+            final template = custom[index - 1];
+            return ListTile(
+              title: Text(template.title),
+              subtitle: Text(
+                template.isActive
+                    ? template.category.label
+                    : '${template.category.label} · Deaktiviert',
+              ),
+              leading: Icon(
+                template.isActive
+                    ? Icons.check_circle_outline
+                    : Icons.pause_circle_outline,
+              ),
+              trailing: IconButton(
+                icon: Icon(
+                  template.isActive
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                tooltip: template.isActive ? 'Deaktivieren' : 'Aktivieren',
+                onPressed: () => onToggleCustom(template),
+              ),
+            );
+          }
+          index -= customLength;
+        }
+
+        if (index == 0) {
+          return _SectionHeader('Vordefiniert (${defaults.length})');
+        }
+        final template = defaults[index - 1];
+        return ListTile(
+          title: Text(template.title),
+          subtitle: Text(template.category.label),
+          dense: true,
+        );
+      },
     );
   }
 }

@@ -3,11 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/app/app.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
+import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
+import 'package:berichtsheft_merker/core/models/activity_template.dart';
 import 'package:berichtsheft_merker/core/storage/daily_entry_storage.dart';
+import 'package:berichtsheft_merker/core/storage/activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/today/today_screen.dart';
@@ -86,15 +89,47 @@ class ControlledDailyEntryStorage implements DailyEntryStorage {
   }
 }
 
+class ControlledActivityTemplateStorage implements ActivityTemplateStorage {
+  Object? loadError;
+  final List<ActivityTemplate> templates;
+
+  ControlledActivityTemplateStorage({
+    this.loadError,
+    Iterable<ActivityTemplate> templates = const [],
+  }) : templates = templates.toList();
+
+  @override
+  Future<void> clearAll() async {
+    templates.clear();
+  }
+
+  @override
+  Future<List<ActivityTemplate>> loadCustom() async {
+    if (loadError case final error?) {
+      throw error;
+    }
+    return templates;
+  }
+
+  @override
+  Future<void> save(ActivityTemplate template) async {
+    templates
+      ..removeWhere((item) => item.id == template.id)
+      ..add(template);
+  }
+}
+
 Future<void> pumpToday(
   WidgetTester tester, {
   DailyEntryStorage? storage,
+  ActivityTemplateStorage? templateStorage,
   DateTime? date,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       home: TodayScreen(
         storage: storage ?? InMemoryDailyEntryStorage(),
+        templateStorage: templateStorage ?? InMemoryActivityTemplateStorage(),
         date: date,
       ),
     ),
@@ -185,6 +220,9 @@ void main() {
       find.byKey(const ValueKey('area_verpackung')),
       scrollDelta: -300,
     );
+    expect(find.text('Bereich ändern?'), findsOneWidget);
+    await tester.tap(find.text('Änderungen verwerfen'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Ware angenommen'), findsNothing);
     expect(find.text('Ware verpackt'), findsOneWidget);
@@ -232,6 +270,9 @@ void main() {
       find.byKey(const ValueKey('day_type_urlaub')),
       scrollDelta: -300,
     );
+    expect(find.text('Tagestyp ändern?'), findsOneWidget);
+    await tester.tap(find.text('Änderungen verwerfen'));
+    await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('daily_note_field')), findsNothing);
     expect(find.text('Urlaub kann direkt gespeichert werden.'), findsOneWidget);
@@ -288,6 +329,128 @@ void main() {
     await tapSave(tester);
 
     await expectStatus(tester, 'Gespeichert');
+  });
+
+  testWidgets('Bereichswechsel kann ohne Datenverlust abgebrochen werden', (
+    WidgetTester tester,
+  ) async {
+    await pumpToday(tester);
+
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('activity_wareneingang_01')),
+    );
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('area_verpackung')),
+      scrollDelta: -300,
+    );
+
+    await tester.tap(find.text('Weiter bearbeiten'));
+    await tester.pumpAndSettle();
+
+    final selectedArea = tester.widget<ChoiceChip>(
+      find.byKey(const ValueKey('area_wareneingang')),
+    );
+    expect(selectedArea.selected, isTrue);
+    expect(find.text('Ware angenommen'), findsOneWidget);
+  });
+
+  testWidgets('eigene Tätigkeit kann ausgewählt und gespeichert werden', (
+    WidgetTester tester,
+  ) async {
+    final storage = ControlledDailyEntryStorage();
+    final templateStorage = InMemoryActivityTemplateStorage(
+      initialTemplates: const [
+        ActivityTemplate(
+          id: 'custom_1',
+          title: 'Eigene Warenprüfung',
+          category: ActivityCategory.wareneingang,
+          isCustom: true,
+        ),
+      ],
+    );
+    await pumpToday(
+      tester,
+      storage: storage,
+      templateStorage: templateStorage,
+    );
+
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('activity_custom_1')),
+    );
+    await tapSave(tester);
+    await tester.pumpAndSettle();
+
+    expect(storage.lastSavedEntry?.selectedActivities, ['custom_1']);
+  });
+
+  testWidgets('deaktivierte historische Tätigkeit bleibt abwählbar sichtbar', (
+    WidgetTester tester,
+  ) async {
+    final date = DateTime(2026, 6, 12);
+    final storage = ControlledDailyEntryStorage(
+      entry: DailyEntry(
+        id: DailyEntry.idForDate(date),
+        date: date,
+        dayType: DayType.betrieb,
+        area: TrainingArea.wareneingang,
+        selectedActivities: const ['custom_1'],
+        specialFlags: const [],
+        note: null,
+        createdAt: date,
+        updatedAt: date,
+      ),
+    );
+    final templateStorage = InMemoryActivityTemplateStorage(
+      initialTemplates: const [
+        ActivityTemplate(
+          id: 'custom_1',
+          title: 'Alte eigene Tätigkeit',
+          category: ActivityCategory.wareneingang,
+          isCustom: true,
+          isActive: false,
+        ),
+      ],
+    );
+
+    await pumpToday(
+      tester,
+      storage: storage,
+      templateStorage: templateStorage,
+      date: date,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('activity_custom_1')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.text('Alte eigene Tätigkeit (deaktiviert)'), findsOneWidget);
+    final chip = tester.widget<FilterChip>(
+      find.byKey(const ValueKey('activity_custom_1')),
+    );
+    expect(chip.selected, isTrue);
+    expect(chip.onSelected, isNotNull);
+  });
+
+  testWidgets('Vorlagen-Ladefehler lässt Standardtätigkeiten nutzbar', (
+    WidgetTester tester,
+  ) async {
+    final templateStorage = ControlledActivityTemplateStorage(
+      loadError: StateError('Lesefehler'),
+    );
+    await pumpToday(tester, templateStorage: templateStorage);
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+
+    expect(
+      find.textContaining('Eigene Tätigkeiten konnten nicht geladen werden.'),
+      findsOneWidget,
+    );
+    expect(find.text('Ware angenommen'), findsOneWidget);
   });
 
   testWidgets('Heute-Eintrag bleibt beim Tabwechsel im Arbeitsspeicher', (

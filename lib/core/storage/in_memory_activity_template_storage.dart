@@ -21,11 +21,6 @@ class InMemoryActivityTemplateStorage implements ActivityTemplateStorage {
   }
 
   @override
-  Future<void> delete(String id) async {
-    _templates.remove(id);
-  }
-
-  @override
   Future<void> clearAll() async {
     _templates.clear();
   }

@@ -30,7 +30,7 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Aktuelle Phase
 
-**Phase 8: Polishing und Android-Build** — App-Icon, Splash Screen, APK-Build, manuelle Gerätetests.
+**Phase 10: Kernflow- und UX-Stabilisierung** — Code abgeschlossen; manueller Android-Gerätetest offen.
 
 ---
 
@@ -51,8 +51,8 @@ lib/core/week_utils.dart                         → ISO-Kalenderwochen-Helfer
 lib/features/onboarding/onboarding_screen.dart   → Erststart mit vollständigem Ausbildungsprofil
 lib/features/today/today_screen.dart             → Persistenter Tageseintrag
 lib/features/week/week_screen.dart               → Persistente Wochenübersicht + Zusammenfassung
-lib/features/templates/templates_screen.dart     → Platzhalter — aktive Phase baut hier
-lib/features/profile/profile_screen.dart         → Ausbildungsprofil anzeigen und bearbeiten
+lib/features/templates/templates_screen.dart     → Eigene Tätigkeiten verwalten, deaktivieren/reaktivieren
+lib/features/profile/profile_screen.dart         → Ausbildungsprofil, lokale Erinnerungen, Datenverwaltung
 lib/shared/widgets/profile_form.dart             → Gemeinsame Profilmaske
 lib/shared/widgets/placeholder_screen.dart       → Wiederverwendbar: Icon + Titel + Beschreibung
 docs/CODEMAP.md                                  → Schnellreferenz alle Dateien und Einstiegspunkte

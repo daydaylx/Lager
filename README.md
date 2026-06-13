@@ -53,4 +53,4 @@ Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
 ## Nächster Schritt
 
-Siehe `TASKS.md` → Phase 6: Vorlagenverwaltung.
+Siehe `TASKS.md` → manueller Android-Gerätetest für Phase 9/10.

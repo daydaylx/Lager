@@ -21,9 +21,10 @@ Future<void> scrollTo(WidgetTester tester, String key) async {
 Future<NoOpNotificationScheduler> pumpScreen(
   WidgetTester tester, {
   Map<String, Object> prefs = const {},
+  NoOpNotificationScheduler? scheduler,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
-  final spy = NoOpNotificationScheduler();
+  final spy = scheduler ?? NoOpNotificationScheduler();
   await tester.pumpWidget(
     MaterialApp(
       home: ProfileScreen(
@@ -53,7 +54,8 @@ void main() {
       expect(toggle.value, isFalse);
     });
 
-    testWidgets('Toggle aktivieren speichert reminder_enabled in SharedPreferences',
+    testWidgets(
+        'Toggle aktivieren speichert reminder_enabled in SharedPreferences',
         (tester) async {
       await pumpScreen(tester);
       await tester.tap(find.byKey(const ValueKey('reminder_toggle')));
@@ -70,7 +72,8 @@ void main() {
       expect(spy.lastScheduled?.enabled, isTrue);
     });
 
-    testWidgets('Standard-Zeit 20:00 ist nach Aktivieren sichtbar', (tester) async {
+    testWidgets('Standard-Zeit 20:00 ist nach Aktivieren sichtbar',
+        (tester) async {
       await pumpScreen(tester, prefs: {'reminder_enabled': true});
       await scrollTo(tester, 'reminder_time_0');
       expect(find.text('20:00'), findsOneWidget);
@@ -101,6 +104,30 @@ void main() {
       expect(find.byKey(const ValueKey('reminder_add_time')), findsOneWidget);
     });
 
+    testWidgets('letzte Uhrzeit kann nicht entfernt werden', (tester) async {
+      await pumpScreen(tester, prefs: {'reminder_enabled': true});
+      await scrollTo(tester, 'reminder_time_0');
+      final button = tester.widget<IconButton>(
+        find.descendant(
+          of: find.byKey(const ValueKey('reminder_time_0')),
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('doppelte Uhrzeit zeigt verständlichen Fehler', (tester) async {
+      await pumpScreen(tester, prefs: {'reminder_enabled': true});
+      await scrollTo(tester, 'reminder_add_time');
+      await tester.tap(find.byKey(const ValueKey('reminder_add_time')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.text('Diese Uhrzeit ist bereits eingetragen.'), findsOneWidget);
+    });
+
     testWidgets('Mo–Fr Chips sind standardmäßig ausgewählt', (tester) async {
       await pumpScreen(tester, prefs: {'reminder_enabled': true});
       await scrollTo(tester, 'reminder_weekday_1');
@@ -108,13 +135,15 @@ void main() {
         final chip = tester.widget<FilterChip>(
           find.byKey(ValueKey('reminder_weekday_$i')),
         );
-        expect(chip.selected, isTrue, reason: 'Wochentag $i soll ausgewählt sein');
+        expect(chip.selected, isTrue,
+            reason: 'Wochentag $i soll ausgewählt sein');
       }
       for (int i = 6; i <= 7; i++) {
         final chip = tester.widget<FilterChip>(
           find.byKey(ValueKey('reminder_weekday_$i')),
         );
-        expect(chip.selected, isFalse, reason: 'Wochentag $i soll nicht ausgewählt sein');
+        expect(chip.selected, isFalse,
+            reason: 'Wochentag $i soll nicht ausgewählt sein');
       }
     });
 
@@ -127,6 +156,64 @@ void main() {
         find.byKey(const ValueKey('reminder_weekday_6')),
       );
       expect(chip.selected, isTrue);
+    });
+
+    testWidgets('letzter Wochentag kann nicht abgewählt werden',
+        (tester) async {
+      await pumpScreen(tester, prefs: {
+        'reminder_enabled': true,
+        'reminder_weekdays': '[1]',
+      });
+      await scrollTo(tester, 'reminder_weekday_1');
+      final chip = tester.widget<FilterChip>(
+        find.byKey(const ValueKey('reminder_weekday_1')),
+      );
+      expect(chip.onSelected, isNull);
+    });
+
+    testWidgets('verweigerte Berechtigung behält deaktivierten Zustand', (
+      tester,
+    ) async {
+      final spy = NoOpNotificationScheduler(
+        scheduleResult: NotificationScheduleResult.permissionDenied,
+      );
+      await pumpScreen(tester, scheduler: spy);
+      await tester.tap(find.byKey(const ValueKey('reminder_toggle')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wurde nicht aktiviert.',
+        ),
+        findsOneWidget,
+      );
+      final toggle = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('reminder_toggle')),
+      );
+      expect(toggle.value, isFalse);
+      expect(spy.scheduleCalls, 2);
+    });
+
+    testWidgets('Schedulingfehler zeigt Meldung und behält Zustand', (
+      tester,
+    ) async {
+      final spy = NoOpNotificationScheduler(
+        scheduleError: StateError('Schedulingfehler'),
+      );
+      await pumpScreen(tester, scheduler: spy);
+      await tester.tap(find.byKey(const ValueKey('reminder_toggle')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.',
+        ),
+        findsOneWidget,
+      );
+      final toggle = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('reminder_toggle')),
+      );
+      expect(toggle.value, isFalse);
     });
   });
 }

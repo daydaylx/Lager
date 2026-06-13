@@ -1,6 +1,6 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–8 abgeschlossen, Phase 9 (Erinnerungen) in Arbeit.
+Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–10 im Code abgeschlossen; manueller Android-Test offen.
 
 ---
 
@@ -20,10 +20,10 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 | Datei                               | Zeilen | Status    | Beschreibung                                              |
 | ----------------------------------- | -----: | --------- | --------------------------------------------------------- |
 | `onboarding/onboarding_screen.dart` |     63 | ✅ fertig | Erststart, Profil anlegen                                 |
-| `today/today_screen.dart`           |    683 | ✅ fertig | Tageseintrag: Typ, Bereich, Tätigkeiten, Notiz, Speichern |
-| `week/week_screen.dart`             |    682 | ✅ fertig | Wochenübersicht 7 Kacheln + Zusammenfassung               |
-| `templates/templates_screen.dart`   |     18 | 🔨 aktiv  | Platzhalter — **hier baut Phase 6**                       |
-| `profile/profile_screen.dart`       |    104 | ✅ fertig | Profil anzeigen + bearbeiten                              |
+| `today/today_screen.dart`           |    907 | ✅ fertig | Tageseintrag, eigene Vorlagen, Eingabeverlustschutz       |
+| `week/week_screen.dart`             |    775 | ✅ fertig | Wochenübersicht + Zusammenfassung inklusive eigener Titel |
+| `templates/templates_screen.dart`   |    398 | ✅ fertig | Vorlagen hinzufügen, filtern, deaktivieren/reaktivieren   |
+| `profile/profile_screen.dart`       |    415 | ✅ fertig | Profil, lokale Erinnerungen, Datenverwaltung              |
 
 ---
 
@@ -43,7 +43,7 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 | Datei                           | Inhalt                                                                                       |
 | ------------------------------- | -------------------------------------------------------------------------------------------- |
 | `models/daily_entry.dart`       | `DailyEntry` — id, date, dayType, area?, selectedActivities, specialFlags, note?, timestamps |
-| `models/activity_template.dart` | `ActivityTemplate` — id (stabil!), title, category                                           |
+| `models/activity_template.dart` | `ActivityTemplate` — id (stabil!), title, category, isCustom, isActive                       |
 | `models/reminder_settings.dart` | `ReminderTime` + `ReminderSettings` (enabled, times, weekdays, defaults, copyWith)           |
 
 ### Storage
@@ -54,6 +54,9 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 | `storage/daily_entry_adapter.dart`           | Hive-CE-Adapter, handgeschrieben (typeId: 0) |
 | `storage/hive_daily_entry_storage.dart`      | Produktiv-Impl., Box `entries`               |
 | `storage/in_memory_daily_entry_storage.dart` | Test-Mock                                    |
+| `storage/activity_template_storage.dart`      | Interface für eigene Tätigkeiten             |
+| `storage/activity_template_adapter.dart`      | Hive-CE-Adapter, handgeschrieben (typeId: 1) |
+| `storage/hive_activity_template_storage.dart` | Produktiv-Impl., Box `custom_templates`      |
 | `storage/reminder_storage.dart`              | Reminder-Einstellungen in SharedPreferences  |
 
 ### Services
@@ -101,7 +104,7 @@ Erinnerungen:
     → reminder_storage.dart
     → SharedPreferences (reminder_enabled, reminder_times, reminder_weekdays)
     → notification_service.dart (FlutterLocalNotificationScheduler)
-    → flutter_local_notifications
+    → flutter_timezone + flutter_local_notifications
 
 Onboarding-Flag:
   main.dart / constants.dart (SharedPreferences-Key)
@@ -119,11 +122,12 @@ Onboarding-Flag:
 | `week_utils_test.dart`                  | ISO-Kalenderwochen, Jahreswechsel                 |
 | `default_activities_test.dart`          | 87 Einträge, eindeutige IDs                       |
 | `hive_daily_entry_storage_test.dart`    | Persistenz über Box-Neuöffnung                    |
+| `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität          |
 | `reminder_settings_test.dart`           | Modell-Defaults, Gleichheit, Serialisierung       |
 | `reminder_storage_test.dart`            | SharedPreferences-Roundtrip, mehrere Zeiten/Tage  |
 | `profile_reminder_screen_test.dart`     | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage) |
 
-Letzter Lauf (Phase 8): 35/35 bestanden. Phase-9-Tests noch nicht auf Entwicklermaschine geprüft.
+Letzter Lauf (Phase 10): 77/77 bestanden.
 
 ---
 

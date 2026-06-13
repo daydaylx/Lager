@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 8: Polishing und Android-Build** — NÄCHSTE PHASE
+**Phase 10: Kernflow- und UX-Stabilisierung** — Code abgeschlossen, manueller Android-Test offen
 
 ---
 
@@ -85,7 +85,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 - [x] Vordefinierte Tätigkeiten pro Kategorie anzeigen
 - [x] Eigene Tätigkeit hinzufügen
-- [x] Eigene Tätigkeit löschen
+- [x] Eigene Tätigkeit deaktivieren und reaktivieren
 - [x] Kategorie-Filter
 
 ---
@@ -116,8 +116,26 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 - [x] `ReminderStorage` (SharedPreferences, JSON-Serialisierung)
 - [x] `NotificationScheduler`-Interface + `NoOpNotificationScheduler` (Tests) + `FlutterLocalNotificationScheduler` (Produktiv)
 - [x] Profil-Screen: Erinnerungen-Sektion (Toggle, Zeiten, Wochentage)
-- [x] Android-Permissions: `RECEIVE_BOOT_COMPLETED`, `SCHEDULE_EXACT_ALARM`, `POST_NOTIFICATIONS`
-- [x] `flutter_local_notifications` + `timezone` in pubspec.yaml
+- [x] Android-Permissions und Receiver: `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`
+- [x] `flutter_local_notifications` + `timezone` + `flutter_timezone` in pubspec.yaml
 - [x] Tests: `reminder_settings_test.dart`, `reminder_storage_test.dart`, `profile_reminder_screen_test.dart`
-- [ ] `flutter pub get` → `flutter analyze` → `flutter test` → `flutter build apk --debug` auf Entwicklermaschine ausführen
+- [x] `flutter pub get` → `flutter analyze` → `flutter test` auf Entwicklermaschine ausführen
+- [x] Debug-APK mit lokaler Reminder-Konfiguration bauen: `build/app/outputs/flutter-apk/app-debug.apk`
 - [ ] Manuelle Tests auf echtem Android-Gerät (Permission-Dialog, Notification erscheint)
+
+---
+
+## Phase 10: Kernflow- und UX-Stabilisierung ✅
+
+- [x] Eigene Tätigkeiten im Heute-Screen und in der Wochenzusammenfassung nutzbar machen
+- [x] Eigene Tätigkeiten deaktivieren statt hart löschen; historische Einträge lesbar halten
+- [x] Verlustreiche Tagestyp-/Bereichswechsel und Zurück-Navigation bestätigen
+- [x] Vorlagen-Ladefehler blockieren Standardtätigkeiten nicht
+- [x] Leere Wochenzusammenfassung deaktivieren und Empty State präzisieren
+- [x] Reminder-Berechtigung, Fehler, doppelte Zeiten und Mindest-Auswahl verständlich behandeln
+- [x] Gerätezeitzone für lokale Erinnerungen setzen
+- [x] Geplante Erinnerungen bei „Alle Daten löschen“ abbrechen
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 77/77 bestanden
+- [x] `flutter build apk --debug` — erfolgreich
+- [ ] Manueller Android-Test: Zurück-Geste, Vorlagen-Sync, Permission-Dialog, lokale Uhrzeit, Datenlöschung

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
+import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
+import 'package:berichtsheft_merker/core/models/activity_template.dart';
 import 'package:berichtsheft_merker/core/storage/daily_entry_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/week_utils.dart';
 import 'package:berichtsheft_merker/features/week/week_screen.dart';
 
@@ -38,12 +41,14 @@ DailyEntry entryFor(
 Future<void> pumpWeek(
   WidgetTester tester, {
   DailyEntryStorage? storage,
+  InMemoryActivityTemplateStorage? templateStorage,
   DateTime? initialDate,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       home: WeekScreen(
         storage: storage ?? InMemoryDailyEntryStorage(),
+        templateStorage: templateStorage ?? InMemoryActivityTemplateStorage(),
         initialDate: initialDate,
       ),
     ),
@@ -199,6 +204,61 @@ void main() {
     }
   });
 
+  testWidgets('leere Woche deaktiviert die Zusammenfassung', (
+    WidgetTester tester,
+  ) async {
+    await pumpWeek(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('show_week_summary')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    final button = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('show_week_summary')),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('Zusammenfassung zeigt Titel einer eigenen Tätigkeit', (
+    WidgetTester tester,
+  ) async {
+    final today = normalizedToday();
+    final monday = startOfWeek(today);
+    final storage = InMemoryDailyEntryStorage(
+      initialEntries: [
+        entryFor(monday, activities: const ['custom_1']),
+      ],
+    );
+    final templateStorage = InMemoryActivityTemplateStorage(
+      initialTemplates: const [
+        ActivityTemplate(
+          id: 'custom_1',
+          title: 'Eigene Warenprüfung',
+          category: ActivityCategory.wareneingang,
+          isCustom: true,
+          isActive: false,
+        ),
+      ],
+    );
+
+    await pumpWeek(
+      tester,
+      storage: storage,
+      templateStorage: templateStorage,
+      initialDate: today,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('show_week_summary')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('show_week_summary')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Eigene Warenprüfung'), findsOneWidget);
+  });
+
   testWidgets('Tag kann aus Woche geöffnet, gespeichert und neu geladen werden',
       (
     WidgetTester tester,
@@ -232,6 +292,34 @@ void main() {
     );
   });
 
+  testWidgets('Zurück-Navigation schützt ungespeicherte Änderungen', (
+    WidgetTester tester,
+  ) async {
+    final today = normalizedToday();
+    final monday = startOfWeek(today);
+    await pumpWeek(tester, initialDate: today);
+
+    await tester.tap(
+      find.byKey(ValueKey('week_day_${DailyEntry.idForDate(monday)}')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('day_type_frei')));
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Änderungen verwerfen?'), findsOneWidget);
+    await tester.tap(find.text('Weiter bearbeiten'));
+    await tester.pumpAndSettle();
+    expect(find.text(monday == today ? 'Heute' : 'Tageseintrag'), findsWidgets);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Änderungen verwerfen'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('week_number')), findsOneWidget);
+  });
+
   testWidgets('Ladefehler kann erneut versucht werden', (
     WidgetTester tester,
   ) async {
@@ -262,6 +350,7 @@ void main() {
       MaterialApp(
         home: WeekScreen(
           storage: storage,
+          templateStorage: InMemoryActivityTemplateStorage(),
           refreshSignal: 0,
         ),
       ),
@@ -273,6 +362,7 @@ void main() {
       MaterialApp(
         home: WeekScreen(
           storage: storage,
+          templateStorage: InMemoryActivityTemplateStorage(),
           refreshSignal: 1,
         ),
       ),

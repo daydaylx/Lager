@@ -4,7 +4,7 @@ Zuletzt aktualisiert: 2026-06-13
 
 ## Aktueller Stand
 
-**Phase 6 vollständig abgeschlossen. Phase 7 ist der nächste Schritt.**
+**Phasen 0–10 im Code abgeschlossen. Manueller Android-Gerätetest ist der nächste Schritt.**
 
 ---
 
@@ -31,14 +31,15 @@ Zuletzt aktualisiert: 2026-06-13
   - `lib/core/storage/` — Speicher-Schnittstelle, Hive-CE-Adapter und In-Memory-Testspeicher
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — kompakter Erststart mit vollständigem Ausbildungsprofil
-  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Lade- und Fehlerzuständen
-  - `lib/features/week/week_screen.dart` — Wochenwechsel, Tagesstatus, Fortschritt und Wochenzusammenfassung
-  - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung (Phase 6)
-  - `lib/features/profile/profile_screen.dart` — Ausbildungsprofil anzeigen und bearbeiten
+  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag, eigene Vorlagen, Schutz vor Eingabeverlust
+  - `lib/features/week/week_screen.dart` — Wochenwechsel, Tagesstatus und Zusammenfassung inklusive eigener Vorlagen
+  - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung mit Aktiv-/Deaktivstatus
+  - `lib/features/profile/profile_screen.dart` — Ausbildungsprofil, lokale Erinnerungen und Datenverwaltung
   - `lib/shared/widgets/placeholder_screen.dart` — wiederverwendbarer leerer Screen
 - `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
 - `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
-- `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge dauerhaft in der Box `entries`
+- `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge und eigene Tätigkeiten dauerhaft
+- `flutter_local_notifications` / `flutter_timezone` — lokale Erinnerungen in Gerätezeitzone
 - `test/widget_test.dart` — Onboarding-, Profil- und Navigationstests
 - `test/today_screen_test.dart` — Validierungs-, Speicher-, Bearbeitungs- und Tagtyp-Tests
 - `test/default_activities_test.dart` — Katalogumfang und eindeutige IDs
@@ -53,18 +54,25 @@ Zuletzt aktualisiert: 2026-06-13
 | `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
 | `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
 | `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 35/35 Tests bestanden                 |
-| `flutter build apk --debug`            | Auf Nutzerwunsch übersprungen         |
-| Start auf Android-Gerät oder Emulator  | Auf Nutzerwunsch übersprungen         |
+| `flutter test`                         | 77/77 Tests bestanden                 |
+| `flutter build apk --debug`            | Erfolgreich, Debug-APK 94.7 MB        |
+| Start auf Android-Gerät oder Emulator  | Kein ADB-Gerät/Emulator verfügbar     |
+
+Debug-APK: `build/app/outputs/flutter-apk/app-debug.apk`
+
+Der erfolgreiche Build nutzt NDK 26.3.11579264. Die installierte NDK-27-Kopie
+ist unvollständig; Plugins melden deshalb weiterhin eine abweichende
+NDK-Empfehlung, der Debug-Build ist davon nicht blockiert.
 
 ## Bewusst noch nicht gebaut
 
-Alles aus Phase 7–8:
-
-- App-Version und lokale Datenlöschung im Profil
+- Vollständiges visuelles Redesign / eigenes Komponenten-Theme
+- Favoriten und zuletzt verwendete Tätigkeiten
+- Bearbeiten eigener Tätigkeitstitel
 - PDF-Export (nicht geplant)
 - Cloud/Backend (nicht geplant)
 
 ## Nächster Schritt
 
-Phase 7 umsetzen: App-Version anzeigen, alle Daten löschen (mit Bestätigung).
+Manuellen Android-Gerätetest für Kernflow, große Systemschrift, Tastatur,
+Zurück-Geste, Benachrichtigungsberechtigung und lokale Erinnerungszeit durchführen.

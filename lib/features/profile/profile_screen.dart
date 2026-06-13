@@ -25,14 +25,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loadFailed = false;
   ReminderSettings _reminderSettings = ReminderSettings.defaults;
   late final NotificationScheduler _scheduler;
+  bool _isReminderSaving = false;
+  bool _isDeleting = false;
+  String? _reminderError;
 
   static const _weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
   @override
   void initState() {
     super.initState();
-    _scheduler =
-        widget.notificationScheduler ?? const FlutterLocalNotificationScheduler();
+    _scheduler = widget.notificationScheduler ??
+        const FlutterLocalNotificationScheduler();
     _loadProfile();
     _loadReminderSettings();
   }
@@ -66,14 +69,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final settings = await ReminderStorage.load();
       if (mounted) setState(() => _reminderSettings = settings);
     } catch (_) {
-      // keep defaults on error
+      if (mounted) {
+        setState(() {
+          _reminderError =
+              'Erinnerungseinstellungen konnten nicht geladen werden.';
+        });
+      }
     }
   }
 
   Future<void> _saveAndReschedule(ReminderSettings settings) async {
-    await ReminderStorage.save(settings);
-    await _scheduler.schedule(settings);
-    if (mounted) setState(() => _reminderSettings = settings);
+    if (_isReminderSaving) return;
+    final previous = _reminderSettings;
+    setState(() {
+      _isReminderSaving = true;
+      _reminderError = null;
+    });
+
+    try {
+      final result = await _scheduler.schedule(settings);
+      if (result == NotificationScheduleResult.permissionDenied) {
+        await _scheduler.schedule(previous);
+        if (mounted) {
+          setState(() {
+            _isReminderSaving = false;
+            _reminderError =
+                'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wurde nicht aktiviert.';
+          });
+        }
+        return;
+      }
+      await ReminderStorage.save(settings);
+      if (mounted) {
+        setState(() {
+          _reminderSettings = settings;
+          _isReminderSaving = false;
+        });
+      }
+    } catch (_) {
+      try {
+        await _scheduler.schedule(previous);
+      } catch (_) {
+        // The visible error below covers both scheduling failures.
+      }
+      if (mounted) {
+        setState(() {
+          _isReminderSaving = false;
+          _reminderError =
+              'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.';
+        });
+      }
+    }
   }
 
   Future<void> _toggleReminder(bool value) async {
@@ -87,10 +133,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _addTime(TimeOfDay picked) async {
+    final newTime = ReminderTime(hour: picked.hour, minute: picked.minute);
+    if (_reminderSettings.times.contains(newTime)) {
+      setState(() => _reminderError = 'Diese Uhrzeit ist bereits eingetragen.');
+      return;
+    }
     final times = [
       ..._reminderSettings.times,
-      ReminderTime(hour: picked.hour, minute: picked.minute),
-    ];
+      newTime,
+    ]..sort((a, b) => a.hour == b.hour
+        ? a.minute.compareTo(b.minute)
+        : a.hour.compareTo(b.hour));
     await _saveAndReschedule(_reminderSettings.copyWith(times: times));
   }
 
@@ -133,7 +186,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (confirmed == true) {
-      await widget.onDataCleared();
+      setState(() => _isDeleting = true);
+      try {
+        await widget.onDataCleared();
+      } catch (_) {
+        if (mounted) {
+          setState(() => _isDeleting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Die Daten konnten nicht vollständig gelöscht werden. Bitte versuche es erneut.',
+              ),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -199,22 +266,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const Divider(),
         const SizedBox(height: 16),
         OutlinedButton.icon(
+          key: const ValueKey('delete_all_data'),
           style: OutlinedButton.styleFrom(
             foregroundColor: colorScheme.error,
             side: BorderSide(color: colorScheme.error),
             minimumSize: const Size.fromHeight(48),
           ),
-          onPressed: _confirmAndDeleteAll,
-          icon: const Icon(Icons.delete_forever_outlined),
-          label: const Text('Alle Daten löschen'),
+          onPressed: _isDeleting ? null : _confirmAndDeleteAll,
+          icon: _isDeleting
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.delete_forever_outlined),
+          label: Text(
+              _isDeleting ? 'Daten werden gelöscht ...' : 'Alle Daten löschen'),
         ),
         const SizedBox(height: 32),
         Text(
           'Version $kAppVersion',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+                color: colorScheme.onSurfaceVariant,
+              ),
         ),
         const SizedBox(height: 8),
       ],
@@ -232,12 +306,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 4),
         SwitchListTile(
           key: const ValueKey('reminder_toggle'),
-          title: const Text('Täglich erinnern'),
+          title: const Text('An ausgewählten Tagen erinnern'),
           value: _reminderSettings.enabled,
-          onChanged: _toggleReminder,
+          onChanged: _isReminderSaving ? null : _toggleReminder,
           contentPadding: EdgeInsets.zero,
+          secondary: _isReminderSaving
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
         ),
+        if (_reminderError case final error?) ...[
+          const SizedBox(height: 8),
+          _ReminderError(text: error),
+        ],
         if (_reminderSettings.enabled) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Uhrzeiten',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
           ..._reminderSettings.times.asMap().entries.map((entry) {
             final index = entry.key;
             final time = entry.value;
@@ -247,21 +336,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: Text(time.toDisplayString()),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: () => _deleteTime(index),
+                tooltip: _reminderSettings.times.length <= 1
+                    ? 'Mindestens eine Uhrzeit ist erforderlich'
+                    : 'Uhrzeit entfernen',
+                onPressed:
+                    _isReminderSaving || _reminderSettings.times.length <= 1
+                        ? null
+                        : () => _deleteTime(index),
               ),
             );
           }),
           TextButton.icon(
             key: const ValueKey('reminder_add_time'),
-            onPressed: () async {
-              final picked = await showTimePicker(
-                context: context,
-                initialTime: const TimeOfDay(hour: 20, minute: 0),
-              );
-              if (picked != null) await _addTime(picked);
-            },
+            onPressed: _isReminderSaving
+                ? null
+                : () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: const TimeOfDay(hour: 20, minute: 0),
+                    );
+                    if (picked != null) await _addTime(picked);
+                  },
             icon: const Icon(Icons.add),
             label: const Text('Zeit hinzufügen'),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tage',
+            style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -272,12 +374,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 key: ValueKey('reminder_weekday_$weekday'),
                 label: Text(_weekdayLabels[i]),
                 selected: _reminderSettings.weekdays.contains(weekday),
-                onSelected: (_) => _toggleWeekday(weekday),
+                onSelected: _isReminderSaving ||
+                        (_reminderSettings.weekdays.length <= 1 &&
+                            _reminderSettings.weekdays.contains(weekday))
+                    ? null
+                    : (_) => _toggleWeekday(weekday),
               );
             }),
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ReminderError extends StatelessWidget {
+  final String text;
+
+  const _ReminderError({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline, color: theme.colorScheme.error),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text)),
+        ],
+      ),
     );
   }
 }

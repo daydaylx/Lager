@@ -253,6 +253,8 @@ Anforderungen:
 - keine winzigen Checkboxen
 - Kategorie sichtbar
 - häufig genutzte Tätigkeiten oben
+- aktive eigene Tätigkeiten passend zur Kategorie anzeigen
+- deaktivierte eigene Tätigkeiten nur in historischen Einträgen lesbar halten
 
 Optional:
 
@@ -453,14 +455,18 @@ Funktionen:
 - Tätigkeiten anzeigen
 - nach Kategorie filtern
 - eigene Tätigkeit hinzufügen
-- eigene Tätigkeit bearbeiten
 - Tätigkeit deaktivieren
+- deaktivierte eigene Tätigkeit reaktivieren
 
 Wichtig:
 
 Vordefinierte Tätigkeiten sollten nicht hart gelöscht werden. Besser deaktivieren.
 
-Eigene Tätigkeiten dürfen bearbeitet werden.
+Eigene Tätigkeitstitel werden aktuell nicht bearbeitet, damit bereits gespeicherte
+Tageseinträge nicht rückwirkend ihre Bedeutung ändern.
+
+Deaktivieren ersetzt hartes Löschen. Deaktivierte Tätigkeiten verschwinden aus
+neuen Tageseinträgen, bleiben in historischen Einträgen und Zusammenfassungen lesbar.
 
 ---
 

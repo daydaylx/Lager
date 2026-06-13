@@ -4,17 +4,16 @@ Format: Aufgabe → Dateien lesen → Risiken → Mindestchecks
 
 ---
 
-## Pack 1: Phase 6 — Vorlagenverwaltung (aktiv)
+## Pack 1: Vorlagenverwaltung und Tagesauswahl
 
-**Aufgabe:** `templates_screen.dart` implementieren — vordefinierte Tätigkeiten anzeigen,
-filtern, eigene Tätigkeiten hinzufügen und löschen.
+**Aufgabe:** Vorlagen verwalten oder ihre Nutzung im Heute-/Wochen-Screen ändern.
 
 ### Dateien lesen (in dieser Reihenfolge)
 
 | Datei                                          | Warum                                                   |
 | ---------------------------------------------- | ------------------------------------------------------- |
 | `TASKS.md`                                     | Genaue Anforderungen Phase 6                            |
-| `lib/features/templates/templates_screen.dart` | Aktueller Platzhalter — hier wird gebaut                |
+| `lib/features/templates/templates_screen.dart` | Eigene Tätigkeiten verwalten                             |
 | `lib/core/data/default_activities.dart`        | 87 Tätigkeiten mit stabilen IDs und Kategorien          |
 | `lib/core/models/activity_template.dart`       | ActivityTemplate-Modell                                 |
 | `lib/core/enums/activity_category.dart`        | ActivityCategory-Enum (10 Kategorien)                   |
@@ -28,7 +27,8 @@ filtern, eigene Tätigkeiten hinzufügen und löschen.
 - **Keine neuen Packages:** Vorlagenverwaltung braucht kein neues Package. Nur vorhandene Hive CE / SharedPreferences nutzen.
 - **setState reicht:** Kein State-Management-Framework einführen.
 - **Kategorie-Filter als Chips:** Nicht als Dropdown — sieh UI_UX_SPEC.md.
-- **Eigene Tätigkeiten:** Brauchen eigene stabile IDs (z. B. UUID-Format oder Timestamp-basiert). Nicht mit vordefinierten IDs kollidieren.
+- **Eigene Tätigkeiten:** Stabile IDs nie ändern. Deaktivieren statt hart löschen, damit historische Einträge lesbar bleiben.
+- **Katalog-Synchronisierung:** Änderungen müssen Heute- und Wochen-Screen ohne App-Neustart erreichen.
 
 ### Mindestchecks nach Änderung
 
@@ -52,6 +52,7 @@ filtern, eigene Tätigkeiten hinzufügen und löschen.
 | `lib/core/storage/daily_entry_adapter.dart`      | Hive-CE-Adapter — muss bei Felderweiterung angepasst werden |
 | `lib/core/storage/hive_daily_entry_storage.dart` | Produktiv-Impl.                                             |
 | `test/hive_daily_entry_storage_test.dart`        | Persistenz-Tests                                            |
+| `test/hive_activity_template_storage_test.dart`  | Bei ActivityTemplate-/Adapter-Änderungen                    |
 | `DECISIONS.md`                                   | Warum Hive CE statt SQLite (nicht erneut diskutieren)       |
 
 ### Risiken

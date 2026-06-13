@@ -67,9 +67,9 @@ enum SpecialFlag {
 
 ## Modelle
 
-`DailyEntry` und `ActivityTemplate` sind als minimale Phase-3-Modelle
-implementiert. Felder für eigene Vorlagen werden in späteren Phasen
-ergänzt, sobald sie benötigt werden.
+`DailyEntry` und `ActivityTemplate` sind implementiert. Eigene Vorlagen werden
+in Hive CE gespeichert und über einen Aktivstatus aus der neuen Auswahl entfernt,
+ohne historische Tageseinträge unlesbar zu machen.
 
 ### DailyEntry
 
@@ -94,6 +94,8 @@ class ActivityTemplate {
   final String id;                  // stabile, eindeutige Katalog-ID
   final String title;               // Anzeigetext, z.B. "Wareneingangsprüfung durchführen"
   final ActivityCategory category;  // Kategorie
+  final bool isCustom;              // true bei selbst angelegten Tätigkeiten
+  final bool isActive;              // false = nur noch für historische Einträge sichtbar
 }
 ```
 
@@ -129,6 +131,9 @@ lib/core/
     daily_entry_storage.dart
     daily_entry_adapter.dart
     hive_daily_entry_storage.dart
+    activity_template_storage.dart
+    activity_template_adapter.dart
+    hive_activity_template_storage.dart
 ```
 
 `UserProfile` und `TrainingOccupation` werden aktuell durch
@@ -144,10 +149,15 @@ Hive-CE-Boxen:
 | Box-Name | Typ | Inhalt |
 |---|---|---|
 | `'entries'` | `Box<DailyEntry>` | Alle Tageseinträge, Schlüssel = Datum als String `'yyyy-MM-dd'` |
+| `'custom_templates'` | `Box<ActivityTemplate>` | Eigene Tätigkeiten mit stabilem Schlüssel und Aktivstatus |
 
 `DailyEntry` verwendet einen handgeschriebenen Adapter mit dauerhaft reserviertem
 `typeId: 0`. Enum-Werte werden als Namen gespeichert, damit keine zusätzlichen
 Enum-Adapter benötigt werden.
+
+`ActivityTemplate` verwendet `typeId: 1`. Das Feld `isActive` ist
+rückwärtskompatibel: Fehlt es in bestehenden Hive-Daten, wird `true` verwendet.
+Eigene Tätigkeiten werden deaktiviert statt hart gelöscht.
 
 **SharedPreferences** (ab Phase 2):
 

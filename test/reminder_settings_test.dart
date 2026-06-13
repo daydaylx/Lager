@@ -36,7 +36,8 @@ void main() {
 
     test('toDisplayString gibt nullaufgefüllte Zeit zurück', () {
       expect(const ReminderTime(hour: 8, minute: 5).toDisplayString(), '08:05');
-      expect(const ReminderTime(hour: 20, minute: 0).toDisplayString(), '20:00');
+      expect(
+          const ReminderTime(hour: 20, minute: 0).toDisplayString(), '20:00');
     });
 
     test('fromString wirft bei ungültigem Format', () {
@@ -69,7 +70,8 @@ void main() {
     });
 
     test('copyWith ohne Argumente erzeugt gleiche Einstellungen', () {
-      expect(ReminderSettings.defaults.copyWith(), equals(ReminderSettings.defaults));
+      expect(ReminderSettings.defaults.copyWith(),
+          equals(ReminderSettings.defaults));
     });
   });
 }

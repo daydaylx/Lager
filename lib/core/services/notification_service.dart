@@ -1,10 +1,17 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/reminder_settings.dart';
 
+enum NotificationScheduleResult {
+  scheduled,
+  disabled,
+  permissionDenied,
+}
+
 abstract interface class NotificationScheduler {
-  Future<void> schedule(ReminderSettings settings);
+  Future<NotificationScheduleResult> schedule(ReminderSettings settings);
   Future<void> cancelAll();
 }
 
@@ -13,11 +20,24 @@ class NoOpNotificationScheduler implements NotificationScheduler {
   int scheduleCalls = 0;
   int cancelAllCalls = 0;
   ReminderSettings? lastScheduled;
+  NotificationScheduleResult scheduleResult;
+  Object? scheduleError;
+
+  NoOpNotificationScheduler({
+    this.scheduleResult = NotificationScheduleResult.scheduled,
+    this.scheduleError,
+  });
 
   @override
-  Future<void> schedule(ReminderSettings settings) async {
+  Future<NotificationScheduleResult> schedule(ReminderSettings settings) async {
     scheduleCalls++;
     lastScheduled = settings;
+    if (scheduleError case final error?) {
+      throw error;
+    }
+    return settings.enabled
+        ? scheduleResult
+        : NotificationScheduleResult.disabled;
   }
 
   @override
@@ -37,6 +57,8 @@ class FlutterLocalNotificationScheduler implements NotificationScheduler {
   static Future<void> _ensureInitialized() async {
     if (_initialized) return;
     tzdata.initializeTimeZones();
+    final currentTimezone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(currentTimezone.identifier));
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     await _plugin.initialize(
@@ -46,19 +68,22 @@ class FlutterLocalNotificationScheduler implements NotificationScheduler {
   }
 
   @override
-  Future<void> schedule(ReminderSettings settings) async {
+  Future<NotificationScheduleResult> schedule(ReminderSettings settings) async {
     await _ensureInitialized();
     await _plugin.cancelAll();
     if (!settings.enabled ||
         settings.times.isEmpty ||
         settings.weekdays.isEmpty) {
-      return;
+      return NotificationScheduleResult.disabled;
     }
 
-    await _plugin
+    final permissionGranted = await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+    if (permissionGranted == false) {
+      return NotificationScheduleResult.permissionDenied;
+    }
 
     const androidDetails = AndroidNotificationDetails(
       'reminder_channel',
@@ -85,6 +110,7 @@ class FlutterLocalNotificationScheduler implements NotificationScheduler {
         );
       }
     }
+    return NotificationScheduleResult.scheduled;
   }
 
   @override

@@ -52,13 +52,16 @@ void main() {
     });
 
     test('Aktiviert-Umschalten false→true→false bleibt korrekt', () async {
-      await ReminderStorage.save(ReminderSettings.defaults.copyWith(enabled: false));
+      await ReminderStorage.save(
+          ReminderSettings.defaults.copyWith(enabled: false));
       expect((await ReminderStorage.load()).enabled, isFalse);
 
-      await ReminderStorage.save(ReminderSettings.defaults.copyWith(enabled: true));
+      await ReminderStorage.save(
+          ReminderSettings.defaults.copyWith(enabled: true));
       expect((await ReminderStorage.load()).enabled, isTrue);
 
-      await ReminderStorage.save(ReminderSettings.defaults.copyWith(enabled: false));
+      await ReminderStorage.save(
+          ReminderSettings.defaults.copyWith(enabled: false));
       expect((await ReminderStorage.load()).enabled, isFalse);
     });
 

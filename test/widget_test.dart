@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/app/app.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
+import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/onboarding/onboarding_screen.dart';
@@ -216,5 +217,40 @@ void main() {
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
     expect(find.text('Profil speichern'), findsOneWidget);
+  });
+
+  testWidgets('Alle Daten löschen bricht geplante Erinnerungen ab', (
+    WidgetTester tester,
+  ) async {
+    final scheduler = NoOpNotificationScheduler();
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: scheduler,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+    expect(find.text('Profil speichern'), findsOneWidget);
+    final vertical = find.byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable && widget.axisDirection == AxisDirection.down,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('delete_all_data')),
+      300,
+      scrollable: vertical,
+    );
+    await tester.tap(find.byKey(const ValueKey('delete_all_data')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Alle Daten löschen').last);
+    await tester.pumpAndSettle();
+
+    expect(scheduler.cancelAllCalls, 1);
+    expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 }

@@ -22,18 +22,21 @@ class ActivityTemplateAdapter extends TypeAdapter<ActivityTemplate> {
       title: fields[1] as String,
       category: ActivityCategory.values.byName(fields[2] as String),
       isCustom: true,
+      isActive: fields[3] as bool? ?? true,
     );
   }
 
   @override
   void write(BinaryWriter writer, ActivityTemplate t) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(t.id)
       ..writeByte(1)
       ..write(t.title)
       ..writeByte(2)
-      ..write(t.category.name);
+      ..write(t.category.name)
+      ..writeByte(3)
+      ..write(t.isActive);
   }
 }

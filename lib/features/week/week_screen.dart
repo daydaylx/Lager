@@ -4,20 +4,26 @@ import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
 import '../../core/enums/training_area.dart';
 import '../../core/models/daily_entry.dart';
+import '../../core/models/activity_template.dart';
+import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/week_utils.dart';
 import '../today/today_screen.dart';
 
 class WeekScreen extends StatefulWidget {
   final DailyEntryStorage storage;
+  final ActivityTemplateStorage templateStorage;
   final DateTime? initialDate;
   final int refreshSignal;
+  final int templateRefreshSignal;
 
   const WeekScreen({
     super.key,
     required this.storage,
+    required this.templateStorage,
     this.initialDate,
     this.refreshSignal = 0,
+    this.templateRefreshSignal = 0,
   });
 
   @override
@@ -27,8 +33,10 @@ class WeekScreen extends StatefulWidget {
 class _WeekScreenState extends State<WeekScreen> {
   late DateTime _selectedWeekStart;
   Map<String, DailyEntry> _entries = {};
+  Map<String, ActivityTemplate> _customTemplates = {};
   bool _isLoading = true;
   bool _loadFailed = false;
+  bool _templatesLoadFailed = false;
   int _loadGeneration = 0;
 
   DateTime get _today {
@@ -50,6 +58,7 @@ class _WeekScreenState extends State<WeekScreen> {
     super.initState();
     _selectedWeekStart = startOfWeek(widget.initialDate ?? DateTime.now());
     _loadWeek();
+    _loadTemplates();
   }
 
   @override
@@ -57,6 +66,9 @@ class _WeekScreenState extends State<WeekScreen> {
     super.didUpdateWidget(oldWidget);
     if (widget.refreshSignal != oldWidget.refreshSignal) {
       _loadWeek();
+    }
+    if (widget.templateRefreshSignal != oldWidget.templateRefreshSignal) {
+      _loadTemplates();
     }
   }
 
@@ -122,6 +134,10 @@ class _WeekScreenState extends State<WeekScreen> {
             const SizedBox(height: 16),
             const _EmptyWeekCard(),
           ],
+          if (_templatesLoadFailed) ...[
+            const SizedBox(height: 16),
+            _WeekTemplateWarning(onRetry: _loadTemplates),
+          ],
           const SizedBox(height: 16),
           ...weekDays.map((date) {
             final entry = _entryFor(date);
@@ -141,7 +157,7 @@ class _WeekScreenState extends State<WeekScreen> {
             height: 52,
             child: FilledButton.icon(
               key: const ValueKey('show_week_summary'),
-              onPressed: _openSummary,
+              onPressed: hasEntries ? _openSummary : null,
               icon: const Icon(Icons.summarize_outlined),
               label: const Text('Wochenzusammenfassung anzeigen'),
             ),
@@ -263,6 +279,24 @@ class _WeekScreenState extends State<WeekScreen> {
     }
   }
 
+  Future<void> _loadTemplates() async {
+    try {
+      final templates = await widget.templateStorage.loadCustom();
+      if (mounted) {
+        setState(() {
+          _customTemplates = {
+            for (final template in templates) template.id: template,
+          };
+          _templatesLoadFailed = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _templatesLoadFailed = true);
+      }
+    }
+  }
+
   void _changeWeek(int days) {
     final newStart = _selectedWeekStart.add(Duration(days: days));
     if (newStart.isAfter(_currentWeekStart)) {
@@ -277,6 +311,7 @@ class _WeekScreenState extends State<WeekScreen> {
       MaterialPageRoute(
         builder: (context) => TodayScreen(
           storage: widget.storage,
+          templateStorage: widget.templateStorage,
           date: date,
         ),
       ),
@@ -292,6 +327,12 @@ class _WeekScreenState extends State<WeekScreen> {
           days: _weekDays,
           entries: _entries,
           today: _today,
+          activityTitles: {
+            for (final activity in defaultActivities)
+              activity.id: activity.title,
+            for (final activity in _customTemplates.values)
+              activity.id: activity.title,
+          },
         ),
       ),
     );
@@ -404,9 +445,61 @@ class _EmptyWeekCard extends StatelessWidget {
           Expanded(
             child: Text(
               'Für diese Woche gibt es noch keine Einträge. '
-              'Starte mit einem Tag, der bereits stattgefunden hat.',
+              'Tippe auf einen vergangenen Tag, um ihn einzutragen.',
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeekTemplateWarning extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _WeekTemplateWarning({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoRow(
+      icon: Icons.warning_amber_outlined,
+      text:
+          'Eigene Tätigkeitstitel konnten nicht geladen werden. Standardtitel bleiben sichtbar.',
+      action: IconButton(
+        onPressed: onRetry,
+        tooltip: 'Erneut versuchen',
+        icon: const Icon(Icons.refresh),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Widget? action;
+
+  const _InfoRow({
+    required this.icon,
+    required this.text,
+    this.action,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+          if (action case final action?) action,
         ],
       ),
     );
@@ -488,12 +581,14 @@ class _WeekSummaryScreen extends StatelessWidget {
   final List<DateTime> days;
   final Map<String, DailyEntry> entries;
   final DateTime today;
+  final Map<String, String> activityTitles;
 
   const _WeekSummaryScreen({
     required this.weekStart,
     required this.days,
     required this.entries,
     required this.today,
+    required this.activityTitles,
   });
 
   @override
@@ -517,6 +612,7 @@ class _WeekSummaryScreen extends StatelessWidget {
               child: _SummaryDayCard(
                 date: date,
                 entry: entry,
+                activityTitles: activityTitles,
                 isMissing: date.weekday <= DateTime.friday &&
                     !date.isAfter(today) &&
                     entry == null,
@@ -533,11 +629,13 @@ class _SummaryDayCard extends StatelessWidget {
   final DateTime date;
   final DailyEntry? entry;
   final bool isMissing;
+  final Map<String, String> activityTitles;
 
   const _SummaryDayCard({
     required this.date,
     required this.entry,
     required this.isMissing,
+    required this.activityTitles,
   });
 
   @override
@@ -593,12 +691,7 @@ class _SummaryDayCard extends StatelessWidget {
   }
 
   String _activityTitle(String id) {
-    for (final activity in defaultActivities) {
-      if (activity.id == id) {
-        return activity.title;
-      }
-    }
-    return id;
+    return activityTitles[id] ?? 'Nicht mehr verfügbare Tätigkeit';
   }
 }
 

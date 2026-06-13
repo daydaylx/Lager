@@ -23,7 +23,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Alle'), findsOneWidget);
-    expect(find.text('Wareneingang'), findsOneWidget);
+    expect(find.text('Wareneingang'), findsWidgets);
     expect(find.text('Vordefiniert (87)'), findsOneWidget);
   });
 
@@ -81,9 +81,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Hinzufügen'), findsOneWidget);
+    expect(find.text('Gib eine Bezeichnung ein.'), findsOneWidget);
   });
 
-  testWidgets('eigene Tätigkeit löschen entfernt sie aus der Liste', (
+  testWidgets('eigene Tätigkeit kann deaktiviert und reaktiviert werden', (
     tester,
   ) async {
     await storage.save(
@@ -106,13 +107,19 @@ void main() {
     expect(find.text('Zu löschende Tätigkeit'), findsOneWidget);
     expect(find.text('Eigene (1)'), findsOneWidget);
 
-    await tester.ensureVisible(find.byIcon(Icons.delete_outline));
+    await tester.ensureVisible(find.byTooltip('Deaktivieren'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pump();
+    await tester.tap(find.byTooltip('Deaktivieren'));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Zu löschende Tätigkeit'), findsNothing);
-    expect(find.text('Eigene (1)'), findsNothing);
+    expect(find.text('Zu löschende Tätigkeit'), findsOneWidget);
+    expect(find.text('Wareneingang · Deaktiviert'), findsOneWidget);
+    expect((await storage.loadCustom()).single.isActive, isFalse);
+
+    await tester.tap(find.byTooltip('Aktivieren'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wareneingang · Deaktiviert'), findsNothing);
+    expect((await storage.loadCustom()).single.isActive, isTrue);
   });
 
   testWidgets('Kategorie-Filter zeigt nur eigene Tätigkeit der Kategorie', (

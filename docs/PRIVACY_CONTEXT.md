@@ -11,8 +11,10 @@ Diese App speichert **ausschließlich lokal**. Kein Netzwerkzugriff, kein Backen
 | Daten             | Speicherort           | Datei                                            |
 | ----------------- | --------------------- | ------------------------------------------------ |
 | Tageseinträge     | Hive CE Box `entries` | `lib/core/storage/hive_daily_entry_storage.dart` |
+| Eigene Tätigkeiten | Hive CE Box `custom_templates` | `lib/core/storage/hive_activity_template_storage.dart` |
 | Ausbildungsprofil | SharedPreferences     | `lib/core/profile_storage.dart`                  |
 | Onboarding-Flag   | SharedPreferences     | `lib/core/constants.dart` (Key)                  |
+| Erinnerungseinstellungen | SharedPreferences | `lib/core/storage/reminder_storage.dart`       |
 
 ---
 
@@ -24,6 +26,9 @@ Diese App speichert **ausschließlich lokal**. Kein Netzwerkzugriff, kein Backen
 - Analytics, Crashlytics, Sentry
 - Login, OAuth, Auth-Flow
 - Push-Notifications über FCM oder APNs
+
+Lokale Android-Benachrichtigungen sind erlaubt. Sie werden ausschließlich auf
+dem Gerät geplant, verwenden die Gerätezeitzone und benötigen keinen Netzwerkzugriff.
 
 ---
 
