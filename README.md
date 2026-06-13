@@ -51,4 +51,4 @@ Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
 ## Nächster Schritt
 
-Siehe `TASKS.md` → Phase 1: App-Grundgerüst.
+Siehe `TASKS.md` → Phase 6: Vorlagenverwaltung.

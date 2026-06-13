@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 3: Heute-Screen** — NÄCHSTE PHASE
+**Phase 6: Vorlagenverwaltung** — NÄCHSTE PHASE
 
 ---
 
@@ -50,36 +50,38 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 3: Heute-Screen — NÄCHSTE PHASE
+## Phase 3: Heute-Screen ✅
 
-- [ ] Tageseintrag erstellen (Datum, Tagtyp, Bereich, Tätigkeiten, Notizen)
-- [ ] Tagtypen: Betrieb, Berufsschule, Frei, Urlaub, Krank, Feiertag, Sonstiges
-- [ ] Tätigkeitsliste aus Vorlagen wählen
-- [ ] Freie Notiz hinzufügen
-- [ ] Eintrag speichern (noch ohne persistente DB — in Arbeitsspeicher)
-- [ ] Bestehenden Eintrag für heute anzeigen wenn vorhanden
-
----
-
-## Phase 4: Lokale Speicherung
-
-- [ ] Hive als lokale Datenbank einrichten
-- [ ] DailyEntry-Modell mit Hive-Adapter
-- [ ] Alle bisher temporär gespeicherten Daten auf Hive umstellen
-- [ ] Daten überleben App-Neustart
+- [x] Tageseintrag erstellen (Datum, Tagtyp, Bereich, Tätigkeiten, Besonderheiten, Notiz)
+- [x] Tagtypen: Betrieb, Berufsschule, Frei, Urlaub, Krank, Feiertag, Sonstiges
+- [x] Tätigkeitsliste aus 87 vordefinierten Vorlagen wählen
+- [x] Freie Notiz hinzufügen
+- [x] Eintrag speichern und bearbeiten (zunächst im Arbeitsspeicher)
+- [x] Bestehenden Eintrag für heute anzeigen wenn vorhanden
+- [x] Bedingte Eingaben und Validierung je Tagtyp
 
 ---
 
-## Phase 5: Wochenübersicht
+## Phase 4: Lokale Speicherung ✅
 
-- [ ] 7-Tage-Kacheln für aktuelle Woche
-- [ ] Kachelstatus: eingetragen / fehlt / Frei/Urlaub/Krank
-- [ ] Wochenzusammenfassung als lesbare Liste
-- [ ] Navigation zum Tageseintrag aus Wochenansicht
+- [x] Hive CE als lokale Datenbank einrichten
+- [x] DailyEntry-Modell mit handgeschriebenem Hive-Adapter
+- [x] Temporären Heute-Eintrag auf Hive CE umstellen
+- [x] Daten überleben App-Neustart
+- [x] Lade- und Speicherfehler verständlich behandeln
 
 ---
 
-## Phase 6: Vorlagenverwaltung
+## Phase 5: Wochenübersicht ✅
+
+- [x] 7-Tage-Kacheln mit Wechsel zwischen vergangenen Wochen
+- [x] Kalenderbewusster Kachelstatus: eingetragen / fehlt / Frei/Urlaub/Krank
+- [x] Wochenzusammenfassung als lesbare Liste
+- [x] Navigation zum Tageseintrag aus Wochenansicht
+
+---
+
+## Phase 6: Vorlagenverwaltung — NÄCHSTE PHASE
 
 - [ ] Vordefinierte Tätigkeiten pro Kategorie anzeigen
 - [ ] Eigene Tätigkeit hinzufügen

@@ -1,9 +1,9 @@
 # DATA_MODEL.md — Datenmodell-Referenz
 
-Dieses Dokument beschreibt die geplanten Dart-Datenstrukturen.
-**Status: Konzept — noch nicht als Dart-Code vorhanden. Implementierung ab Phase 3/4.**
+Dieses Dokument beschreibt die Dart-Datenstrukturen und ihre geplanten Erweiterungen.
+**Status: Phase-3-Modelle und Enums implementiert. DailyEntry wird seit Phase 4 mit Hive CE persistiert.**
 
-Vollständiger Tätigkeitskatalog (100+ Einträge): `docs/AGENT_IMPLEMENTATION_PROMPT.md`
+Vollständiger Tätigkeitskatalog (87 Einträge): `docs/AGENT_IMPLEMENTATION_PROMPT.md`
 
 ---
 
@@ -65,18 +65,21 @@ enum SpecialFlag {
 
 ---
 
-## Konzept-Modelle
+## Modelle
+
+`DailyEntry` und `ActivityTemplate` sind als minimale Phase-3-Modelle
+implementiert. Felder für eigene Vorlagen werden in späteren Phasen
+ergänzt, sobald sie benötigt werden.
 
 ### DailyEntry
 
 ```dart
 class DailyEntry {
-  final String id;                        // UUID, z.B. mit package:uuid
+  final String id;                        // Datum im Format yyyy-MM-dd
   final DateTime date;                    // Datum des Eintrags
   final DayType dayType;                  // Tagtyp
   final TrainingArea? area;               // nur wenn dayType == betrieb
   final List<String> selectedActivities;  // IDs aus ActivityTemplate
-  final List<String> customActivities;    // freie Texteingaben
   final List<SpecialFlag> specialFlags;   // Besonderheiten
   final String? note;                     // optionale Freitext-Notiz
   final DateTime createdAt;
@@ -88,13 +91,9 @@ class DailyEntry {
 
 ```dart
 class ActivityTemplate {
-  final String id;                  // UUID
+  final String id;                  // stabile, eindeutige Katalog-ID
   final String title;               // Anzeigetext, z.B. "Wareneingangsprüfung durchführen"
   final ActivityCategory category;  // Kategorie
-  final bool isDefault;             // true = vordefiniert, false = nutzerdefiniert
-  final bool isActive;              // kann vom User deaktiviert werden
-  final int usageCount;             // Häufigkeit der Nutzung (für Sortierung)
-  final DateTime createdAt;
 }
 ```
 
@@ -112,38 +111,43 @@ class UserProfile {
 
 ---
 
-## Zieldateistruktur
-
-Ab Phase 3 werden Models als Dart-Dateien erstellt:
+## Dateistruktur
 
 ```
 lib/core/
   models/
     daily_entry.dart
     activity_template.dart
-    user_profile.dart
   enums/
     day_type.dart
     training_area.dart
     activity_category.dart
-    training_occupation.dart
     special_flag.dart
   data/
-    default_activities.dart    ← 100+ vordefinierte Tätigkeiten als const List
+    default_activities.dart    ← 87 vordefinierte Tätigkeiten als const List
+  storage/
+    daily_entry_storage.dart
+    daily_entry_adapter.dart
+    hive_daily_entry_storage.dart
 ```
+
+`UserProfile` und `TrainingOccupation` werden aktuell durch
+`StoredProfile`, Konstanten und SharedPreferences abgebildet.
 
 ---
 
-## Persistenz (ab Phase 4)
+## Persistenz
 
-**Speicher-Technologie:** Hive (noch nicht eingebaut)
+**Speicher-Technologie:** Hive CE für Tageseinträge, SharedPreferences für das Profil.
 
-Hive-Boxen:
+Hive-CE-Boxen:
 | Box-Name | Typ | Inhalt |
 |---|---|---|
 | `'entries'` | `Box<DailyEntry>` | Alle Tageseinträge, Schlüssel = Datum als String `'yyyy-MM-dd'` |
-| `'templates'` | `Box<ActivityTemplate>` | Vorlagen, Schlüssel = UUID |
-| `'profile'` | `Box<UserProfile>` | Genau ein Eintrag (Key `'profile'`) |
+
+`DailyEntry` verwendet einen handgeschriebenen Adapter mit dauerhaft reserviertem
+`typeId: 0`. Enum-Werte werden als Namen gespeichert, damit keine zusätzlichen
+Enum-Adapter benötigt werden.
 
 **SharedPreferences** (ab Phase 2):
 
@@ -159,13 +163,13 @@ Hive-Boxen:
 | betrieb                          | ja                 | ja                           |
 | berufsschule                     | nein               | ja (Kategorie: berufsschule) |
 | frei / urlaub / krank / feiertag | nein               | nein                         |
-| sonstiges                        | nein               | optional                     |
+| sonstiges                        | nein               | nein; Besonderheiten/Notiz   |
 
 ---
 
 ## Vordefinierte Tätigkeitskategorien (Übersicht)
 
-Vollständige Liste mit 100+ Einträgen: `docs/AGENT_IMPLEMENTATION_PROMPT.md`
+Vollständige Liste mit 87 Einträgen: `docs/AGENT_IMPLEMENTATION_PROMPT.md`
 
 | Kategorie          | Beispiel-Tätigkeiten                                            |
 | ------------------ | --------------------------------------------------------------- |

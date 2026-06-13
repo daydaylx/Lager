@@ -29,9 +29,7 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Aktuelle Phase
 
-**Phase 1: App-Grundgerüst** — Onboarding-Stub, Navigation funktioniert, App startet auf Gerät.
-
-Nächste Phase danach: Phase 2 (Onboarding-Logik).
+**Phase 6: Vorlagenverwaltung** — vordefinierte und eigene Tätigkeitsvorlagen verwalten.
 
 ---
 
@@ -42,12 +40,19 @@ lib/main.dart                                    → runApp(BerichtsheftApp)
 lib/app/app.dart                                 → MaterialApp + MainShell (IndexedStack + NavigationBar)
 lib/app/theme.dart                               → buildAppTheme() — M3, ColorScheme.fromSeed grün-teal
 lib/app/router.dart                              → AppRoutes (statische String-Konstanten)
-lib/core/constants.dart                          → AppStrings (Tab-Label-Texte)
-lib/features/onboarding/onboarding_screen.dart   → Platzhalter — Phase 2 baut hier
-lib/features/today/today_screen.dart             → Platzhalter — Phase 3 baut hier
-lib/features/week/week_screen.dart               → Platzhalter — Phase 5 baut hier
-lib/features/templates/templates_screen.dart     → Platzhalter — Phase 6 baut hier
-lib/features/profile/profile_screen.dart         → Platzhalter — Phase 7 baut hier
+lib/core/constants.dart                          → AppStrings + SharedPreferences-Konstanten
+lib/core/profile_storage.dart                    → Ausbildungsprofil in SharedPreferences
+lib/core/enums/                                  → DayType, TrainingArea, ActivityCategory, SpecialFlag
+lib/core/models/                                 → DailyEntry, ActivityTemplate
+lib/core/data/default_activities.dart            → 87 vordefinierte Tätigkeiten
+lib/core/storage/                                → DailyEntryStorage + Hive-CE-Persistenz
+lib/core/week_utils.dart                         → ISO-Kalenderwochen-Helfer
+lib/features/onboarding/onboarding_screen.dart   → Erststart mit vollständigem Ausbildungsprofil
+lib/features/today/today_screen.dart             → Persistenter Tageseintrag
+lib/features/week/week_screen.dart               → Persistente Wochenübersicht + Zusammenfassung
+lib/features/templates/templates_screen.dart     → Platzhalter — aktive Phase baut hier
+lib/features/profile/profile_screen.dart         → Ausbildungsprofil anzeigen und bearbeiten
+lib/shared/widgets/profile_form.dart             → Gemeinsame Profilmaske
 lib/shared/widgets/placeholder_screen.dart       → Wiederverwendbar: Icon + Titel + Beschreibung
 docs/DATA_MODEL.md                               → Enums, Model-Konzepte, Zieldateistruktur
 docs/PRODUCT_CONCEPT.md                          → Fachliche Spezifikation
@@ -68,7 +73,8 @@ Zentrale Konzepte:
 - **UserProfile** — Ausbildungsprofil der Nutzerin
 - **DayType** — Betrieb | Berufsschule | Frei | Urlaub | Krank | Feiertag | Sonstiges
 
-Models werden erst ab Phase 3/4 implementiert. Noch nicht als Dart-Klassen vorhanden.
+`DailyEntry` und `ActivityTemplate` sowie die benötigten Enums sind implementiert.
+Tageseinträge werden über `DailyEntryStorage` in Hive CE gespeichert; das Profil bleibt in SharedPreferences.
 
 ---
 
@@ -167,6 +173,6 @@ Flutter ist unter `/home/d/flutter/bin/flutter` installiert — **nicht** im Sys
 - Flutter 3.x / Dart 3.x
 - Android-first (Kotlin-Wrapper generiert)
 - Material 3
-- Lokale Speicherung: Hive (ab Phase 4 — noch nicht eingebaut)
+- Lokale Speicherung: Hive CE für Tageseinträge, SharedPreferences für Profil
 - SharedPreferences: Onboarding-Flag, Profil (ab Phase 2)
 - Kein Backend, keine Cloud, kein Login

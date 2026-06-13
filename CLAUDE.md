@@ -13,7 +13,7 @@ Dieses Projekt wird mit **Claude Code** bearbeitet. Ergänzt `AGENTS.md` — imm
 4. docs/DATA_MODEL.md — Datenmodell-Überblick
 ```
 
-Aktuelle Phase: **Phase 1 — App-Grundgerüst**
+Aktuelle Phase: **Phase 6 — Vorlagenverwaltung**
 
 ---
 

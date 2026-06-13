@@ -18,8 +18,8 @@ Flutter-Standardsprache. Keine externe Wahl nötig.
 **Lokale Speicherung statt Cloud**
 Private App für eine Person. Kein Account, kein Server, keine Datenschutzprobleme, kein Wartungsaufwand. Daten gehören der Nutzerin und bleiben auf dem Gerät.
 
-**Hive als lokale Datenbank (ab Phase 4)**
-Leichtgewichtig, Flutter-native, kein SQL-Overhead für diese Datenmenge. SQLite wäre auch möglich, aber Hive ist einfacher für einfache Datenstrukturen. Entscheidung kann in Phase 4 revidiert werden.
+**Hive CE als lokale Datenbank (seit Phase 4)**
+Hive CE ist die aktiv gepflegte Fortführung der Hive-v2-API. Es bleibt leichtgewichtig und vermeidet SQL-Overhead für diese Datenmenge. Tageseinträge liegen in der Box `entries`; Adapter werden ohne Codegenerierung handgeschrieben.
 
 **SharedPreferences für Einstellungen**
 Profilname, Ausbildungsdaten, Onboarding-Flag — kleine Schlüssel-Wert-Paare passen in SharedPreferences, keine eigene DB-Tabelle nötig.
@@ -42,7 +42,7 @@ Scroll-Position und Screen-State bleiben beim Tab-Wechsel erhalten. Bessere UX a
 ## State Management
 
 **setState im MVP — kein Framework**
-Die App ist klein. Ein Tageseintrag-Formular und eine Wochenübersicht brauchen keinen BLoC oder Riverpod. setState reicht. Entscheidung wird in Phase 4–5 neu bewertet wenn Datenbankzugriffe komplexer werden.
+Die App ist klein. Ein Tageseintrag-Formular und eine Wochenübersicht brauchen keinen BLoC oder Riverpod. `setState` reicht; dies wurde nach Abschluss der persistenten Wochenübersicht in Phase 5 bestätigt.
 
 ---
 

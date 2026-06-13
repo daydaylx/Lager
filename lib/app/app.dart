@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import '../core/constants.dart';
 import '../core/profile_storage.dart';
+import '../core/storage/daily_entry_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
@@ -9,6 +10,7 @@ import '../features/templates/templates_screen.dart';
 import '../features/profile/profile_screen.dart';
 
 class BerichtsheftApp extends StatefulWidget {
+  final DailyEntryStorage dailyEntryStorage;
   final bool initialOnboardingCompleted;
   final String? initialName;
   final String? initialCompany;
@@ -17,6 +19,7 @@ class BerichtsheftApp extends StatefulWidget {
 
   const BerichtsheftApp({
     super.key,
+    required this.dailyEntryStorage,
     required this.initialOnboardingCompleted,
     this.initialName,
     this.initialCompany,
@@ -62,7 +65,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
       title: AppStrings.appName,
       theme: buildAppTheme(),
       home: _onboardingCompleted
-          ? const MainShell()
+          ? MainShell(dailyEntryStorage: widget.dailyEntryStorage)
           : OnboardingScreen(
               initialName: widget.initialName,
               initialCompany: widget.initialCompany,
@@ -76,7 +79,12 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
 }
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final DailyEntryStorage dailyEntryStorage;
+
+  const MainShell({
+    super.key,
+    required this.dailyEntryStorage,
+  });
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -84,24 +92,33 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-
-  static const List<Widget> _screens = [
-    TodayScreen(),
-    WeekScreen(),
-    TemplatesScreen(),
-    ProfileScreen(),
-  ];
+  int _weekRefreshSignal = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: [
+          TodayScreen(storage: widget.dailyEntryStorage),
+          WeekScreen(
+            storage: widget.dailyEntryStorage,
+            refreshSignal: _weekRefreshSignal,
+          ),
+          const TemplatesScreen(),
+          const ProfileScreen(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+            if (index == 1) {
+              _weekRefreshSignal++;
+            }
+          });
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.today_outlined),

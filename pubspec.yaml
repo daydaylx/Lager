@@ -9,6 +9,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  hive_ce: ^2.19.3
+  hive_ce_flutter: ^2.3.4
   shared_preferences: ^2.5.3
 
 dev_dependencies:

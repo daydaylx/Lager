@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/app/app.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/onboarding/onboarding_screen.dart';
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
@@ -19,7 +20,10 @@ void main() {
 
   testWidgets('Erststart zeigt das Onboarding', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const BerichtsheftApp(initialOnboardingCompleted: false),
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        initialOnboardingCompleted: false,
+      ),
     );
 
     expect(find.byType(OnboardingScreen), findsOneWidget);
@@ -37,7 +41,10 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const BerichtsheftApp(initialOnboardingCompleted: false),
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        initialOnboardingCompleted: false,
+      ),
     );
 
     await tester.enterText(
@@ -88,7 +95,8 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const BerichtsheftApp(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
         initialOnboardingCompleted: false,
         initialName: 'Lara Lager',
         initialOccupation: TrainingOccupationValues.fachlagerist,
@@ -107,8 +115,12 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const BerichtsheftApp(initialOnboardingCompleted: true),
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        initialOnboardingCompleted: true,
+      ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.byType(MainShell), findsOneWidget);
     expect(find.byType(OnboardingScreen), findsNothing);
@@ -127,7 +139,10 @@ void main() {
     });
 
     await tester.pumpWidget(
-      const BerichtsheftApp(initialOnboardingCompleted: true),
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        initialOnboardingCompleted: true,
+      ),
     );
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
@@ -173,20 +188,18 @@ void main() {
 
   testWidgets('Alle vier Tabs sind erreichbar', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const BerichtsheftApp(initialOnboardingCompleted: true),
-    );
-
-    expect(
-      find.text(
-        'Hier entsteht die schnelle Tagesnotiz.\n'
-        'Datum, Bereich, Tätigkeiten — in unter einer Minute.',
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        initialOnboardingCompleted: true,
       ),
-      findsOneWidget,
     );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.tabWeek));
     await tester.pumpAndSettle();
-    expect(find.text('Wochenübersicht'), findsOneWidget);
+    expect(find.byKey(const ValueKey('week_number')), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.tabTemplates));
     await tester.pumpAndSettle();
