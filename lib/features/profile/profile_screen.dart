@@ -1,3 +1,4 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../../core/models/reminder_settings.dart';
@@ -29,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isReminderSaving = false;
   bool _isDeleting = false;
   String? _reminderError;
+  bool _notificationsBlockedBySystem = false;
 
   @override
   void initState() {
@@ -37,6 +39,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const FlutterLocalNotificationScheduler();
     _loadProfile();
     _loadReminderSettings();
+    _checkNotificationPermission();
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    try {
+      final enabled = await _scheduler.areNotificationsEnabled();
+      if (mounted) setState(() => _notificationsBlockedBySystem = !enabled);
+    } catch (_) {
+      // Silently skip if the plugin is not available (e.g. in tests).
+    }
+  }
+
+  Future<void> _openNotificationSettings() async {
+    await AppSettings.openAppSettings(type: AppSettingsType.notification);
   }
 
   Future<void> _loadProfile() async {
@@ -113,8 +129,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) {
           setState(() {
             _isReminderSaving = false;
+            _notificationsBlockedBySystem = true;
             _reminderError =
-                'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wurde nicht aktiviert.';
+                'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.';
           });
         }
         return;
@@ -278,6 +295,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           settings: _reminderSettings,
           error: _reminderError,
           isSaving: _isReminderSaving,
+          isPermissionBlocked: _notificationsBlockedBySystem,
+          onOpenSettings: _openNotificationSettings,
           onToggle: _toggleReminder,
           onAddTime: _addTime,
           onDeleteTime: _deleteTime,
@@ -339,6 +358,8 @@ class _ReminderSection extends StatelessWidget {
   final ReminderSettings settings;
   final String? error;
   final bool isSaving;
+  final bool isPermissionBlocked;
+  final VoidCallback? onOpenSettings;
   final ValueChanged<bool> onToggle;
   final ValueChanged<TimeOfDay> onAddTime;
   final ValueChanged<int> onDeleteTime;
@@ -348,6 +369,8 @@ class _ReminderSection extends StatelessWidget {
     required this.settings,
     required this.error,
     required this.isSaving,
+    required this.isPermissionBlocked,
+    required this.onOpenSettings,
     required this.onToggle,
     required this.onAddTime,
     required this.onDeleteTime,
@@ -377,10 +400,23 @@ class _ReminderSection extends StatelessWidget {
           const Divider(),
           Padding(
             padding: const EdgeInsets.all(12),
-            child: AppMessage(
-              icon: Icons.error_outline,
-              title: msg,
-              tone: AppMessageTone.error,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppMessage(
+                  icon: Icons.error_outline,
+                  title: msg,
+                  tone: AppMessageTone.error,
+                ),
+                if (isPermissionBlocked && onOpenSettings != null) ...[
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    onPressed: onOpenSettings,
+                    icon: const Icon(Icons.settings_outlined),
+                    label: const Text('Benachrichtigungseinstellungen öffnen'),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -458,6 +494,29 @@ class _ReminderSection extends StatelessWidget {
             ),
           ),
         ],
+        const Divider(),
+        const ExpansionTile(
+          key: ValueKey('samsung_hint'),
+          leading: Icon(Icons.info_outline),
+          title: Text('Hinweis für Samsung-Geräte'),
+          tilePadding: EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                'Auf Samsung-Geräten können Benachrichtigungen zusätzlich '
+                'blockiert werden:\n\n'
+                '• Einstellungen → Apps → Berichtsheft-Merker → Akku → '
+                '"Nicht eingeschränkt" wählen\n'
+                '• Einstellungen → Benachrichtigungen → Nicht stören → '
+                'prüfen, ob die App blockiert wird\n'
+                '• Einstellungen → Apps → Berichtsheft-Merker → '
+                'Benachrichtigungen → Kategorie "Tägliche Berichtsheft-'
+                'Erinnerungen" aktivieren',
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

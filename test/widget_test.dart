@@ -30,14 +30,14 @@ void main() {
     );
 
     expect(find.byType(OnboardingScreen), findsOneWidget);
-    expect(find.text('Willkommen'), findsOneWidget);
-    expect(find.text('Loslegen'), findsOneWidget);
+    expect(find.text('Jeden Tag kurz festhalten.'), findsOneWidget);
+    expect(find.text('Profil einrichten'), findsOneWidget);
     expect(find.byType(MainShell), findsNothing);
 
-    final submitButton = tester.widget<FilledButton>(
-      find.byKey(const ValueKey('profile_submit_button')),
+    final continueButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('onboarding_continue')),
     );
-    expect(submitButton.onPressed, isNull);
+    expect(continueButton.onPressed, isNotNull);
   });
 
   testWidgets('Onboarding speichert vollständiges Profil und öffnet die App', (
@@ -51,6 +51,8 @@ void main() {
       ),
     );
 
+    await tester.tap(find.byKey(const ValueKey('onboarding_continue')));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('profile_name_field')),
       '  Lara Lager  ',
@@ -108,6 +110,8 @@ void main() {
       ),
     );
 
+    await tester.tap(find.byKey(const ValueKey('onboarding_continue')));
+    await tester.pumpAndSettle();
     final nameField = tester.widget<TextField>(
       find.byKey(const ValueKey('profile_name_field')),
     );
@@ -152,6 +156,8 @@ void main() {
       ),
     );
     await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('edit_profile')));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -216,7 +222,7 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
-    expect(find.text('Profil speichern'), findsOneWidget);
+    expect(find.text('Ausbildungsprofil'), findsOneWidget);
   });
 
   testWidgets('Alle Daten löschen bricht geplante Erinnerungen ab', (
@@ -235,7 +241,7 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
-    expect(find.text('Profil speichern'), findsOneWidget);
+    expect(find.text('Ausbildungsprofil'), findsOneWidget);
     final vertical = find.byWidgetPredicate(
       (widget) =>
           widget is Scrollable && widget.axisDirection == AxisDirection.down,
@@ -245,6 +251,8 @@ void main() {
       300,
       scrollable: vertical,
     );
+    await tester.drag(vertical, const Offset(0, -160));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('delete_all_data')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Alle Daten löschen').last);

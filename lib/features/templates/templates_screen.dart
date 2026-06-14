@@ -3,6 +3,7 @@ import '../../core/data/default_activities.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/models/activity_template.dart';
 import '../../core/storage/activity_template_storage.dart';
+import '../../shared/widgets/app_ui.dart';
 
 class TemplatesScreen extends StatefulWidget {
   final ActivityTemplateStorage storage;
@@ -20,8 +21,10 @@ class TemplatesScreen extends StatefulWidget {
 
 class _TemplatesScreenState extends State<TemplatesScreen> {
   final TextEditingController _addController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   ActivityCategory? _selectedCategory;
+  String _searchQuery = '';
   List<ActivityTemplate> _customTemplates = [];
   bool _isLoading = true;
   bool _loadFailed = false;
@@ -35,6 +38,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   @override
   void dispose() {
     _addController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -59,17 +63,32 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   }
 
   List<ActivityTemplate> get _filteredDefaults {
-    if (_selectedCategory == null) return defaultActivities;
     return defaultActivities
-        .where((t) => t.category == _selectedCategory)
+        .where(
+          (template) =>
+              (_selectedCategory == null ||
+                  template.category == _selectedCategory) &&
+              _matchesSearch(template),
+        )
         .toList();
   }
 
   List<ActivityTemplate> get _filteredCustom {
-    if (_selectedCategory == null) return _customTemplates;
     return _customTemplates
-        .where((t) => t.category == _selectedCategory)
+        .where(
+          (template) =>
+              (_selectedCategory == null ||
+                  template.category == _selectedCategory) &&
+              _matchesSearch(template),
+        )
         .toList();
+  }
+
+  bool _matchesSearch(ActivityTemplate template) {
+    final query = _searchQuery.trim().toLowerCase();
+    return query.isEmpty ||
+        template.title.toLowerCase().contains(query) ||
+        template.category.label.toLowerCase().contains(query);
   }
 
   Future<void> _toggleCustom(ActivityTemplate template) async {
@@ -99,97 +118,130 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     }
   }
 
-  Future<void> _showAddDialog() async {
+  Future<void> _showAddSheet() async {
     _addController.clear();
     ActivityCategory selectedCategory =
         _selectedCategory ?? ActivityCategory.values.first;
     String? titleError;
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Eigene Tätigkeit'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _addController,
-                autofocus: true,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: 'Bezeichnung',
-                  border: const OutlineInputBorder(),
-                  errorText: titleError,
-                ),
-                onChanged: (_) {
-                  if (titleError != null) {
-                    setDialogState(() => titleError = null);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<ActivityCategory>(
-                value: selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Kategorie',
-                  border: OutlineInputBorder(),
-                ),
-                items: ActivityCategory.values
-                    .map(
-                      (c) => DropdownMenuItem(value: c, child: Text(c.label)),
-                    )
-                    .toList(),
-                onChanged: (c) {
-                  if (c != null) setDialogState(() => selectedCategory = c);
-                },
-              ),
-            ],
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            20 + MediaQuery.viewInsetsOf(ctx).bottom,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final title = _addController.text.trim();
-                if (title.isEmpty) {
-                  setDialogState(
-                    () => titleError = 'Gib eine Bezeichnung ein.',
-                  );
-                  return;
-                }
-                Navigator.of(ctx).pop();
-                final template = ActivityTemplate(
-                  id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-                  title: title,
-                  category: selectedCategory,
-                  isCustom: true,
-                );
-                try {
-                  await widget.storage.save(template);
-                  if (mounted) {
-                    setState(
-                      () => _customTemplates = [..._customTemplates, template],
-                    );
-                    widget.onTemplatesChanged?.call();
-                  }
-                } catch (_) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Die Tätigkeit konnte nicht gespeichert werden.'),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Eigene Tätigkeit',
+                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Sie erscheint passend zur gewählten Kategorie im Tagesflow.',
+                  style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  key: const ValueKey('template_title_field'),
+                  controller: _addController,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: 'Bezeichnung',
+                    errorText: titleError,
+                  ),
+                  onChanged: (_) {
+                    if (titleError != null) {
+                      setSheetState(() => titleError = null);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ActivityCategory>(
+                  value: selectedCategory,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Kategorie'),
+                  items: ActivityCategory.values
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(
+                            c.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (c) {
+                    if (c != null) setSheetState(() => selectedCategory = c);
+                  },
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () async {
+                    final title = _addController.text.trim();
+                    if (title.isEmpty) {
+                      setSheetState(
+                        () => titleError = 'Gib eine Bezeichnung ein.',
+                      );
+                      return;
+                    }
+                    Navigator.of(ctx).pop();
+                    final template = ActivityTemplate(
+                      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+                      title: title,
+                      category: selectedCategory,
+                      isCustom: true,
                     );
-                  }
-                }
-              },
-              child: const Text('Hinzufügen'),
+                    try {
+                      await widget.storage.save(template);
+                      if (mounted) {
+                        setState(
+                          () => _customTemplates = [
+                            ..._customTemplates,
+                            template
+                          ],
+                        );
+                        widget.onTemplatesChanged?.call();
+                      }
+                    } catch (_) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Die Tätigkeit konnte nicht gespeichert werden.',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Hinzufügen'),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Abbrechen'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -197,7 +249,6 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final filteredDefaults = _filteredDefaults;
     final filteredCustom = _filteredCustom;
     final isEmpty = filteredDefaults.isEmpty && filteredCustom.isEmpty;
@@ -205,12 +256,35 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Vorlagen')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
+        onPressed: _showAddSheet,
         icon: const Icon(Icons.add),
         label: const Text('Eigene Tätigkeit'),
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: TextField(
+              key: const ValueKey('template_search'),
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Tätigkeiten durchsuchen',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        tooltip: 'Suche leeren',
+                        icon: const Icon(Icons.close),
+                      ),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+          ),
           _CategoryFilter(
             selected: _selectedCategory,
             onSelected: (c) => setState(() => _selectedCategory = c),
@@ -219,47 +293,23 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _loadFailed
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.error_outline, size: 48),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Eigene Tätigkeiten konnten nicht geladen werden.',
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              FilledButton.icon(
-                                onPressed: _loadCustom,
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Erneut versuchen'),
-                              ),
-                            ],
-                          ),
+                    ? AppEmptyState(
+                        icon: Icons.error_outline,
+                        title: 'Vorlagen nicht verfügbar',
+                        message:
+                            'Eigene Tätigkeiten konnten nicht geladen werden.',
+                        action: FilledButton.icon(
+                          onPressed: _loadCustom,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Erneut versuchen'),
                         ),
                       )
                     : isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.search_off_outlined,
-                                  size: 48,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Keine Tätigkeiten in dieser Kategorie.',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ? const AppEmptyState(
+                            icon: Icons.search_off_outlined,
+                            title: 'Keine Tätigkeiten gefunden',
+                            message:
+                                'Passe Suche oder Kategorie an, um weitere Tätigkeiten zu sehen.',
                           )
                         : _TemplateList(
                             defaults: filteredDefaults,
@@ -299,26 +349,33 @@ class _TemplateList extends StatelessWidget {
           }
           if (index <= custom.length) {
             final template = custom[index - 1];
-            return ListTile(
-              title: Text(template.title),
-              subtitle: Text(
-                template.isActive
-                    ? template.category.label
-                    : '${template.category.label} · Deaktiviert',
-              ),
-              leading: Icon(
-                template.isActive
-                    ? Icons.check_circle_outline
-                    : Icons.pause_circle_outline,
-              ),
-              trailing: IconButton(
-                icon: Icon(
-                  template.isActive
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              child: Material(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(14),
+                child: ListTile(
+                  title: Text(template.title),
+                  subtitle: Text(
+                    template.isActive
+                        ? template.category.label
+                        : '${template.category.label} · Deaktiviert',
+                  ),
+                  leading: Icon(
+                    template.isActive
+                        ? Icons.check_circle_outline
+                        : Icons.pause_circle_outline,
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      template.isActive
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    tooltip: template.isActive ? 'Deaktivieren' : 'Aktivieren',
+                    onPressed: () => onToggleCustom(template),
+                  ),
                 ),
-                tooltip: template.isActive ? 'Deaktivieren' : 'Aktivieren',
-                onPressed: () => onToggleCustom(template),
               ),
             );
           }
@@ -329,10 +386,13 @@ class _TemplateList extends StatelessWidget {
           return _SectionHeader('Vordefiniert (${defaults.length})');
         }
         final template = defaults[index - 1];
-        return ListTile(
-          title: Text(template.title),
-          subtitle: Text(template.category.label),
-          dense: true,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: ListTile(
+            title: Text(template.title),
+            subtitle: Text(template.category.label),
+            leading: const Icon(Icons.checklist_outlined, size: 20),
+          ),
         );
       },
     );
@@ -385,12 +445,12 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
       child: Text(
         text,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w600,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.onSurface,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

@@ -1,6 +1,6 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–10 im Code abgeschlossen; manueller Android-Test offen.
+Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–11 im Code abgeschlossen; manueller Android-Test offen.
 
 ---
 
@@ -10,7 +10,7 @@ Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–10 im Code
 lib/main.dart                → runApp, Hive-Init, Profil laden
 lib/app/app.dart             → MaterialApp, MainShell, IndexedStack, NavigationBar
 lib/app/router.dart          → AppRoutes (String-Konstanten)
-lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün-teal
+lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententheme
 ```
 
 ---
@@ -19,11 +19,11 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 
 | Datei                               | Zeilen | Status    | Beschreibung                                              |
 | ----------------------------------- | -----: | --------- | --------------------------------------------------------- |
-| `onboarding/onboarding_screen.dart` |     63 | ✅ fertig | Erststart, Profil anlegen                                 |
-| `today/today_screen.dart`           |    907 | ✅ fertig | Tageseintrag, eigene Vorlagen, Eingabeverlustschutz       |
-| `week/week_screen.dart`             |    775 | ✅ fertig | Wochenübersicht + Zusammenfassung inklusive eigener Titel |
-| `templates/templates_screen.dart`   |    398 | ✅ fertig | Vorlagen hinzufügen, filtern, deaktivieren/reaktivieren   |
-| `profile/profile_screen.dart`       |    415 | ✅ fertig | Profil, lokale Erinnerungen, Datenverwaltung              |
+| `onboarding/onboarding_screen.dart` |    208 | ✅ fertig | Zweistufiger Erststart                                    |
+| `today/today_screen.dart`           |    909 | ✅ fertig | Tageseintrag mit Checklisten und Eingabeverlustschutz     |
+| `week/week_screen.dart`             |    758 | ✅ fertig | Kompakte Wochenliste + Zusammenfassung                    |
+| `templates/templates_screen.dart`   |    458 | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren     |
+| `profile/profile_screen.dart`       |    549 | ✅ fertig | Übersicht, Bearbeitung, Erinnerungen, Datenverwaltung     |
 
 ---
 
@@ -82,6 +82,7 @@ lib/app/theme.dart           → buildAppTheme(), M3, ColorScheme.fromSeed grün
 | ------------------------- | ---------------------------------------------------------- |
 | `placeholder_screen.dart` | Wiederverwendbar: Icon + Titel + Beschreibung              |
 | `profile_form.dart`       | Profilmaske (Onboarding + Profil-Screen teilen sich diese) |
+| `app_ui.dart`             | Abschnittsköpfe, Statusmeldungen, Empty States, Gruppen    |
 
 ---
 
@@ -126,8 +127,9 @@ Onboarding-Flag:
 | `reminder_settings_test.dart`           | Modell-Defaults, Gleichheit, Serialisierung       |
 | `reminder_storage_test.dart`            | SharedPreferences-Roundtrip, mehrere Zeiten/Tage  |
 | `profile_reminder_screen_test.dart`     | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage) |
+| `ui_layout_test.dart`                    | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens |
 
-Letzter Lauf (Phase 10): 77/77 bestanden.
+Letzter Lauf (Phase 11): 87/87 bestanden.
 
 ---
 

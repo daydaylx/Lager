@@ -47,16 +47,17 @@ Die App soll angenehm wirken, aber nicht kindisch oder kitschig.
 
 ## 3. Visuelle Grundidee
 
-Empfohlener Look:
+Implementierter Look seit Phase 11:
 
-- heller oder sanft gedämpfter Hintergrund
-- abgerundete Karten
+- reduzierte native Material-3-Optik
+- sehr heller neutraler Hintergrund
+- Karten nur zur sinnvollen Gruppierung
 - große Touchflächen
 - klare Icons
 - deutliche Statusanzeigen
-- dezente Akzentfarbe
+- Teal als dezente Akzentfarbe
 - ruhige Typografie
-- einfache Animationen
+- explizite Komponentenregeln aus `lib/app/theme.dart`
 
 Die App soll ungefähr in diese Richtung gehen:
 
@@ -234,7 +235,7 @@ Darstellung:
 
 ## 10. Tätigkeitsauswahl
 
-Tätigkeiten sollen als antippbare Karten oder Checkbox-Chips dargestellt werden.
+Tätigkeiten werden als kompakte antippbare Checklistenzeilen dargestellt.
 
 Beispiel:
 
@@ -250,7 +251,7 @@ Anforderungen:
 
 - gut antippbar
 - ausgewählt/nicht ausgewählt klar erkennbar
-- keine winzigen Checkboxen
+- gesamte Zeile antippbar, mindestens 48 dp hoch
 - Kategorie sichtbar
 - häufig genutzte Tätigkeiten oben
 - aktive eigene Tätigkeiten passend zur Kategorie anzeigen
@@ -369,7 +370,7 @@ KW 25
 4 von 5 Tagen eingetragen
 ```
 
-Darunter Tageskarten:
+Darunter eine zusammenhängende kompakte Tagesliste:
 
 ```text
 Montag
@@ -453,6 +454,7 @@ Hier werden Tätigkeitsvorlagen verwaltet.
 Funktionen:
 
 - Tätigkeiten anzeigen
+- lokal durchsuchen
 - nach Kategorie filtern
 - eigene Tätigkeit hinzufügen
 - Tätigkeit deaktivieren
@@ -468,11 +470,13 @@ Tageseinträge nicht rückwirkend ihre Bedeutung ändern.
 Deaktivieren ersetzt hartes Löschen. Deaktivierte Tätigkeiten verschwinden aus
 neuen Tageseinträgen, bleiben in historischen Einträgen und Zusammenfassungen lesbar.
 
+Eigene Tätigkeiten werden in einem keyboard-sicheren Modal Bottom Sheet angelegt.
+
 ---
 
 ## 19. Profil-Screen
 
-Der Profil-Screen bleibt einfach.
+Der Profil-Screen bleibt einfach und startet als Übersicht.
 
 Felder:
 
@@ -481,6 +485,9 @@ Felder:
 - optional Name
 - optional Betrieb
 - Datenverwaltung
+
+Die Profilfelder selbst liegen auf einem separaten Bearbeitungsscreen.
+Erinnerungen sowie Daten & Datenschutz sind klar getrennte Einstellungsgruppen.
 
 Datenverwaltung:
 
@@ -494,7 +501,7 @@ Keine überladene Einstellungsseite.
 
 ## 20. Onboarding
 
-Beim ersten Start:
+Beim ersten Start gibt es genau zwei kompakte Schritte:
 
 Screen 1:
 
@@ -508,28 +515,16 @@ Sie ersetzt nicht dein offizielles Berichtsheft.
 Screen 2:
 
 ```text
-Welche Ausbildung?
+Ausbildungsprofil
 [ Fachlagerist/in ]
 [ Fachkraft für Lagerlogistik ]
-```
-
-Screen 3:
-
-```text
-Welches Ausbildungsjahr?
 [ 1. Jahr ]
 [ 2. Jahr ]
 [ 3. Jahr ]
 ```
 
-Screen 4:
-
-```text
-Fertig.
-Du kannst jetzt deinen ersten Tag eintragen.
-```
-
-Onboarding darf nicht länger sein. Kein Registrierungsquatsch.
+Der erste Schritt ist scrollbar und hat eine sticky Weiter-Aktion. Kein
+Registrierungsflow, Berechtigungsdialog oder Tutorial-Karussell.
 
 ---
 
@@ -545,6 +540,14 @@ Wichtige Details:
 - keine Textwände
 - klare leere Zustände
 - gute Einhandbedienung
+
+Automatisierte Mindestabsicherung:
+
+- kleines Display mit 360 × 640 dp
+- große Systemschrift bis Faktor 1,5
+- Tastatur auf Heute-Notiz und Vorlagen-Bottom-Sheet
+- Touchflächen mindestens 48 dp
+- Golden-Referenzen für Onboarding, Heute, Woche und Profil
 
 ---
 

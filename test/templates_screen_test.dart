@@ -53,6 +53,27 @@ void main() {
     expect(find.text('Vordefiniert (87)'), findsOneWidget);
   });
 
+  testWidgets('Suche filtert Tätigkeiten lokal', (tester) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pump();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('template_search')),
+      'Ware angenommen',
+    );
+    await tester.pump();
+
+    expect(find.text('Vordefiniert (1)'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(ListTile),
+        matching: find.text('Ware angenommen'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Ware verpackt'), findsNothing);
+  });
+
   testWidgets('eigene Tätigkeit hinzufügen erscheint in Eigene-Liste', (
     tester,
   ) async {
@@ -62,7 +83,10 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'Meine Testroutine');
+    await tester.enterText(
+      find.byKey(const ValueKey('template_title_field')),
+      'Meine Testroutine',
+    );
     await tester.tap(find.text('Hinzufügen'));
     await tester.pumpAndSettle();
 

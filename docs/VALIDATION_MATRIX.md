@@ -17,6 +17,8 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 | Hive-Adapter ändern              | `flutter analyze`                         | `flutter test` (passender Hive-Storage-Test)                    |
 | `default_activities.dart` ändern | `flutter analyze`                         | `flutter test` (default_activities_test.dart)                  |
 | Reminder / Android-Manifest ändern | `flutter analyze` + `flutter test`      | `flutter build apk --debug` + manueller Gerätetest             |
+| Layout / Theme / kritischer Screen ändern | `flutter analyze` + `flutter test test/ui_layout_test.dart` | `flutter test` + manueller Gerätetest |
+| Golden bewusst aktualisieren       | Änderung visuell prüfen                  | `flutter test test/ui_layout_test.dart --update-goldens`       |
 | Phase abschließen                | `flutter analyze` + `flutter test`        | `PROJECT_STATUS.md` + `TASKS.md` + `CURRENT_STATUS.md` updaten |
 
 ---
@@ -36,6 +38,7 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 # Einzelnen Test ausführen
 /home/d/flutter/bin/flutter test test/hive_daily_entry_storage_test.dart
 /home/d/flutter/bin/flutter test test/hive_activity_template_storage_test.dart
+/home/d/flutter/bin/flutter test test/ui_layout_test.dart
 
 # App starten (Gerät/Emulator muss verbunden sein)
 /home/d/flutter/bin/flutter run

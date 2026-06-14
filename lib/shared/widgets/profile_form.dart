@@ -103,6 +103,20 @@ class _ProfileFormState extends State<ProfileForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Persönliche Angaben',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Name und Betrieb sind optional.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
         TextField(
           key: const ValueKey('profile_name_field'),
           controller: _nameController,
@@ -114,11 +128,11 @@ class _ProfileFormState extends State<ProfileForm> {
             prefixIcon: Icon(Icons.person_outline),
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
         Text(
           'Welche Ausbildung machst du?',
           style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
@@ -135,11 +149,11 @@ class _ProfileFormState extends State<ProfileForm> {
           selectedValue: _selectedOccupation,
           onSelected: _selectOccupation,
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
         Text(
           'In welchem Ausbildungsjahr bist du?',
           style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
@@ -155,7 +169,7 @@ class _ProfileFormState extends State<ProfileForm> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
         TextField(
           key: const ValueKey('profile_company_field'),
           controller: _companyController,
@@ -167,7 +181,7 @@ class _ProfileFormState extends State<ProfileForm> {
             prefixIcon: Icon(Icons.business_outlined),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
         FilledButton.icon(
           key: const ValueKey('profile_submit_button'),
           onPressed: _selectedOccupation == null ||
@@ -231,10 +245,10 @@ class _OccupationOption extends StatelessWidget {
       color: isSelected
           ? theme.colorScheme.secondaryContainer
           : theme.colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
         key: ValueKey(value),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
         onTap: () => onSelected(value),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),

@@ -31,8 +31,10 @@ Profilname, Ausbildungsdaten, Onboarding-Flag — kleine Schlüssel-Wert-Paare p
 **Bottom Navigation mit 4 Tabs**
 Schneller Alltagseinsatz: Heute, Woche, Vorlagen, Profil. Alles mit einem Daumenclick erreichbar. Kein Hamburger-Menü, das erst aufgeklappt werden muss.
 
-**Material 3**
-Modernes, freundliches Android-Look & Feel ohne Custom-Theme-Aufwand. Wärme und Lesbarkeit out of the box.
+**Reduziertes Material 3 mit explizitem Komponenten-Theme**
+Die App bleibt visuell nah an Android, verwendet aber feste Regeln für AppBars,
+Navigation, Buttons, Eingaben, Chips, Karten, Dialoge und Statusflächen. Teal
+bleibt die zurückhaltende Akzentfarbe; Custom Fonts und neue UI-Pakete sind nicht nötig.
 
 **IndexedStack für Tab-Persistence**
 Scroll-Position und Screen-State bleiben beim Tab-Wechsel erhalten. Bessere UX als Navigator-Pop/Push für jeden Tab.
@@ -51,8 +53,9 @@ Die App ist klein. Ein Tageseintrag-Formular und eine Wochenübersicht brauchen 
 **Kein PDF-Export in V1**
 Die App ist eine Merkhilfe, kein offizielles Dokument. PDF-Generierung ist komplex und fehleranfällig. Nutzerin schreibt das Berichtsheft manuell — die App liefert nur das Gedächtnis.
 
-**Kein Onboarding-Wizard mit vielen Schritten**
-Einfache Profil-Eingabe beim ersten Start reicht. Keine Tutorial-Slides, keine Berechtigungs-Dialoge, kein Onboarding-Karussel.
+**Onboarding mit genau zwei kompakten Schritten**
+Eine kurze Einführung und danach das Ausbildungsprofil reichen. Keine
+Tutorial-Slides, Berechtigungs-Dialoge oder langen Onboarding-Karussells.
 
 **Lokale Erinnerungs-Notifications ohne Cloud**
 Erinnerungen werden ausschließlich auf dem Android-Gerät geplant. Sie verwenden

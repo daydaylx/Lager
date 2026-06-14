@@ -183,7 +183,7 @@ void main() {
 
       expect(
         find.text(
-          'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wurde nicht aktiviert.',
+          'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.',
         ),
         findsOneWidget,
       );

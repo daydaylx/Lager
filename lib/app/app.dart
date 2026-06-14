@@ -5,6 +5,7 @@ import '../core/profile_storage.dart';
 import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
+import '../core/storage/reminder_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
@@ -147,6 +148,42 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   int _weekRefreshSignal = 0;
   int _templateRefreshSignal = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    FlutterLocalNotificationScheduler.setOnTap(_handleNotificationTap);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkTodayEntry());
+  }
+
+  @override
+  void dispose() {
+    FlutterLocalNotificationScheduler.setOnTap(null);
+    super.dispose();
+  }
+
+  void _handleNotificationTap(String? payload) {
+    if (payload == 'today' && mounted) {
+      setState(() => _currentIndex = 0);
+    }
+  }
+
+  Future<void> _checkTodayEntry() async {
+    if (!mounted) return;
+    final now = DateTime.now();
+    if (now.weekday > DateTime.friday) return;
+    final today = DateTime(now.year, now.month, now.day);
+    final entry = await widget.dailyEntryStorage.loadByDate(today);
+    if (!mounted || entry != null) return;
+    final settings = await ReminderStorage.load();
+    if (!mounted || !settings.enabled) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Heutiger Eintrag fehlt noch – jetzt kurz eintragen?'),
+        duration: Duration(seconds: 5),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -108,6 +108,8 @@ class _WeekScreenState extends State<WeekScreen> {
     final dueWeekDays = weekDays.where(_isDueWeekDay).toList();
     final enteredDueDays = dueWeekDays.where(_hasEntry).length;
     final hasEntries = _entries.isNotEmpty;
+    final isCurrentWeek = _selectedWeekStart == _currentWeekStart;
+    final missingCount = dueWeekDays.length - enteredDueDays;
 
     return RefreshIndicator(
       onRefresh: _loadWeek,
@@ -125,6 +127,10 @@ class _WeekScreenState extends State<WeekScreen> {
             onNext: () => _changeWeek(7),
             onSummary: _openSummary,
           ),
+          if (isCurrentWeek && missingCount > 0) ...[
+            const SizedBox(height: 16),
+            _MissingDaysBanner(count: missingCount),
+          ],
           if (!hasEntries) ...[
             const SizedBox(height: 16),
             const _EmptyWeekCard(),
@@ -438,6 +444,23 @@ class _WeekHeader extends StatelessWidget {
   static String _shortDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}.'
         '${date.month.toString().padLeft(2, '0')}.';
+  }
+}
+
+class _MissingDaysBanner extends StatelessWidget {
+  final int count;
+
+  const _MissingDaysBanner({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppMessage(
+      key: const ValueKey('missing_days_banner'),
+      icon: Icons.warning_amber_outlined,
+      title: '$count ${count == 1 ? 'Tag fehlt' : 'Tage fehlen'} noch diese Woche',
+      message: 'Tippe auf einen offenen Tag, um ihn einzutragen.',
+      tone: AppMessageTone.warning,
+    );
   }
 }
 

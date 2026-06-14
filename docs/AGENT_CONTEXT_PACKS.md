@@ -81,7 +81,9 @@ Format: Aufgabe → Dateien lesen → Risiken → Mindestchecks
 | `docs/UI_UX_SPEC.md`                             | Design-Vorgaben für den jeweiligen Screen |
 | Ziel-Screen (z. B. `today_screen.dart`)          | Bestehendes Layout                        |
 | `lib/app/theme.dart`                             | Farben, Theme-Tokens                      |
+| `lib/shared/widgets/app_ui.dart`                 | Gemeinsame visuelle Bausteine             |
 | Relevanter Test (z. B. `today_screen_test.dart`) | Was darf sich nicht ändern                |
+| `test/ui_layout_test.dart`                       | Mobile Layout- und Golden-Verträge        |
 
 ### Risiken
 
@@ -94,6 +96,7 @@ Format: Aufgabe → Dateien lesen → Risiken → Mindestchecks
 
 ```bash
 /home/d/flutter/bin/flutter analyze
+/home/d/flutter/bin/flutter test test/ui_layout_test.dart
 ```
 
 Manueller Test auf Gerät/Emulator wenn Layout-kritisch.

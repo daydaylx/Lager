@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 10: Kernflow- und UX-Stabilisierung** — Code abgeschlossen, manueller Android-Test offen
+**Phase 11: UI-Redesign** — Code und automatisierte UI-Prüfungen abgeschlossen, manueller Android-Test offen
 
 ---
 
@@ -139,3 +139,37 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 - [x] `flutter test` — 77/77 bestanden
 - [x] `flutter build apk --debug` — erfolgreich
 - [ ] Manueller Android-Test: Zurück-Geste, Vorlagen-Sync, Permission-Dialog, lokale Uhrzeit, Datenlöschung
+
+---
+
+## Phase 11: UI-Redesign ✅
+
+- [x] Explizites Material-3-Komponententheme und gemeinsame UI-Bausteine
+- [x] Onboarding auf zwei kompakte, klar geführte Schritte umstellen
+- [x] Heute-Screen mit Statuskopf, Tätigkeits-Checklisten und ruhiger Sticky-Speicheraktion
+- [x] Woche als kompakte Tagesliste mit Zusammenfassung im Kopf
+- [x] Vorlagen mit lokaler Suche und keyboard-sicherem Bottom Sheet
+- [x] Profil als Übersicht mit separatem Bearbeitungsscreen und gruppierten Einstellungen
+- [x] Kleine Displays, große Systemschrift, Touchflächen und Tastatur automatisiert prüfen
+- [x] Vier Golden-Referenzen für zentrale UI-Zustände
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 87/87 bestanden
+- [ ] Manueller Android-Test: visuelle Wirkung, Einhandbedienung, Tastatur und große Systemschrift
+
+---
+
+## Phase 12: Reminder-Stack verbessern ✅
+
+Issues #14–#20 aus GitHub abgearbeitet.
+
+- [x] #14 Android 13+ Permission-Feedback: Warnung + Button "Benachrichtigungseinstellungen öffnen" (`app_settings`)
+- [x] #15 Notification-Channel mit `Importance.high`, `Priority.high`, Ton und Vibration
+- [x] #16 Bessere Notification-Copy: Titel und Text überarbeitet, Tap-Payload `'today'` → öffnet Heute-Tab
+- [x] #17 Eskalationslogik: zweite Erinnerung 30 min nach primärer, Wochencheck freitags 19:00
+- [x] #18 Samsung-Hinweis als `ExpansionTile` im Profil-Screen (Akku, Nicht-Stören, Kategorien)
+- [x] #19 Wochenansicht: Banner "X Tage fehlen noch", App-Start-SnackBar bei fehlendem Eintrag
+- [x] #20 QA-Checkliste `docs/QA_REMINDER_CHECKLIST.md` für manuellen Samsung-Test erstellt
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 130/130 bestanden
+- [x] `flutter build apk --debug` — erfolgreich
+- [ ] Manueller Android-Gerätetest: Permission-Dialog, Notifications, Samsung-spezifisches Verhalten
