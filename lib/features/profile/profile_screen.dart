@@ -4,6 +4,7 @@ import '../../core/models/reminder_settings.dart';
 import '../../core/profile_storage.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/storage/reminder_storage.dart';
+import '../../shared/widgets/app_ui.dart';
 import '../../shared/widgets/profile_form.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -28,8 +29,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isReminderSaving = false;
   bool _isDeleting = false;
   String? _reminderError;
-
-  static const _weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
   @override
   void initState() {
@@ -62,6 +61,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       occupation: occupation,
       trainingYear: trainingYear,
     );
+  }
+
+  Future<void> _openProfileEditor() async {
+    final profile = _profile;
+    if (profile == null) return;
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => _ProfileEditScreen(
+          profile: profile,
+          onSave: _saveProfile,
+        ),
+      ),
+    );
+    if (saved == true && mounted) {
+      await _loadProfile();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil gespeichert.')),
+        );
+      }
+    }
   }
 
   Future<void> _loadReminderSettings() async {
@@ -214,26 +234,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildBody() {
     if (_loadFailed) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                'Dein Profil konnte nicht geladen werden.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: _loadProfile,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Erneut versuchen'),
-              ),
-            ],
-          ),
+      return AppEmptyState(
+        icon: Icons.error_outline,
+        title: 'Profil nicht verfügbar',
+        message: 'Dein Profil konnte nicht geladen werden.',
+        action: FilledButton.icon(
+          onPressed: _loadProfile,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Erneut versuchen'),
         ),
       );
     }
@@ -243,51 +251,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final colorScheme = Theme.of(context).colorScheme;
-
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        ProfileForm(
-          initialName: profile.name,
-          initialCompany: profile.company,
-          initialOccupation: profile.occupation,
-          initialTrainingYear: profile.trainingYear,
-          submitLabel: 'Profil speichern',
-          submitIcon: Icons.save_outlined,
-          successMessage: 'Profil gespeichert.',
-          onSubmit: _saveProfile,
+        _ProfileHeader(profile: profile),
+        const SizedBox(height: 24),
+        AppSettingsSection(
+          title: 'Ausbildungsprofil',
+          description: 'Diese Angaben helfen dir bei der täglichen Einordnung.',
+          children: [
+            ListTile(
+              key: const ValueKey('edit_profile'),
+              leading: const Icon(Icons.badge_outlined),
+              title: Text(_occupationLabel(profile.occupation)),
+              subtitle: Text(
+                '${profile.trainingYear ?? '–'}. Ausbildungsjahr'
+                '${profile.company == null ? '' : ' · ${profile.company}'}',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _openProfileEditor,
+            ),
+          ],
         ),
-        const SizedBox(height: 32),
-        const Divider(),
-        const SizedBox(height: 16),
-        _buildReminderSection(),
-        const SizedBox(height: 32),
-        const Divider(),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          key: const ValueKey('delete_all_data'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: colorScheme.error,
-            side: BorderSide(color: colorScheme.error),
-            minimumSize: const Size.fromHeight(48),
-          ),
-          onPressed: _isDeleting ? null : _confirmAndDeleteAll,
-          icon: _isDeleting
-              ? const SizedBox.square(
-                  dimension: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.delete_forever_outlined),
-          label: Text(
-              _isDeleting ? 'Daten werden gelöscht ...' : 'Alle Daten löschen'),
+        const SizedBox(height: 24),
+        _ReminderSection(
+          settings: _reminderSettings,
+          error: _reminderError,
+          isSaving: _isReminderSaving,
+          onToggle: _toggleReminder,
+          onAddTime: _addTime,
+          onDeleteTime: _deleteTime,
+          onToggleWeekday: _toggleWeekday,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        AppSettingsSection(
+          title: 'Daten & Datenschutz',
+          description: 'Alle Inhalte bleiben lokal auf diesem Gerät.',
+          children: [
+            ListTile(
+              key: const ValueKey('delete_all_data'),
+              leading: _isDeleting
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_outline),
+              title: Text(
+                _isDeleting
+                    ? 'Daten werden gelöscht ...'
+                    : 'Alle Daten löschen',
+              ),
+              subtitle: const Text('Entfernt Profil, Einträge und Vorlagen.'),
+              trailing: const Icon(Icons.chevron_right),
+              textColor: Theme.of(context).colorScheme.error,
+              iconColor: Theme.of(context).colorScheme.error,
+              enabled: !_isDeleting,
+              onTap: _isDeleting ? null : _confirmAndDeleteAll,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
         Text(
           'Version $kAppVersion',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
         const SizedBox(height: 8),
@@ -295,92 +323,139 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildReminderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  String _occupationLabel(String? occupation) {
+    return switch (occupation) {
+      TrainingOccupationValues.fachlagerist => 'Fachlagerist/in',
+      TrainingOccupationValues.fachkraftLagerlogistik =>
+        'Fachkraft für Lagerlogistik',
+      _ => 'Ausbildung noch nicht ausgewählt',
+    };
+  }
+}
+
+class _ReminderSection extends StatelessWidget {
+  static const _weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+  final ReminderSettings settings;
+  final String? error;
+  final bool isSaving;
+  final ValueChanged<bool> onToggle;
+  final ValueChanged<TimeOfDay> onAddTime;
+  final ValueChanged<int> onDeleteTime;
+  final ValueChanged<int> onToggleWeekday;
+
+  const _ReminderSection({
+    required this.settings,
+    required this.error,
+    required this.isSaving,
+    required this.onToggle,
+    required this.onAddTime,
+    required this.onDeleteTime,
+    required this.onToggleWeekday,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSettingsSection(
+      title: 'Erinnerungen',
+      description: 'Ein kurzer Hinweis an ausgewählten Tagen.',
       children: [
-        Text(
-          'Erinnerungen',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 4),
         SwitchListTile(
           key: const ValueKey('reminder_toggle'),
           title: const Text('An ausgewählten Tagen erinnern'),
-          value: _reminderSettings.enabled,
-          onChanged: _isReminderSaving ? null : _toggleReminder,
-          contentPadding: EdgeInsets.zero,
-          secondary: _isReminderSaving
+          subtitle: Text(settings.enabled ? 'Aktiv' : 'Aus'),
+          value: settings.enabled,
+          onChanged: isSaving ? null : onToggle,
+          secondary: isSaving
               ? const SizedBox.square(
                   dimension: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : null,
         ),
-        if (_reminderError case final error?) ...[
-          const SizedBox(height: 8),
-          _ReminderError(text: error),
-        ],
-        if (_reminderSettings.enabled) ...[
-          const SizedBox(height: 16),
-          Text(
-            'Uhrzeiten',
-            style: Theme.of(context).textTheme.labelLarge,
+        if (error case final msg?) ...[
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: AppMessage(
+              icon: Icons.error_outline,
+              title: msg,
+              tone: AppMessageTone.error,
+            ),
           ),
-          ..._reminderSettings.times.asMap().entries.map((entry) {
+        ],
+        if (settings.enabled) ...[
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              'Uhrzeiten',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          ...settings.times.asMap().entries.map((entry) {
             final index = entry.key;
             final time = entry.value;
             return ListTile(
               key: ValueKey('reminder_time_$index'),
-              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.schedule_outlined),
               title: Text(time.toDisplayString()),
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
-                tooltip: _reminderSettings.times.length <= 1
+                tooltip: settings.times.length <= 1
                     ? 'Mindestens eine Uhrzeit ist erforderlich'
                     : 'Uhrzeit entfernen',
-                onPressed:
-                    _isReminderSaving || _reminderSettings.times.length <= 1
-                        ? null
-                        : () => _deleteTime(index),
+                onPressed: isSaving || settings.times.length <= 1
+                    ? null
+                    : () => onDeleteTime(index),
               ),
             );
           }),
           TextButton.icon(
             key: const ValueKey('reminder_add_time'),
-            onPressed: _isReminderSaving
+            onPressed: isSaving
                 ? null
                 : () async {
                     final picked = await showTimePicker(
                       context: context,
                       initialTime: const TimeOfDay(hour: 20, minute: 0),
                     );
-                    if (picked != null) await _addTime(picked);
+                    if (picked != null) onAddTime(picked);
                   },
             icon: const Icon(Icons.add),
             label: const Text('Zeit hinzufügen'),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Tage',
-            style: Theme.of(context).textTheme.labelLarge,
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              'Tage',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: List.generate(7, (i) {
-              final weekday = i + 1;
-              return FilterChip(
-                key: ValueKey('reminder_weekday_$weekday'),
-                label: Text(_weekdayLabels[i]),
-                selected: _reminderSettings.weekdays.contains(weekday),
-                onSelected: _isReminderSaving ||
-                        (_reminderSettings.weekdays.length <= 1 &&
-                            _reminderSettings.weekdays.contains(weekday))
-                    ? null
-                    : (_) => _toggleWeekday(weekday),
-              );
-            }),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(7, (i) {
+                final weekday = i + 1;
+                return FilterChip(
+                  key: ValueKey('reminder_weekday_$weekday'),
+                  label: Text(_weekdayLabels[i]),
+                  selected: settings.weekdays.contains(weekday),
+                  onSelected: isSaving ||
+                          (settings.weekdays.length <= 1 &&
+                              settings.weekdays.contains(weekday))
+                      ? null
+                      : (_) => onToggleWeekday(weekday),
+                );
+              }),
+            ),
           ),
         ],
       ],
@@ -388,26 +463,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _ReminderError extends StatelessWidget {
-  final String text;
+class _ProfileHeader extends StatelessWidget {
+  final StoredProfile profile;
 
-  const _ReminderError({required this.text});
+  const _ProfileHeader({required this.profile});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
+    final name = profile.name?.trim();
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 36,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              foregroundColor: theme.colorScheme.onPrimaryContainer,
+              child: const Icon(Icons.person_outline, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name == null || name.isEmpty ? 'Dein Profil' : name,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Ausbildung und App-Einstellungen',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+}
+
+class _ProfileEditScreen extends StatelessWidget {
+  final StoredProfile profile;
+  final ProfileSubmitCallback onSave;
+
+  const _ProfileEditScreen({
+    required this.profile,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profil bearbeiten')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          Icon(Icons.error_outline, color: theme.colorScheme.error),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text)),
+          ProfileForm(
+            initialName: profile.name,
+            initialCompany: profile.company,
+            initialOccupation: profile.occupation,
+            initialTrainingYear: profile.trainingYear,
+            submitLabel: 'Profil speichern',
+            submitIcon: Icons.save_outlined,
+            onSubmit: ({
+              name,
+              company,
+              required occupation,
+              required trainingYear,
+            }) async {
+              await onSave(
+                name: name,
+                company: company,
+                occupation: occupation,
+                trainingYear: trainingYear,
+              );
+              if (context.mounted) {
+                Navigator.of(context).pop(true);
+              }
+            },
+          ),
         ],
       ),
     );

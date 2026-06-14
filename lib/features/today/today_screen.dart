@@ -9,11 +9,14 @@ import '../../core/models/activity_template.dart';
 import '../../core/models/daily_entry.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
+import '../../core/week_utils.dart';
+import '../../shared/widgets/app_ui.dart';
 
 class TodayScreen extends StatefulWidget {
   final DailyEntryStorage storage;
   final ActivityTemplateStorage templateStorage;
   final DateTime? date;
+  final DateTime? currentDate;
   final int templateRefreshSignal;
   final bool protectBackNavigation;
 
@@ -22,6 +25,7 @@ class TodayScreen extends StatefulWidget {
     required this.storage,
     required this.templateStorage,
     this.date,
+    this.currentDate,
     this.templateRefreshSignal = 0,
     this.protectBackNavigation = true,
   });
@@ -47,12 +51,12 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _templatesLoadFailed = false;
 
   DateTime get _today {
-    final value = widget.date ?? DateTime.now();
+    final value = widget.date ?? widget.currentDate ?? DateTime.now();
     return DateTime(value.year, value.month, value.day);
   }
 
   bool get _isToday {
-    final now = DateTime.now();
+    final now = widget.currentDate ?? DateTime.now();
     return _today == DateTime(now.year, now.month, now.day);
   }
 
@@ -115,29 +119,17 @@ class _TodayScreenState extends State<TodayScreen> {
     if (_loadFailed) {
       return Scaffold(
         appBar: AppBar(title: Text(_screenTitle)),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  _isToday
-                      ? 'Dein heutiger Eintrag konnte nicht geladen werden.'
-                      : 'Der Tageseintrag konnte nicht geladen werden.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  key: const ValueKey('retry_daily_entry_load'),
-                  onPressed: _loadEntry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Erneut versuchen'),
-                ),
-              ],
-            ),
+        body: AppEmptyState(
+          icon: Icons.error_outline,
+          title: 'Eintrag nicht verfügbar',
+          message: _isToday
+              ? 'Dein heutiger Eintrag konnte nicht geladen werden.'
+              : 'Der Tageseintrag konnte nicht geladen werden.',
+          action: FilledButton.icon(
+            key: const ValueKey('retry_daily_entry_load'),
+            onPressed: _loadEntry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Erneut versuchen'),
           ),
         ),
       );
@@ -160,9 +152,13 @@ class _TodayScreenState extends State<TodayScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              _buildDayHeader(context),
+              _DayStatusCard(
+                date: _today,
+                statusLabel: _statusLabel,
+                isSaved: _savedEntry != null && !_hasUnsavedChanges,
+              ),
               const SizedBox(height: 24),
-              _SectionTitle(
+              AppSectionHeader(
                 title: 'Tagestyp',
                 description: _isToday
                     ? 'Was für ein Tag ist heute?'
@@ -182,8 +178,8 @@ class _TodayScreenState extends State<TodayScreen> {
                 }).toList(),
               ),
               if (_selectedDayType == DayType.betrieb) ...[
-                const SizedBox(height: 28),
-                _SectionTitle(
+                const SizedBox(height: 24),
+                AppSectionHeader(
                   title: 'Bereich',
                   description: _isToday
                       ? 'Wo hast du heute gearbeitet?'
@@ -204,35 +200,37 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
               ],
               if (_selectedDayType.supportsActivities) ...[
-                const SizedBox(height: 28),
-                _SectionTitle(
+                const SizedBox(height: 24),
+                AppSectionHeader(
                   title: 'Tätigkeiten',
                   description: _isToday
                       ? 'Wähle aus, was du heute gemacht hast.'
                       : 'Wähle aus, was du an diesem Tag gemacht hast.',
+                  trailing: _SelectionCount(count: _selectedActivityIds.length),
                 ),
                 const SizedBox(height: 12),
                 _buildActivities(context),
               ],
               if (_selectedDayType == DayType.sonstiges) ...[
                 const SizedBox(height: 24),
-                const _InfoCard(
+                const AppMessage(
                   icon: Icons.edit_note_outlined,
-                  text:
+                  title:
                       'Beschreibe den Tag kurz über Besonderheiten oder Notiz.',
                 ),
               ],
               if (_selectedDayType.isAbsence) ...[
                 const SizedBox(height: 24),
-                _InfoCard(
+                AppMessage(
                   icon: Icons.event_available_outlined,
-                  text:
+                  title:
                       '${_selectedDayType.label} kann direkt gespeichert werden.',
+                  tone: AppMessageTone.success,
                 ),
               ],
               if (!_selectedDayType.isAbsence) ...[
-                const SizedBox(height: 28),
-                const _SectionTitle(
+                const SizedBox(height: 24),
+                const AppSectionHeader(
                   title: 'Besonderheiten',
                   description: 'Optional: Was war heute besonders?',
                 ),
@@ -249,8 +247,8 @@ class _TodayScreenState extends State<TodayScreen> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 28),
-                const _SectionTitle(
+                const SizedBox(height: 24),
+                const AppSectionHeader(
                   title: 'Notiz',
                   description: 'Optional und bewusst kurz.',
                 ),
@@ -270,92 +268,13 @@ class _TodayScreenState extends State<TodayScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_validationHint case final hint?) ...[
-                Text(
-                  hint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-              ],
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  key: const ValueKey('save_daily_entry'),
-                  onPressed: _canSubmit ? _saveEntry : null,
-                  icon: _isSaving
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          _savedEntry == null
-                              ? Icons.save_outlined
-                              : Icons.update,
-                        ),
-                  label: Text(
-                    _savedEntry == null
-                        ? _isToday
-                            ? 'Heute speichern'
-                            : 'Tag speichern'
-                        : 'Änderungen speichern',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDayHeader(BuildContext context) {
-    final theme = Theme.of(context);
-    final isSaved = _savedEntry != null && !_hasUnsavedChanges;
-    final color = isSaved
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Icon(
-              isSaved ? Icons.check_circle : Icons.today_outlined,
-              color: color,
-              size: 32,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _formatDate(_today),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    _statusLabel,
-                    key: const ValueKey('daily_entry_status'),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: color),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        bottomNavigationBar: _SaveBar(
+          validationHint: _validationHint,
+          canSubmit: _canSubmit,
+          isSaving: _isSaving,
+          isNewEntry: _savedEntry == null,
+          isToday: _isToday,
+          onSave: _saveEntry,
         ),
       ),
     );
@@ -363,9 +282,9 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Widget _buildActivities(BuildContext context) {
     if (_selectedDayType == DayType.betrieb && _selectedArea == null) {
-      return const _InfoCard(
+      return const AppMessage(
         icon: Icons.touch_app_outlined,
-        text: 'Wähle zuerst einen Bereich aus.',
+        title: 'Wähle zuerst einen Bereich aus.',
       );
     }
 
@@ -423,6 +342,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   activities: custom,
                   selectedActivityIds: _selectedActivityIds,
                   onToggle: _toggleActivity,
+                  markAsCustom: true,
                 ),
               ),
           ];
@@ -682,93 +602,139 @@ class _TodayScreenState extends State<TodayScreen> {
       }
     }
   }
-
-  String _formatDate(DateTime date) {
-    const weekdays = [
-      'Montag',
-      'Dienstag',
-      'Mittwoch',
-      'Donnerstag',
-      'Freitag',
-      'Samstag',
-      'Sonntag',
-    ];
-    const months = [
-      'Januar',
-      'Februar',
-      'März',
-      'April',
-      'Mai',
-      'Juni',
-      'Juli',
-      'August',
-      'September',
-      'Oktober',
-      'November',
-      'Dezember',
-    ];
-
-    return '${weekdays[date.weekday - 1]}, ${date.day}. ${months[date.month - 1]}';
-  }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final String description;
+class _DayStatusCard extends StatelessWidget {
+  final DateTime date;
+  final String statusLabel;
+  final bool isSaved;
 
-  const _SectionTitle({
-    required this.title,
-    required this.description,
+  const _DayStatusCard({
+    required this.date,
+    required this.statusLabel,
+    required this.isSaved,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+    final color = isSaved
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatDayDate(date),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        isSaved ? Icons.check_circle : Icons.circle_outlined,
+                        color: color,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          statusLabel,
+                          key: const ValueKey('daily_entry_status'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.today_outlined,
+              color: theme.colorScheme.primary,
+              size: 30,
+            ),
+          ],
         ),
-        const SizedBox(height: 3),
-        Text(
-          description,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String text;
+class _SaveBar extends StatelessWidget {
+  final String? validationHint;
+  final bool canSubmit;
+  final bool isSaving;
+  final bool isNewEntry;
+  final bool isToday;
+  final VoidCallback onSave;
 
-  const _InfoCard({
-    required this.icon,
-    required this.text,
+  const _SaveBar({
+    required this.validationHint,
+    required this.canSubmit,
+    required this.isSaving,
+    required this.isNewEntry,
+    required this.isToday,
+    required this.onSave,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text)),
-        ],
+    return Material(
+      color: theme.colorScheme.surfaceContainer,
+      child: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (validationHint case final hint?) ...[
+              Text(
+                hint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                key: const ValueKey('save_daily_entry'),
+                onPressed: canSubmit ? onSave : null,
+                icon: isSaving
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(isNewEntry ? Icons.save_outlined : Icons.update),
+                label: Text(
+                  isNewEntry
+                      ? isToday
+                          ? 'Heute speichern'
+                          : 'Tag speichern'
+                      : 'Änderungen speichern',
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -779,12 +745,14 @@ class _ActivityGroup extends StatelessWidget {
   final List<ActivityTemplate> activities;
   final Set<String> selectedActivityIds;
   final ValueChanged<String> onToggle;
+  final bool markAsCustom;
 
   const _ActivityGroup({
     required this.title,
     required this.activities,
     required this.selectedActivityIds,
     required this.onToggle,
+    this.markAsCustom = false,
   });
 
   @override
@@ -793,31 +761,73 @@ class _ActivityGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.primary,
-          ),
-        ),
+        AppSectionHeader(title: title),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: activities.map((activity) {
-            final isSelected = selectedActivityIds.contains(activity.id);
-            return FilterChip(
-              key: ValueKey('activity_${activity.id}'),
-              label: Text(
-                activity.isActive
-                    ? activity.title
-                    : '${activity.title} (deaktiviert)',
-              ),
-              selected: isSelected,
-              onSelected: activity.isActive || isSelected
-                  ? (_) => onToggle(activity.id)
-                  : null,
-            );
-          }).toList(),
+        Material(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: activities.indexed.map((entry) {
+              final index = entry.$1;
+              final activity = entry.$2;
+              final isSelected = selectedActivityIds.contains(activity.id);
+              final enabled = activity.isActive || isSelected;
+              return Column(
+                children: [
+                  InkWell(
+                    key: ValueKey('activity_${activity.id}'),
+                    onTap: enabled ? () => onToggle(activity.id) : null,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: isSelected,
+                              onChanged:
+                                  enabled ? (_) => onToggle(activity.id) : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    activity.isActive
+                                        ? activity.title
+                                        : '${activity.title} (deaktiviert)',
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      fontWeight: isSelected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (markAsCustom) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Eigene Tätigkeit',
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (index < activities.length - 1) const Divider(indent: 56),
+                ],
+              );
+            }).toList(growable: false),
+          ),
         ),
       ],
     );
@@ -831,29 +841,44 @@ class _TemplateLoadWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AppMessage(
+      icon: Icons.warning_amber_outlined,
+      title: 'Eigene Tätigkeiten konnten nicht geladen werden.',
+      message: 'Vordefinierte Tätigkeiten bleiben verfügbar.',
+      tone: AppMessageTone.error,
+      action: IconButton(
+        onPressed: onRetry,
+        tooltip: 'Erneut versuchen',
+        icon: const Icon(Icons.refresh),
+      ),
+    );
+  }
+}
+
+class _SelectionCount extends StatelessWidget {
+  final int count;
+
+  const _SelectionCount({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
+        color: count == 0
+            ? theme.colorScheme.surfaceContainer
+            : theme.colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_amber_outlined, color: theme.colorScheme.error),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Eigene Tätigkeiten konnten nicht geladen werden. '
-              'Vordefinierte Tätigkeiten bleiben verfügbar.',
-            ),
-          ),
-          IconButton(
-            onPressed: onRetry,
-            tooltip: 'Erneut versuchen',
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
+      child: Text(
+        '$count gewählt',
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: count == 0
+              ? theme.colorScheme.onSurfaceVariant
+              : theme.colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

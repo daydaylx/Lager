@@ -30,16 +30,19 @@ Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
 ## Projektdokumente
 
-| Datei                                 | Inhalt                                                       |
-| ------------------------------------- | ------------------------------------------------------------ |
-| `docs/PRODUCT_CONCEPT.md`             | Fachliche Spezifikation, Features, Phasen                    |
-| `docs/UI_UX_SPEC.md`                  | Design-Richtlinien, Screen-Layouts                           |
-| `docs/AGENT_IMPLEMENTATION_PROMPT.md` | ⚠️ Historisch — Bootstrap-Dokument; nur zur Konzept-Referenz |
-| `TASKS.md`                            | Aktueller Arbeitsstand nach Phasen                           |
-| `PROJECT_STATUS.md`                   | Was existiert, was fehlt noch                                |
-| `AGENTS.md`                           | Regeln für alle Coding-Agenten                               |
-| `CLAUDE.md`                           | Kurzregeln für Claude Code                                   |
-| `DECISIONS.md`                        | Architekturentscheidungen                                    |
+| Datei                         | Inhalt                                        |
+| ----------------------------- | --------------------------------------------- |
+| `AGENTS.md`                   | Zentrale Regeln für alle Coding-Agenten       |
+| `CLAUDE.md`                   | Claude-Code-Einstieg (verweist auf AGENTS.md) |
+| `TASKS.md`                    | Aktueller Arbeitsstand nach Phasen            |
+| `DECISIONS.md`                | Architekturentscheidungen                     |
+| `docs/CODEMAP.md`             | Kompakte Projektkarte und wichtige Pfade      |
+| `docs/AGENT_CONTEXT_PACKS.md` | Taskbezogene Kontextpakete für Agenten        |
+| `docs/CURRENT_STATUS.md`      | Aktueller Projektstand für Agent-Handoff      |
+| `docs/VALIDATION_MATRIX.md`   | Prüfkommandos pro Änderungstyp                |
+| `docs/DATA_MODEL.md`          | Datenmodell, Storage und Persistenzregeln     |
+| `docs/UI_UX_SPEC.md`          | UI-/UX-Regeln und visuelle Vorgaben           |
+| `docs/PRODUCT_CONCEPT.md`     | Fachliche Spezifikation und Features          |
 
 ## Nicht in dieser App
 
@@ -53,4 +56,4 @@ Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
 ## Nächster Schritt
 
-Siehe `TASKS.md` → manueller Android-Gerätetest für Phase 9/10.
+Siehe `TASKS.md` → manueller Android-Gerätetest für Phase 9–11.

@@ -53,8 +53,8 @@ class ReminderSettings {
   }) {
     return ReminderSettings(
       enabled: enabled ?? this.enabled,
-      times: times ?? this.times,
-      weekdays: weekdays ?? this.weekdays,
+      times: List.unmodifiable(times ?? this.times),
+      weekdays: List.unmodifiable(weekdays ?? this.weekdays),
     );
   }
 

@@ -94,5 +94,61 @@ void main() {
       final loaded = await ReminderStorage.load();
       expect(loaded, equals(original));
     });
+
+    test('Korruptes times-JSON fällt auf Standardzeiten zurück', () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_times': 'KEIN_JSON',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(loaded.times, equals(ReminderSettings.defaults.times));
+    });
+
+    test('Korruptes weekdays-JSON fällt auf Standard-Wochentage zurück',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_weekdays': '{KEIN_JSON}',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(loaded.weekdays, equals(ReminderSettings.defaults.weekdays));
+    });
+
+    test('Wochentage außerhalb 1..7 werden gefiltert', () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_weekdays': '[0, 1, 5, 8, 9]',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(loaded.weekdays, [1, 5]);
+    });
+
+    test('Doppelte Wochentage werden dedupliziert und sortiert', () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_weekdays': '[5, 1, 3, 1, 5]',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(loaded.weekdays, [1, 3, 5]);
+    });
+
+    test('Leere Wochentagsliste bleibt leer', () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_weekdays': '[]',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(loaded.weekdays, isEmpty);
+    });
+
+    test('Nicht-int-Einträge in weekdays-JSON werden ignoriert', () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_weekdays': '[1, "abc", 3, null, 5]',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(loaded.weekdays, [1, 3, 5]);
+    });
+
+    test('copyWith erzeugt unmodifiable Liste', () {
+      final settings = ReminderSettings.defaults.copyWith(weekdays: [1, 2, 3]);
+      expect(() => settings.weekdays.add(4), throwsUnsupportedError);
+      expect(() => settings.times.add(const ReminderTime(hour: 8, minute: 0)),
+          throwsUnsupportedError);
+    });
   });
 }

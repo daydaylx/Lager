@@ -15,76 +15,37 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Pflichtlektüre vor der Arbeit
 
-| Dokument                              | Inhalt                                                                               |
-| ------------------------------------- | ------------------------------------------------------------------------------------ |
-| `TASKS.md`                            | Aktuelle Phase und offene Aufgaben — immer zuerst lesen                              |
-| `docs/CURRENT_STATUS.md`              | Agent-Handoff: aktiver Stand, letzte Checks, nächster Schritt                        |
-| `docs/CODEMAP.md`                     | Alle Dateien, Pfade, Einstiegspunkte — Schnellreferenz                               |
-| `docs/AGENT_CONTEXT_PACKS.md`         | Aufgabenbezogene Dateilisten → direkt zur richtigen Datei                            |
-| `docs/DATA_MODEL.md`                  | Datenmodell-Referenz: Enums, Models, Dateistruktur                                   |
-| `docs/UI_UX_SPEC.md`                  | Wie die App aussehen soll, Screen-Layouts                                            |
-| `DECISIONS.md`                        | Getroffene Architekturentscheidungen — nicht erneut diskutieren                      |
-| `docs/AGENT_IMPLEMENTATION_PROMPT.md` | ⚠️ **Historisch** — Bootstrap-Dokument vor Implementierung; nur zur Konzept-Referenz |
+**Immer lesen** (minimaler Pflichtkontext):
+
+| Dokument                 | Inhalt                                         |
+| ------------------------ | ---------------------------------------------- |
+| `TASKS.md`               | Aktuelle Phase und offene Aufgaben             |
+| `docs/CURRENT_STATUS.md` | Aktiver Stand, letzte Checks, nächster Schritt |
+
+**Dann:** `docs/AGENT_CONTEXT_PACKS.md` öffnen und das passende Context Pack zur Aufgabe wählen. Nur die dort genannten Dateien laden.
+
+**Nur bei konkretem Bedarf** (nicht pauschal):
+
+| Dokument             | Wann nötig                                  |
+| -------------------- | ------------------------------------------- |
+| `docs/CODEMAP.md`    | Orientierung zu Pfaden und Einstiegspunkten |
+| `docs/DATA_MODEL.md` | Datenmodell, Enums, Persistenzregeln        |
+| `docs/UI_UX_SPEC.md` | UI-/Design-Fragen                           |
+| `DECISIONS.md`       | Vor Architektur- oder Scope-Fragen          |
 
 ---
 
 ## Aktuelle Phase
 
-**Phase 10: Kernflow- und UX-Stabilisierung** — Code abgeschlossen; manueller Android-Gerätetest offen.
+**Phase 11: UI-Redesign** — Code und automatisierte UI-Prüfungen abgeschlossen; manueller Android-Gerätetest offen.
 
 ---
-
-## Dateikarte
-
-```
-lib/main.dart                                    → runApp(BerichtsheftApp)
-lib/app/app.dart                                 → MaterialApp + MainShell (IndexedStack + NavigationBar)
-lib/app/theme.dart                               → buildAppTheme() — M3, ColorScheme.fromSeed grün-teal
-lib/app/router.dart                              → AppRoutes (statische String-Konstanten)
-lib/core/constants.dart                          → AppStrings + SharedPreferences-Konstanten
-lib/core/profile_storage.dart                    → Ausbildungsprofil in SharedPreferences
-lib/core/enums/                                  → DayType, TrainingArea, ActivityCategory, SpecialFlag
-lib/core/models/                                 → DailyEntry, ActivityTemplate
-lib/core/data/default_activities.dart            → 87 vordefinierte Tätigkeiten
-lib/core/storage/                                → DailyEntryStorage + Hive-CE-Persistenz
-lib/core/week_utils.dart                         → ISO-Kalenderwochen-Helfer
-lib/features/onboarding/onboarding_screen.dart   → Erststart mit vollständigem Ausbildungsprofil
-lib/features/today/today_screen.dart             → Persistenter Tageseintrag
-lib/features/week/week_screen.dart               → Persistente Wochenübersicht + Zusammenfassung
-lib/features/templates/templates_screen.dart     → Eigene Tätigkeiten verwalten, deaktivieren/reaktivieren
-lib/features/profile/profile_screen.dart         → Ausbildungsprofil, lokale Erinnerungen, Datenverwaltung
-lib/shared/widgets/profile_form.dart             → Gemeinsame Profilmaske
-lib/shared/widgets/placeholder_screen.dart       → Wiederverwendbar: Icon + Titel + Beschreibung
-docs/CODEMAP.md                                  → Schnellreferenz alle Dateien und Einstiegspunkte
-docs/AGENT_CONTEXT_PACKS.md                      → Aufgabenbezogene Dateilisten
-docs/VALIDATION_MATRIX.md                        → Mindestprüfungen pro Änderungstyp
-docs/CURRENT_STATUS.md                           → Agent-Handoff: aktiver Stand
-docs/DATA_MODEL.md                               → Enums, Model-Konzepte, Zieldateistruktur
-docs/UI_UX_SPEC.md                               → Design-Vorgaben
-docs/AGENT_IMPLEMENTATION_PROMPT.md              → ⚠️ Historisch (Bootstrap-Dokument, nur Konzept-Referenz)
-```
-
----
-
-## Datenmodell-Überblick
-
-Vollständige Referenz: `docs/DATA_MODEL.md`
-
-Zentrale Konzepte:
-
-- **DailyEntry** — ein Tageseintrag (Datum, Tagtyp, Bereich, Tätigkeiten, Notiz)
-- **ActivityTemplate** — vordefinierte oder eigene Tätigkeit
-- **UserProfile** — Ausbildungsprofil der Nutzerin
-- **DayType** — Betrieb | Berufsschule | Frei | Urlaub | Krank | Feiertag | Sonstiges
-
-`DailyEntry` und `ActivityTemplate` sowie die benötigten Enums sind implementiert.
-Tageseinträge werden über `DailyEntryStorage` in Hive CE gespeichert; das Profil bleibt in SharedPreferences.
 
 ---
 
 ## Harte Nicht-Ziele — baue das NICHT
 
-- PDF-Export oder Druckfunktion
+- PDF-Export oder Druckfunktion (nicht in V1/MVP; nur nach expliziter neuer Entscheidung)
 - Cloud-Sync, Firebase, Supabase oder ähnliches
 - Login, Registrierung, Authentifizierung
 - Backend, REST-API, GraphQL

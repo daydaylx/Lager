@@ -13,23 +13,29 @@ class ReminderStorage {
     if (timesJson == null) {
       times = ReminderSettings.defaults.times;
     } else {
-      final decoded = jsonDecode(timesJson) as List<dynamic>;
-      if (decoded.isEmpty) {
-        times = [];
-      } else {
-        final parsed = decoded
-            .map((s) {
-              try {
-                return ReminderTime.fromString(s as String);
-              } on FormatException {
-                return null;
-              }
-            })
-            .whereType<ReminderTime>()
-            .toList();
-        // Fall back to defaults only when every entry was corrupt.
-        times = parsed.isEmpty ? ReminderSettings.defaults.times : parsed;
+      List<ReminderTime> parsed;
+      try {
+        final decoded = jsonDecode(timesJson) as List<dynamic>;
+        if (decoded.isEmpty) {
+          parsed = [];
+        } else {
+          final entries = decoded
+              .map((s) {
+                try {
+                  return ReminderTime.fromString(s as String);
+                } on FormatException {
+                  return null;
+                }
+              })
+              .whereType<ReminderTime>()
+              .toList();
+          // Fall back to defaults only when every entry was corrupt.
+          parsed = entries.isEmpty ? List.of(ReminderSettings.defaults.times) : entries;
+        }
+      } catch (_) {
+        parsed = List.of(ReminderSettings.defaults.times);
       }
+      times = parsed;
     }
 
     final weekdaysJson = prefs.getString(PreferenceKeys.reminderWeekdays);
@@ -37,8 +43,19 @@ class ReminderStorage {
     if (weekdaysJson == null) {
       weekdays = ReminderSettings.defaults.weekdays;
     } else {
-      final decoded = jsonDecode(weekdaysJson) as List<dynamic>;
-      weekdays = decoded.map((e) => e as int).toList();
+      List<int> parsed;
+      try {
+        final decoded = jsonDecode(weekdaysJson) as List<dynamic>;
+        parsed = decoded
+            .whereType<int>()
+            .where((d) => d >= 1 && d <= 7)
+            .toSet()
+            .toList()
+          ..sort();
+      } catch (_) {
+        parsed = List.of(ReminderSettings.defaults.weekdays);
+      }
+      weekdays = parsed;
     }
 
     return ReminderSettings(enabled: enabled, times: times, weekdays: weekdays);
