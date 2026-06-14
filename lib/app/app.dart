@@ -104,6 +104,8 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     return MaterialApp(
       title: AppStrings.appName,
       theme: buildAppTheme(),
+      darkTheme: buildDarkAppTheme(),
+      themeMode: ThemeMode.dark,
       home: _onboardingCompleted
           ? MainShell(
               dailyEntryStorage: widget.dailyEntryStorage,
