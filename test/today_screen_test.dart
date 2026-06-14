@@ -148,8 +148,7 @@ void main() {
     await pumpToday(tester);
 
     await expectStatus(tester, 'Noch nicht gespeichert');
-    expect(find.text('Wähle einen Bereich aus, um den Tag zu speichern.'),
-        findsOneWidget);
+    expect(find.text('Fehlt: Bereich · Tätigkeit'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(
@@ -159,7 +158,7 @@ void main() {
 
     expect(find.text('Ware angenommen'), findsOneWidget);
     expect(find.text('Ware verpackt'), findsNothing);
-    expect(find.text('Wähle mindestens eine Tätigkeit aus.'), findsOneWidget);
+    expect(find.text('Fehlt: Tätigkeit'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(

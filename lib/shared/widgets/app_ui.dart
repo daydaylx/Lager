@@ -5,12 +5,14 @@ enum AppMessageTone { neutral, success, warning, error }
 class AppSectionHeader extends StatelessWidget {
   final String title;
   final String? description;
+  final String? badge;
   final Widget? trailing;
 
   const AppSectionHeader({
     super.key,
     required this.title,
     this.description,
+    this.badge,
     this.trailing,
   });
 
@@ -24,11 +26,22 @@ class AppSectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (badge case final b?) ...[
+                    const SizedBox(width: 8),
+                    _BadgePill(label: b),
+                  ],
+                ],
               ),
               if (description case final description?) ...[
                 const SizedBox(height: 4),
@@ -47,6 +60,36 @@ class AppSectionHeader extends StatelessWidget {
           trailing,
         ],
       ],
+    );
+  }
+}
+
+class _BadgePill extends StatelessWidget {
+  final String label;
+
+  const _BadgePill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isPflicht = label == 'Pflicht';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: isPflicht
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: isPflicht
+              ? theme.colorScheme.onPrimaryContainer
+              : theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

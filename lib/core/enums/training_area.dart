@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'activity_category.dart';
 
 enum TrainingArea {
@@ -37,4 +38,15 @@ extension TrainingAreaDetails on TrainingArea {
       TrainingArea.retouren => ActivityCategory.retouren,
     };
   }
+
+  IconData get icon => switch (this) {
+        TrainingArea.wareneingang => Icons.move_to_inbox_outlined,
+        TrainingArea.lager => Icons.inventory_2_outlined,
+        TrainingArea.transport => Icons.local_shipping_outlined,
+        TrainingArea.kommissionierung => Icons.checklist_outlined,
+        TrainingArea.verpackung => Icons.inventory_outlined,
+        TrainingArea.versand => Icons.send_outlined,
+        TrainingArea.inventur => Icons.fact_check_outlined,
+        TrainingArea.retouren => Icons.assignment_return_outlined,
+      };
 }

@@ -1,5 +1,6 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
+import '../../app/theme.dart';
 import '../../core/constants.dart';
 import '../../core/models/reminder_settings.dart';
 import '../../core/profile_storage.dart';
@@ -11,11 +12,15 @@ import '../../shared/widgets/profile_form.dart';
 class ProfileScreen extends StatefulWidget {
   final Future<void> Function() onDataCleared;
   final NotificationScheduler? notificationScheduler;
+  final ThemePreset themePreset;
+  final ValueChanged<ThemePreset>? onThemeChanged;
 
   const ProfileScreen({
     super.key,
     required this.onDataCleared,
     this.notificationScheduler,
+    this.themePreset = ThemePreset.lagerTeal,
+    this.onThemeChanged,
   });
 
   @override
@@ -303,6 +308,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onToggleWeekday: _toggleWeekday,
         ),
         const SizedBox(height: 24),
+        _ThemeSection(
+          current: widget.themePreset,
+          onChanged: widget.onThemeChanged,
+        ),
+        const SizedBox(height: 24),
         AppSettingsSection(
           title: 'Daten & Datenschutz',
           description: 'Alle Inhalte bleiben lokal auf diesem Gerät.',
@@ -518,6 +528,56 @@ class _ReminderSection extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _ThemeSection extends StatelessWidget {
+  final ThemePreset current;
+  final ValueChanged<ThemePreset>? onChanged;
+
+  const _ThemeSection({required this.current, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSettingsSection(
+      title: 'Darstellung',
+      description: 'Farbtheme der App.',
+      children: [
+        ListTile(
+          key: const ValueKey('theme_selector'),
+          leading: const Icon(Icons.palette_outlined),
+          title: const Text('Farbtheme'),
+          subtitle: Text(current.label),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: onChanged == null
+              ? null
+              : () => _openSelector(context),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openSelector(BuildContext context) async {
+    await showDialog<ThemePreset>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Farbtheme wählen'),
+        children: ThemePreset.values.map((preset) {
+          return RadioListTile<ThemePreset>(
+            key: ValueKey('theme_${preset.name}'),
+            title: Text(preset.label),
+            value: preset,
+            groupValue: current,
+            onChanged: (value) {
+              if (value != null) {
+                onChanged!(value);
+                Navigator.of(context).pop();
+              }
+            },
+          );
+        }).toList(),
+      ),
     );
   }
 }

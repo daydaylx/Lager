@@ -50,6 +50,7 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _isSaving = false;
   bool _isApplyingEntry = false;
   bool _templatesLoadFailed = false;
+  bool _specialFlagsExpanded = false;
 
   DateTime get _today {
     final value = widget.date ?? widget.currentDate ?? DateTime.now();
@@ -89,6 +90,18 @@ class _TodayScreenState extends State<TodayScreen> {
       return 'Noch nicht gespeichert';
     }
     return _hasUnsavedChanges ? 'Änderungen offen' : 'Gespeichert';
+  }
+
+  List<String> get _missingItems {
+    if (_isLoading || _loadFailed) return const [];
+    final items = <String>[];
+    if (_selectedDayType == DayType.betrieb && _selectedArea == null) {
+      items.add('Bereich');
+    }
+    if (_selectedDayType.supportsActivities && _selectedActivityIds.isEmpty) {
+      items.add('Tätigkeit');
+    }
+    return items;
   }
 
   @override
@@ -157,6 +170,8 @@ class _TodayScreenState extends State<TodayScreen> {
                 date: _today,
                 statusLabel: _statusLabel,
                 isSaved: _savedEntry != null && !_hasUnsavedChanges,
+                hasUnsavedChanges: _hasUnsavedChanges,
+                missingItems: _missingItems,
               ),
               const SizedBox(height: 24),
               AppSectionHeader(
@@ -182,28 +197,23 @@ class _TodayScreenState extends State<TodayScreen> {
                 const SizedBox(height: 24),
                 AppSectionHeader(
                   title: 'Bereich',
+                  badge: 'Pflicht',
                   description: _isToday
                       ? 'Wo hast du heute gearbeitet?'
                       : 'Wo hast du an diesem Tag gearbeitet?',
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: TrainingArea.values.map((area) {
-                    return ChoiceChip(
-                      key: ValueKey('area_${area.name}'),
-                      label: Text(area.label),
-                      selected: _selectedArea == area,
-                      onSelected: (_) => _confirmAndSelectArea(area),
-                    );
-                  }).toList(),
+                _AreaGrid(
+                  areas: TrainingArea.values,
+                  selected: _selectedArea,
+                  onSelect: _confirmAndSelectArea,
                 ),
               ],
               if (_selectedDayType.supportsActivities) ...[
                 const SizedBox(height: 24),
                 AppSectionHeader(
                   title: 'Tätigkeiten',
+                  badge: 'Pflicht',
                   description: _isToday
                       ? 'Wähle aus, was du heute gemacht hast.'
                       : 'Wähle aus, was du an diesem Tag gemacht hast.',
@@ -233,25 +243,16 @@ class _TodayScreenState extends State<TodayScreen> {
                 const SizedBox(height: 24),
                 const AppSectionHeader(
                   title: 'Besonderheiten',
-                  description: 'Optional: Was war heute besonders?',
+                  badge: 'Optional',
+                  description: 'Was war heute besonders?',
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: SpecialFlag.values.map((flag) {
-                    return FilterChip(
-                      key: ValueKey('special_${flag.name}'),
-                      label: Text(flag.label),
-                      selected: _selectedSpecialFlags.contains(flag),
-                      onSelected: (_) => _toggleSpecialFlag(flag),
-                    );
-                  }).toList(),
-                ),
+                _buildSpecialFlags(),
                 const SizedBox(height: 24),
                 const AppSectionHeader(
                   title: 'Notiz',
-                  description: 'Optional und bewusst kurz.',
+                  badge: 'Optional',
+                  description: 'Kurze Ergänzung, falls etwas Besonderes war.',
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -283,7 +284,7 @@ class _TodayScreenState extends State<TodayScreen> {
           ),
         ),
         bottomNavigationBar: _SaveBar(
-          validationHint: _validationHint,
+          missingItems: _missingItems,
           canSubmit: _canSubmit,
           isSaving: _isSaving,
           isNewEntry: _savedEntry == null,
@@ -298,7 +299,7 @@ class _TodayScreenState extends State<TodayScreen> {
     if (_selectedDayType == DayType.betrieb && _selectedArea == null) {
       return const AppMessage(
         icon: Icons.touch_app_outlined,
-        title: 'Wähle zuerst einen Bereich aus.',
+        title: 'Bereich wählen, dann erscheinen passende Tätigkeiten.',
       );
     }
 
@@ -370,14 +371,49 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
-  String? get _validationHint {
-    if (_selectedDayType == DayType.betrieb && _selectedArea == null) {
-      return 'Wähle einen Bereich aus, um den Tag zu speichern.';
-    }
-    if (_selectedDayType.supportsActivities && _selectedActivityIds.isEmpty) {
-      return 'Wähle mindestens eine Tätigkeit aus.';
-    }
-    return null;
+  // #25: Compact collapsible special flags
+  Widget _buildSpecialFlags() {
+    const maxCollapsedUnselected = 3;
+    const allFlags = SpecialFlag.values;
+    final selectedFlags =
+        allFlags.where(_selectedSpecialFlags.contains).toList();
+    final unselectedFlags =
+        allFlags.where((f) => !_selectedSpecialFlags.contains(f)).toList();
+
+    final needsExpand = unselectedFlags.length > maxCollapsedUnselected;
+    final showAll = _specialFlagsExpanded || !needsExpand;
+    final visibleUnselected =
+        showAll ? unselectedFlags : unselectedFlags.take(maxCollapsedUnselected).toList();
+    final hiddenCount = unselectedFlags.length - maxCollapsedUnselected;
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ...selectedFlags.map((flag) => FilterChip(
+              key: ValueKey('special_${flag.name}'),
+              label: Text(flag.label),
+              selected: true,
+              onSelected: (_) => _toggleSpecialFlag(flag),
+            )),
+        ...visibleUnselected.map((flag) => FilterChip(
+              key: ValueKey('special_${flag.name}'),
+              label: Text(flag.label),
+              selected: false,
+              onSelected: (_) => _toggleSpecialFlag(flag),
+            )),
+        if (!showAll && hiddenCount > 0)
+          ActionChip(
+            label: Text('+$hiddenCount weitere'),
+            onPressed: () => setState(() => _specialFlagsExpanded = true),
+          ),
+        if (showAll && needsExpand)
+          ActionChip(
+            label: const Text('Weniger'),
+            onPressed: () => setState(() => _specialFlagsExpanded = false),
+          ),
+      ],
+    );
   }
 
   Future<void> _confirmAndSelectDayType(DayType dayType) async {
@@ -618,9 +654,9 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Map<String, String> _buildActivityTitlesMap() => {
-    for (final a in defaultActivities) a.id: a.title,
-    for (final a in _customTemplates) a.id: a.title,
-  };
+        for (final a in defaultActivities) a.id: a.title,
+        for (final a in _customTemplates) a.id: a.title,
+      };
 
   String? _currentReport() {
     if (!_canSave) return null;
@@ -707,71 +743,80 @@ class _ReportCard extends StatelessWidget {
   }
 }
 
+// #21: Stronger status card with colored badge and missing-items hint
 class _DayStatusCard extends StatelessWidget {
   final DateTime date;
   final String statusLabel;
   final bool isSaved;
+  final bool hasUnsavedChanges;
+  final List<String> missingItems;
 
   const _DayStatusCard({
     required this.date,
     required this.statusLabel,
     required this.isSaved,
+    required this.hasUnsavedChanges,
+    required this.missingItems,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isSaved
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant;
+    final cs = theme.colorScheme;
+
+    final ({Color bg, Color fg}) badge;
+    if (isSaved && !hasUnsavedChanges) {
+      badge = (bg: cs.primaryContainer, fg: cs.onPrimaryContainer);
+    } else if (hasUnsavedChanges) {
+      badge = (bg: cs.tertiaryContainer, fg: cs.onTertiaryContainer);
+    } else {
+      badge = (bg: cs.surfaceContainer, fg: cs.onSurfaceVariant);
+    }
 
     return Material(
-      color: theme.colorScheme.surfaceContainerLow,
+      color: cs.surfaceContainerLow,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    formatDayDate(date),
-                    style: theme.textTheme.titleLarge?.copyWith(
+            Text(
+              formatDayDate(date),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: badge.bg,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    key: const ValueKey('daily_entry_status'),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: badge.fg,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        isSaved ? Icons.check_circle : Icons.circle_outlined,
-                        color: color,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          statusLabel,
-                          key: const ValueKey('daily_entry_status'),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
+              ],
+            ),
+            if (missingItems.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Noch ${missingItems.join(' und ')} auswählen',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
               ),
-            ),
-            Icon(
-              Icons.today_outlined,
-              color: theme.colorScheme.primary,
-              size: 30,
-            ),
+            ],
           ],
         ),
       ),
@@ -779,8 +824,9 @@ class _DayStatusCard extends StatelessWidget {
   }
 }
 
+// #26: Lighter save bar with compact missing-items hint
 class _SaveBar extends StatelessWidget {
-  final String? validationHint;
+  final List<String> missingItems;
   final bool canSubmit;
   final bool isSaving;
   final bool isNewEntry;
@@ -788,7 +834,7 @@ class _SaveBar extends StatelessWidget {
   final VoidCallback onSave;
 
   const _SaveBar({
-    required this.validationHint,
+    required this.missingItems,
     required this.canSubmit,
     required this.isSaving,
     required this.isNewEntry,
@@ -806,9 +852,9 @@ class _SaveBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (validationHint case final hint?) ...[
+            if (missingItems.isNotEmpty) ...[
               Text(
-                hint,
+                'Fehlt: ${missingItems.join(' · ')}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -983,6 +1029,49 @@ class _SelectionCount extends StatelessWidget {
           fontWeight: FontWeight.w700,
         ),
       ),
+    );
+  }
+}
+
+// #23: 2-column area card grid using ChoiceChips with icons
+class _AreaGrid extends StatelessWidget {
+  final List<TrainingArea> areas;
+  final TrainingArea? selected;
+  final ValueChanged<TrainingArea> onSelect;
+
+  const _AreaGrid({
+    required this.areas,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < areas.length; i += 2) {
+      if (i > 0) rows.add(const SizedBox(height: 8));
+      rows.add(Row(
+        children: [
+          Expanded(child: _areaChip(areas[i])),
+          const SizedBox(width: 8),
+          if (i + 1 < areas.length)
+            Expanded(child: _areaChip(areas[i + 1]))
+          else
+            const Expanded(child: SizedBox.shrink()),
+        ],
+      ));
+    }
+    return Column(children: rows);
+  }
+
+  Widget _areaChip(TrainingArea area) {
+    return ChoiceChip(
+      key: ValueKey('area_${area.name}'),
+      label: Text(area.label),
+      avatar: Icon(area.icon, size: 16),
+      showCheckmark: false,
+      selected: selected == area,
+      onSelected: (_) => onSelect(area),
     );
   }
 }

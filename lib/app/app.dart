@@ -6,6 +6,7 @@ import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
 import '../core/storage/reminder_storage.dart';
+import '../core/storage/theme_preset_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
@@ -21,6 +22,7 @@ class BerichtsheftApp extends StatefulWidget {
   final String? initialOccupation;
   final int? initialTrainingYear;
   final NotificationScheduler? notificationScheduler;
+  final ThemePreset initialThemePreset;
 
   const BerichtsheftApp({
     super.key,
@@ -32,6 +34,7 @@ class BerichtsheftApp extends StatefulWidget {
     this.initialOccupation,
     this.initialTrainingYear,
     this.notificationScheduler,
+    this.initialThemePreset = ThemePreset.lagerTeal,
   });
 
   @override
@@ -45,6 +48,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   String? _occupation;
   int? _trainingYear;
   late final NotificationScheduler _notificationScheduler;
+  late ThemePreset _themePreset;
 
   @override
   void initState() {
@@ -54,6 +58,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     _company = widget.initialCompany;
     _occupation = widget.initialOccupation;
     _trainingYear = widget.initialTrainingYear;
+    _themePreset = widget.initialThemePreset;
     _notificationScheduler = widget.notificationScheduler ??
         const FlutterLocalNotificationScheduler();
   }
@@ -100,19 +105,25 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     }
   }
 
+  Future<void> _onThemeChanged(ThemePreset preset) async {
+    await ThemePresetStorage.save(preset);
+    if (mounted) setState(() => _themePreset = preset);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: AppStrings.appName,
-      theme: buildAppTheme(),
-      darkTheme: buildDarkAppTheme(),
-      themeMode: ThemeMode.dark,
+      theme: buildThemeForPreset(_themePreset),
+      themeMode: ThemeMode.light, // preset controls brightness
       home: _onboardingCompleted
           ? MainShell(
               dailyEntryStorage: widget.dailyEntryStorage,
               templateStorage: widget.templateStorage,
               onDataCleared: _resetAll,
               notificationScheduler: _notificationScheduler,
+              themePreset: _themePreset,
+              onThemeChanged: _onThemeChanged,
             )
           : OnboardingScreen(
               initialName: _name,
@@ -131,6 +142,8 @@ class MainShell extends StatefulWidget {
   final ActivityTemplateStorage templateStorage;
   final Future<void> Function() onDataCleared;
   final NotificationScheduler notificationScheduler;
+  final ThemePreset themePreset;
+  final ValueChanged<ThemePreset> onThemeChanged;
 
   const MainShell({
     super.key,
@@ -138,6 +151,8 @@ class MainShell extends StatefulWidget {
     required this.templateStorage,
     required this.onDataCleared,
     required this.notificationScheduler,
+    required this.themePreset,
+    required this.onThemeChanged,
   });
 
   @override
@@ -212,6 +227,8 @@ class _MainShellState extends State<MainShell> {
           ProfileScreen(
             onDataCleared: widget.onDataCleared,
             notificationScheduler: widget.notificationScheduler,
+            themePreset: widget.themePreset,
+            onThemeChanged: widget.onThemeChanged,
           ),
         ],
       ),

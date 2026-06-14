@@ -1,16 +1,64 @@
 import 'package:flutter/material.dart';
 
-ThemeData buildDarkAppTheme() => _buildTheme(Brightness.dark);
+enum ThemePreset {
+  lagerTeal,
+  nachtGruen,
+  warmSand,
+  blauGrau,
+  hell,
+}
 
-ThemeData buildAppTheme() => _buildTheme(Brightness.light);
+extension ThemePresetDetails on ThemePreset {
+  String get label => switch (this) {
+        ThemePreset.lagerTeal => 'Lager Teal',
+        ThemePreset.nachtGruen => 'Nacht Grün',
+        ThemePreset.warmSand => 'Warm Sand',
+        ThemePreset.blauGrau => 'Blau Grau',
+        ThemePreset.hell => 'Hell',
+      };
 
-ThemeData _buildTheme(Brightness brightness) {
+  Color get seedColor => switch (this) {
+        ThemePreset.lagerTeal => const Color(0xFF2E7D6B),
+        ThemePreset.nachtGruen => const Color(0xFF1A5C40),
+        ThemePreset.warmSand => const Color(0xFF8B6914),
+        ThemePreset.blauGrau => const Color(0xFF3A5B8C),
+        ThemePreset.hell => const Color(0xFF2E7D6B),
+      };
+
+  Color get _surfaceColor => switch (this) {
+        ThemePreset.lagerTeal => const Color(0xFF0F1F1C),
+        ThemePreset.nachtGruen => const Color(0xFF081510),
+        ThemePreset.warmSand => const Color(0xFF1A1208),
+        ThemePreset.blauGrau => const Color(0xFF0C1520),
+        ThemePreset.hell => const Color(0xFFF8FAF9),
+      };
+
+  Brightness get brightness => switch (this) {
+        ThemePreset.hell => Brightness.light,
+        _ => Brightness.dark,
+      };
+}
+
+ThemeData buildThemeForPreset(ThemePreset preset) =>
+    _buildTheme(preset.brightness, preset.seedColor, preset._surfaceColor);
+
+ThemeData buildDarkAppTheme() => buildThemeForPreset(ThemePreset.lagerTeal);
+
+ThemeData buildAppTheme() => _buildTheme(
+      Brightness.light,
+      const Color(0xFF2E7D6B),
+      const Color(0xFFF8FAF9),
+    );
+
+ThemeData _buildTheme(
+  Brightness brightness,
+  Color seedColor,
+  Color surfaceColor,
+) {
   final colorScheme = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF2E7D6B),
+    seedColor: seedColor,
     brightness: brightness,
-    surface: brightness == Brightness.dark
-        ? const Color(0xFF0F1F1C)
-        : const Color(0xFFF8FAF9),
+    surface: surfaceColor,
   );
   final base = ThemeData(
     useMaterial3: true,
@@ -20,6 +68,11 @@ ThemeData _buildTheme(Brightness brightness) {
   final roundedShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(16),
   );
+
+  // Slightly lifted secondary text for dark themes (#27)
+  final secondaryTextColor = brightness == Brightness.dark
+      ? colorScheme.onSurface.withValues(alpha: 0.72)
+      : colorScheme.onSurfaceVariant;
 
   return base.copyWith(
     scaffoldBackgroundColor: colorScheme.surface,
@@ -42,7 +95,7 @@ ThemeData _buildTheme(Brightness brightness) {
         return base.textTheme.labelMedium?.copyWith(
           color: states.contains(WidgetState.selected)
               ? colorScheme.onSurface
-              : colorScheme.onSurfaceVariant,
+              : secondaryTextColor, // #27: more readable inactive labels
           fontWeight: states.contains(WidgetState.selected)
               ? FontWeight.w700
               : FontWeight.w500,
@@ -64,6 +117,9 @@ ThemeData _buildTheme(Brightness brightness) {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: colorScheme.surfaceContainerLowest,
+      hintStyle: base.textTheme.bodyLarge?.copyWith(
+        color: secondaryTextColor, // #27: more readable placeholder
+      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -76,12 +132,16 @@ ThemeData _buildTheme(Brightness brightness) {
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: colorScheme.primary, width: 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(48, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        disabledForegroundColor:
+            colorScheme.onSurface.withValues(alpha: 0.45), // #27: readable disabled text
         textStyle: base.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w700,
         ),
@@ -90,7 +150,8 @@ ThemeData _buildTheme(Brightness brightness) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         side: BorderSide(color: colorScheme.outline),
         textStyle: base.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w700,
@@ -111,14 +172,16 @@ ThemeData _buildTheme(Brightness brightness) {
     ),
     listTileTheme: ListTileThemeData(
       minTileHeight: 56,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       iconColor: colorScheme.onSurfaceVariant,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
@@ -140,7 +203,8 @@ ThemeData _buildTheme(Brightness brightness) {
       contentTextStyle: base.textTheme.bodyMedium?.copyWith(
         color: colorScheme.onInverseSurface,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
 }
