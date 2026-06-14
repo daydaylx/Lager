@@ -430,11 +430,14 @@ void main() {
     );
 
     expect(find.text('Alte eigene Tätigkeit (deaktiviert)'), findsOneWidget);
-    final chip = tester.widget<FilterChip>(
-      find.byKey(const ValueKey('activity_custom_1')),
+    final checkbox = tester.widget<Checkbox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('activity_custom_1')),
+        matching: find.byType(Checkbox),
+      ),
     );
-    expect(chip.selected, isTrue);
-    expect(chip.onSelected, isNotNull);
+    expect(checkbox.value, isTrue);
+    expect(checkbox.onChanged, isNotNull);
   });
 
   testWidgets('Vorlagen-Ladefehler lässt Standardtätigkeiten nutzbar', (
@@ -511,10 +514,13 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    final activityChip = tester.widget<FilterChip>(
-      find.byKey(const ValueKey('activity_wareneingang_01')),
+    final activityCheckbox = tester.widget<Checkbox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('activity_wareneingang_01')),
+        matching: find.byType(Checkbox),
+      ),
     );
-    expect(activityChip.selected, isTrue);
+    expect(activityCheckbox.value, isTrue);
 
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('daily_note_field')),
@@ -644,5 +650,57 @@ void main() {
     );
     expect(noteField.controller?.text, 'Diese Notiz bleibt erhalten');
     expect(saveButton(tester).onPressed, isNotNull);
+  });
+
+  group('Berichtsvorschau', () {
+    testWidgets('erscheint nach Auswahl von Bereich und Tätigkeit', (
+      WidgetTester tester,
+    ) async {
+      await pumpToday(tester);
+
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('area_wareneingang')),
+      );
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('activity_wareneingang_01')),
+      );
+
+      await tester.scrollUntilVisible(
+        find.text('Vorschlag fürs Berichtsheft'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Vorschlag fürs Berichtsheft'), findsOneWidget);
+      expect(find.byKey(const Key('copy_daily_report')), findsOneWidget);
+    });
+
+    testWidgets('Kopieren-Button zeigt Snackbar', (
+      WidgetTester tester,
+    ) async {
+      await pumpToday(tester);
+
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('area_wareneingang')),
+      );
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('activity_wareneingang_01')),
+      );
+
+      // Scroll with large delta so button center lands inside viewport
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('copy_daily_report')),
+        500,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('copy_daily_report')));
+      await tester.pump();
+
+      expect(find.text('Tagesbericht kopiert.'), findsOneWidget);
+    });
   });
 }

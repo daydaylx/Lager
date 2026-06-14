@@ -10,6 +10,7 @@ import '../../core/models/daily_entry.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/week_utils.dart';
+import '../../core/report/daily_report_generator.dart';
 import '../../shared/widgets/app_ui.dart';
 
 class TodayScreen extends StatefulWidget {
@@ -263,6 +264,19 @@ class _TodayScreenState extends State<TodayScreen> {
                     border: OutlineInputBorder(),
                     hintText: 'Kurze Notiz, falls etwas Besonderes war ...',
                   ),
+                ),
+              ],
+              if (_canSave) ...[
+                const SizedBox(height: 24),
+                _ReportCard(
+                  report: _currentReport()!,
+                  note: (_selectedDayType == DayType.betrieb ||
+                          _selectedDayType == DayType.berufsschule)
+                      ? (_noteController.text.trim().isEmpty
+                          ? null
+                          : _noteController.text.trim())
+                      : null,
+                  hasUnsavedChanges: _hasUnsavedChanges,
                 ),
               ],
             ],
@@ -601,6 +615,95 @@ class _TodayScreenState extends State<TodayScreen> {
         );
       }
     }
+  }
+
+  Map<String, String> _buildActivityTitlesMap() => {
+    for (final a in defaultActivities) a.id: a.title,
+    for (final a in _customTemplates) a.id: a.title,
+  };
+
+  String? _currentReport() {
+    if (!_canSave) return null;
+    final note = _noteController.text.trim();
+    final entry = DailyEntry(
+      id: DailyEntry.idForDate(_today),
+      date: _today,
+      dayType: _selectedDayType,
+      area: _selectedDayType == DayType.betrieb ? _selectedArea : null,
+      selectedActivities: _selectedActivityIds.toList(growable: false),
+      specialFlags: _selectedSpecialFlags.toList(growable: false),
+      note: note.isEmpty ? null : note,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    return DailyReportGenerator.generate(entry, _buildActivityTitlesMap());
+  }
+}
+
+class _ReportCard extends StatelessWidget {
+  final String report;
+  final String? note;
+  final bool hasUnsavedChanges;
+
+  const _ReportCard({
+    required this.report,
+    required this.note,
+    required this.hasUnsavedChanges,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Vorschlag fürs Berichtsheft',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (hasUnsavedChanges) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Vorschau aus aktueller Auswahl – noch nicht gespeichert',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            SelectableText(report),
+            if (note != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Zusatznotiz – bei Bedarf übernehmen: $note',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('copy_daily_report'),
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('Kopieren'),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: report));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tagesbericht kopiert.')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

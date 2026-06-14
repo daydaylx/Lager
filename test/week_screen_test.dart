@@ -371,4 +371,60 @@ void main() {
 
     expect(storage.loadCalls, 14);
   });
+
+  group('Berichtsvorschlag in Wochenzusammenfassung', () {
+    testWidgets('zeigt Berichtstext für gespeicherten Tag', (
+      WidgetTester tester,
+    ) async {
+      final today = normalizedToday();
+      final monday = startOfWeek(today);
+      final storage = InMemoryDailyEntryStorage(
+        initialEntries: [entryFor(monday)],
+      );
+
+      await pumpWeek(tester, storage: storage, initialDate: today);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('show_week_summary')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const ValueKey('show_week_summary')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ware angenommen'), findsOneWidget);
+      expect(find.text('Vorschlag fürs Berichtsheft'), findsOneWidget);
+    });
+
+    testWidgets('Kopieren-Button pro Tag vorhanden und zeigt Snackbar', (
+      WidgetTester tester,
+    ) async {
+      final today = normalizedToday();
+      final monday = startOfWeek(today);
+      final mondayId = DailyEntry.idForDate(monday);
+      final storage = InMemoryDailyEntryStorage(
+        initialEntries: [entryFor(monday)],
+      );
+
+      await pumpWeek(tester, storage: storage, initialDate: today);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('show_week_summary')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const ValueKey('show_week_summary')));
+      await tester.pumpAndSettle();
+
+      final copyKey = Key('copy_report_$mondayId');
+      await tester.scrollUntilVisible(
+        find.byKey(copyKey),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(copyKey), findsOneWidget);
+
+      await tester.tap(find.byKey(copyKey));
+      await tester.pump();
+      expect(find.text('Tagesbericht kopiert.'), findsOneWidget);
+    });
+  });
 }

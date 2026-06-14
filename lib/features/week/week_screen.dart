@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/data/default_activities.dart';
+import '../../core/report/daily_report_generator.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
 import '../../core/enums/training_area.dart';
@@ -8,12 +10,14 @@ import '../../core/models/activity_template.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/week_utils.dart';
+import '../../shared/widgets/app_ui.dart';
 import '../today/today_screen.dart';
 
 class WeekScreen extends StatefulWidget {
   final DailyEntryStorage storage;
   final ActivityTemplateStorage templateStorage;
   final DateTime? initialDate;
+  final DateTime? currentDate;
   final int refreshSignal;
   final int templateRefreshSignal;
 
@@ -22,6 +26,7 @@ class WeekScreen extends StatefulWidget {
     required this.storage,
     required this.templateStorage,
     this.initialDate,
+    this.currentDate,
     this.refreshSignal = 0,
     this.templateRefreshSignal = 0,
   });
@@ -40,7 +45,7 @@ class _WeekScreenState extends State<WeekScreen> {
   int _loadGeneration = 0;
 
   DateTime get _today {
-    final now = DateTime.now();
+    final now = widget.currentDate ?? DateTime.now();
     return DateTime(now.year, now.month, now.day);
   }
 
@@ -86,27 +91,15 @@ class _WeekScreenState extends State<WeekScreen> {
     }
 
     if (_loadFailed) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                'Die Einträge dieser Woche konnten nicht geladen werden.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                key: const ValueKey('retry_week_load'),
-                onPressed: _loadWeek,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Erneut versuchen'),
-              ),
-            ],
-          ),
+      return AppEmptyState(
+        icon: Icons.error_outline,
+        title: 'Woche nicht verfügbar',
+        message: 'Die Einträge dieser Woche konnten nicht geladen werden.',
+        action: FilledButton.icon(
+          key: const ValueKey('retry_week_load'),
+          onPressed: _loadWeek,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Erneut versuchen'),
         ),
       );
     }
@@ -127,8 +120,10 @@ class _WeekScreenState extends State<WeekScreen> {
             enteredDays: enteredDueDays,
             dueDays: dueWeekDays.length,
             canGoForward: _selectedWeekStart.isBefore(_currentWeekStart),
+            hasEntries: hasEntries,
             onPrevious: () => _changeWeek(-7),
             onNext: () => _changeWeek(7),
+            onSummary: _openSummary,
           ),
           if (!hasEntries) ...[
             const SizedBox(height: 16),
@@ -139,27 +134,24 @@ class _WeekScreenState extends State<WeekScreen> {
             _WeekTemplateWarning(onRetry: _loadTemplates),
           ],
           const SizedBox(height: 16),
-          ...weekDays.map((date) {
-            final entry = _entryFor(date);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _DayCard(
-                date: date,
-                entry: entry,
-                status: _statusFor(date, entry),
-                summary: _summaryFor(entry),
-                onTap: date.isAfter(_today) ? null : () => _openDay(date),
-              ),
-            );
-          }),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 52,
-            child: FilledButton.icon(
-              key: const ValueKey('show_week_summary'),
-              onPressed: hasEntries ? _openSummary : null,
-              icon: const Icon(Icons.summarize_outlined),
-              label: const Text('Wochenzusammenfassung anzeigen'),
+          Material(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: weekDays.indexed.map((entry) {
+                final index = entry.$1;
+                final date = entry.$2;
+                final dailyEntry = _entryFor(date);
+                return _DayCard(
+                  date: date,
+                  entry: dailyEntry,
+                  status: _statusFor(date, dailyEntry),
+                  summary: _summaryFor(dailyEntry),
+                  onTap: date.isAfter(_today) ? null : () => _openDay(date),
+                  showDivider: index < weekDays.length - 1,
+                );
+              }).toList(growable: false),
             ),
           ),
         ],
@@ -344,79 +336,102 @@ class _WeekHeader extends StatelessWidget {
   final int enteredDays;
   final int dueDays;
   final bool canGoForward;
+  final bool hasEntries;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final VoidCallback onSummary;
 
   const _WeekHeader({
     required this.weekStart,
     required this.enteredDays,
     required this.dueDays,
     required this.canGoForward,
+    required this.hasEntries,
     required this.onPrevious,
     required this.onNext,
+    required this.onSummary,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final end = weekStart.add(const Duration(days: 6));
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 16, 12, 14),
-        child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                IconButton(
-                  key: const ValueKey('previous_week'),
-                  onPressed: onPrevious,
-                  tooltip: 'Vorherige Woche',
-                  icon: const Icon(Icons.chevron_left),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(
-                        'KW ${isoWeekNumber(weekStart)} / '
-                        '${isoWeekYear(weekStart)}',
-                        key: const ValueKey('week_number'),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${_shortDate(weekStart)} – ${_shortDate(end)}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+            IconButton(
+              key: const ValueKey('previous_week'),
+              onPressed: onPrevious,
+              tooltip: 'Vorherige Woche',
+              icon: const Icon(Icons.chevron_left),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Text(
+                    'KW ${isoWeekNumber(weekStart)} / ${isoWeekYear(weekStart)}',
+                    key: const ValueKey('week_number'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                IconButton(
-                  key: const ValueKey('next_week'),
-                  onPressed: canGoForward ? onNext : null,
-                  tooltip: 'Nächste Woche',
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    '${_shortDate(weekStart)} – ${_shortDate(end)}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              '$enteredDays von $dueDays fälligen Werktagen eingetragen',
-              key: const ValueKey('week_progress'),
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: dueDays == 0 ? 0 : enteredDays / dueDays,
-              borderRadius: BorderRadius.circular(8),
+            IconButton(
+              key: const ValueKey('next_week'),
+              onPressed: canGoForward ? onNext : null,
+              tooltip: 'Nächste Woche',
+              icon: const Icon(Icons.chevron_right),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$enteredDays von $dueDays fälligen Werktagen eingetragen',
+                key: const ValueKey('week_progress'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              dueDays == 0
+                  ? '0 %'
+                  : '${((enteredDays / dueDays) * 100).round()} %',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: dueDays == 0 ? 0 : enteredDays / dueDays,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        const SizedBox(height: 14),
+        FilledButton.tonalIcon(
+          key: const ValueKey('show_week_summary'),
+          onPressed: hasEntries ? onSummary : null,
+          icon: const Icon(Icons.summarize_outlined),
+          label: const Text('Wochenzusammenfassung'),
+        ),
+      ],
     );
   }
 
@@ -431,25 +446,11 @@ class _EmptyWeekCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.edit_calendar_outlined),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Für diese Woche gibt es noch keine Einträge. '
-              'Tippe auf einen vergangenen Tag, um ihn einzutragen.',
-            ),
-          ),
-        ],
-      ),
+    return const AppMessage(
+      icon: Icons.edit_calendar_outlined,
+      title: 'Noch keine Einträge',
+      message:
+          'Tippe auf einen vergangenen Tag, um ihn für diese Woche einzutragen.',
     );
   }
 }
@@ -461,46 +462,15 @@ class _WeekTemplateWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _InfoRow(
+    return AppMessage(
       icon: Icons.warning_amber_outlined,
-      text:
-          'Eigene Tätigkeitstitel konnten nicht geladen werden. Standardtitel bleiben sichtbar.',
+      title: 'Eigene Tätigkeitstitel konnten nicht geladen werden.',
+      message: 'Standardtitel bleiben sichtbar.',
+      tone: AppMessageTone.warning,
       action: IconButton(
         onPressed: onRetry,
         tooltip: 'Erneut versuchen',
         icon: const Icon(Icons.refresh),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Widget? action;
-
-  const _InfoRow({
-    required this.icon,
-    required this.text,
-    this.action,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text)),
-          if (action case final action?) action,
-        ],
       ),
     );
   }
@@ -512,6 +482,7 @@ class _DayCard extends StatelessWidget {
   final _DayStatus status;
   final String summary;
   final VoidCallback? onTap;
+  final bool showDivider;
 
   const _DayCard({
     required this.date,
@@ -519,59 +490,81 @@ class _DayCard extends StatelessWidget {
     required this.status,
     required this.summary,
     required this.onTap,
+    required this.showDivider,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = status.color(theme.colorScheme);
+    final containerColor = status.containerColor(theme.colorScheme);
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        key: ValueKey('week_day_${DailyEntry.idForDate(date)}'),
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(status.icon, color: color, size: 28),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${_weekday(date)}, ${date.day}. ${_month(date)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+    return Column(
+      children: [
+        InkWell(
+          key: ValueKey('week_day_${DailyEntry.idForDate(date)}'),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 76),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: containerColor,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      entry == null
-                          ? summary
-                          : '${entry!.dayType.label} · $summary',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                    child: Icon(status.icon, color: color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                formatDayDate(date),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              status.label,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          entry == null
+                              ? summary
+                              : '${entry!.dayType.label} · $summary',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      status.label,
-                      style: theme.textTheme.labelLarge?.copyWith(color: color),
-                    ),
-                  ],
-                ),
+                  ),
+                  if (onTap != null) const Icon(Icons.chevron_right, size: 20),
+                ],
               ),
-              if (onTap != null) const Icon(Icons.chevron_right),
-            ],
+            ),
           ),
         ),
-      ),
+        if (showDivider) const Divider(indent: 50),
+      ],
     );
   }
 }
@@ -641,15 +634,16 @@ class _SummaryDayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: EdgeInsets.zero,
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${_weekday(date)}, ${date.day}. ${_month(date)}',
+              formatDayDate(date),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -683,6 +677,38 @@ class _SummaryDayCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text('Notiz: $note'),
               ],
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Vorschlag fürs Berichtsheft',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              SelectableText(
+                DailyReportGenerator.generate(entry!, activityTitles),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: Key('copy_report_${entry!.id}'),
+                icon: const Icon(Icons.copy_outlined),
+                label: const Text('Kopieren'),
+                onPressed: () {
+                  Clipboard.setData(
+                    ClipboardData(
+                      text: DailyReportGenerator.generate(
+                        entry!,
+                        activityTitles,
+                      ),
+                    ),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tagesbericht kopiert.')),
+                  );
+                },
+              ),
             ],
           ],
         ),
@@ -741,35 +767,13 @@ class _DayStatus {
       _DayStatusKind.neutral => colorScheme.onSurfaceVariant,
     };
   }
-}
 
-String _weekday(DateTime date) {
-  const weekdays = [
-    'Montag',
-    'Dienstag',
-    'Mittwoch',
-    'Donnerstag',
-    'Freitag',
-    'Samstag',
-    'Sonntag',
-  ];
-  return weekdays[date.weekday - 1];
-}
-
-String _month(DateTime date) {
-  const months = [
-    'Januar',
-    'Februar',
-    'März',
-    'April',
-    'Mai',
-    'Juni',
-    'Juli',
-    'August',
-    'September',
-    'Oktober',
-    'November',
-    'Dezember',
-  ];
-  return months[date.month - 1];
+  Color containerColor(ColorScheme colorScheme) {
+    return switch (kind) {
+      _DayStatusKind.saved => colorScheme.primaryContainer,
+      _DayStatusKind.absence => colorScheme.tertiaryContainer,
+      _DayStatusKind.missing => colorScheme.errorContainer,
+      _DayStatusKind.neutral => colorScheme.surfaceContainer,
+    };
+  }
 }
