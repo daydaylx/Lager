@@ -98,7 +98,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 8: Polishing und Android-Build ✅
+## Phase 8: Polishing und Android-Build ✅ Code abgeschlossen; Gerätetest in Phase 13 offen
 
 - [x] App-Icon erstellen (teal, Berichtsheft-Metapher via ImageMagick)
 - [x] Splash Screen (einfarbig teal #2E7D6B)
@@ -110,7 +110,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 9: Lokale Erinnerungen (Reminder) 🔨
+## Phase 9: Lokale Erinnerungen (Reminder) ✅ Code abgeschlossen; Gerätetest in Phase 13 offen
 
 - [x] `ReminderSettings`-Modell mit Defaults (20:00 Uhr, Mo–Fr)
 - [x] `ReminderStorage` (SharedPreferences, JSON-Serialisierung)
@@ -142,7 +142,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 11: UI-Redesign ✅
+## Phase 11: UI-Redesign ✅ Code abgeschlossen; Gerätetest in Phase 13 offen
 
 - [x] Explizites Material-3-Komponententheme und gemeinsame UI-Bausteine
 - [x] Onboarding auf zwei kompakte, klar geführte Schritte umstellen
@@ -158,7 +158,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 ---
 
-## Phase 12: Reminder-Stack verbessern ✅
+## Phase 12: Reminder-Stack verbessern ✅ Code abgeschlossen; Gerätetest in Phase 13 offen
 
 Issues #14–#20 aus GitHub abgearbeitet.
 
@@ -176,7 +176,20 @@ Issues #14–#20 aus GitHub abgearbeitet.
 
 ---
 
-## Phase 13: Robustheit und Release-Härtung ✅
+## Bereits implementierte Ergänzungen
+
+Issues #12/#13 und #21–#28 sind im Code abgeschlossen:
+
+- [x] Deterministischer lokaler Tagesberichtsvorschlag in Heute und Woche
+- [x] Berichtsvorschläge lokal kopierbar, ohne KI oder externe API
+- [x] Fünf persistierte Farbthemes inklusive hellem Preset
+- [x] Profil-Screen mit separater Darstellungsgruppe
+- [x] Zusätzliche mobile UI-Verbesserungen und Kontrastkorrekturen
+- [ ] Theme-Auswahl und Theme-Persistenz auf echtem Android-Gerät prüfen
+
+---
+
+## Phase 13: Robustheit und Release-Härtung 🔨
 
 - [x] App-Startfehler sichtbar behandeln und ohne Datenlöschung erneut versuchen
 - [x] Tageswechsel nach Resume in Heute- und Wochenansicht aktualisieren; offene Eingaben schützen

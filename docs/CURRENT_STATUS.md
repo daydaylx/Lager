@@ -25,6 +25,12 @@ Phasen 0–13 im Code abgeschlossen. Neu in Phase 13:
 - Optionale lokale Release-Signierung über ignorierte Datei `android/key.properties`
 - CI führt zusätzlich `flutter build apk --debug` aus
 
+Weitere akzeptierte aktuelle Funktionen:
+
+- Deterministischer lokaler Tagesberichtsvorschlag in Heute und Woche, inklusive Kopieren
+- Fünf lokal persistierte Farbthemes; `Lager Teal` ist das dunkle Standardpreset
+- Theme-Auswahl im Profil und Zurücksetzen über „Alle Daten löschen“
+
 ---
 
 ## Letzte erfolgreiche Verifikation
@@ -45,6 +51,6 @@ lokalen Keystore keine Debug-Signatur enthält.
 
 ## Nächster Schritt
 
-1. Debug-APK auf echtem Android-Gerät nach `docs/QA_REMINDER_CHECKLIST.md` testen.
+1. Debug-APK auf echtem Android-Gerät nach `docs/QA_REMINDER_CHECKLIST.md` testen, einschließlich Theme-Auswahl und Neustart.
 2. Lokalen Release-Keystore konfigurieren und signierten Release-Build prüfen.
 3. Toolchain- und Dependency-Modernisierung als separate spätere Phase planen.

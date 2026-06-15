@@ -386,7 +386,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                     : 'Alle Daten löschen',
               ),
               subtitle: const Text('Entfernt Profil, Einträge und Vorlagen.'),
-              trailing: const Icon(Icons.chevron_right),
               textColor: Theme.of(context).colorScheme.error,
               iconColor: Theme.of(context).colorScheme.error,
               enabled: !_isDeleting,
@@ -568,16 +567,33 @@ class _ReminderSection extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(
-                'Auf Samsung-Geräten können Benachrichtigungen zusätzlich '
-                'blockiert werden:\n\n'
-                '• Einstellungen → Apps → Berichtsheft-Merker → Akku → '
-                '"Nicht eingeschränkt" wählen\n'
-                '• Einstellungen → Benachrichtigungen → Nicht stören → '
-                'prüfen, ob die App blockiert wird\n'
-                '• Einstellungen → Apps → Berichtsheft-Merker → '
-                'Benachrichtigungen → Kategorie "Tägliche Berichtsheft-'
-                'Erinnerungen" aktivieren',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Auf Samsung-Geräten können Benachrichtigungen '
+                    'zusätzlich blockiert werden:',
+                  ),
+                  SizedBox(height: 12),
+                  _SamsungHintStep(
+                    icon: Icons.battery_saver_outlined,
+                    text: 'Einstellungen → Apps → Berichtsheft-Merker '
+                        '→ Akku → „Nicht eingeschränkt" wählen',
+                  ),
+                  SizedBox(height: 8),
+                  _SamsungHintStep(
+                    icon: Icons.do_not_disturb_on_outlined,
+                    text: 'Einstellungen → Benachrichtigungen → Nicht '
+                        'stören → prüfen, ob die App blockiert wird',
+                  ),
+                  SizedBox(height: 8),
+                  _SamsungHintStep(
+                    icon: Icons.notifications_active_outlined,
+                    text: 'Einstellungen → Apps → Berichtsheft-Merker '
+                        '→ Benachrichtigungen → Kategorie '
+                        '„Tägliche Berichtsheft-Erinnerungen" aktivieren',
+                  ),
+                ],
               ),
             ),
           ],
@@ -695,6 +711,28 @@ class _ProfileHeader extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SamsungHintStep extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _SamsungHintStep({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(text, style: theme.textTheme.bodySmall),
+        ),
+      ],
     );
   }
 }

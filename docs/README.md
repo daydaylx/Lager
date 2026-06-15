@@ -1,19 +1,28 @@
-# Berichtsheft-Merker Lagerlogistik
+# Historisches Planungsarchiv
 
-Dokumentenpaket für die Planung und spätere Umsetzung einer kleinen privaten Android-App.
+Dieses Verzeichnis enthält aktive technische Dokumentation und historische
+Konzeptunterlagen der bereits implementierten Android-App.
 
 Erstellt am: 2026-06-12
 
-## Enthaltene Dokumente
+## Historische Dokumente
 
 1. `PRODUCT_CONCEPT.md`  
-   Produktidee, Ziel, MVP, Funktionsumfang und Grenzen.
+   Ursprüngliche Produktidee und frühe Roadmap. Keine aktive Bauanweisung.
 
-2. `UI_UX_SPEC.md`  
-   UI-/UX-Vorgaben für eine moderne App-Oberfläche.
+2. `AGENT_IMPLEMENTATION_PROMPT.md`
+   Ursprünglicher Bootstrap-Prompt. Darf nicht als aktueller Auftrag verwendet werden.
 
-3. `AGENT_IMPLEMENTATION_PROMPT.md`  
-   Prompt für Coding-Agenten wie Claude Code, Codex, Gemini CLI oder ähnliche Tools.
+## Aktive Dokumente
+
+- `CURRENT_STATUS.md` — aktueller Agent-Handoff
+- `AGENT_CONTEXT_PACKS.md` — Mindestkontext je Änderungstyp
+- `CODEMAP.md` — aktuelle Architektur
+- `DATA_MODEL.md` — aktuelle Daten- und Persistenzverträge
+- `UI_UX_SPEC.md` — aktuelle UI-/UX-Regeln
+- `PRIVACY_CONTEXT.md` — lokale Datenhaltung und No-Gos
+- `VALIDATION_MATRIX.md` — erforderliche Prüfungen
+- `QA_REMINDER_CHECKLIST.md` — offener manueller Android-Test
 
 ## Ziel des Projekts
 
@@ -21,7 +30,7 @@ Die App soll Auszubildenden im Bereich Lagerlogistik helfen, täglich kurz Täti
 
 Die App ersetzt kein offizielles Berichtsheft. Sie ist nur eine private Gedächtnisstütze.
 
-## Empfohlene technische Richtung
+## Aktuelle technische Richtung
 
 - Flutter
 - Android-App
@@ -31,7 +40,7 @@ Die App ersetzt kein offizielles Berichtsheft. Sie ist nur eine private Gedächt
 - kein Backend
 - keine PDF-Funktion in Version 1
 
-## Hinweis
+## Quelle der Wahrheit
 
-Die Dokumente sind bewusst als Planungs- und Agenten-Grundlage geschrieben.  
-Sie enthalten noch keinen Quellcode.
+Bei Abweichungen gelten zuerst Code, Build-Konfiguration, Tests und CI. Für
+Agenten ist `AGENTS.md` im Repository-Root kanonisch.

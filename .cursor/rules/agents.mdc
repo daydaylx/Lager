@@ -1,0 +1,8 @@
+---
+description: Canonical repository agent rules
+alwaysApply: true
+---
+
+Follow `AGENTS.md` as the canonical repository instruction file. Treat context
+packs as minimum context, preserve existing user changes, and run the validation
+required by `docs/VALIDATION_MATRIX.md`.

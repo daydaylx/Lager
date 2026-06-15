@@ -223,6 +223,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 AppSectionHeader(
                   title: 'Bereich',
                   badge: 'Pflicht',
+                  badgeRequired: true,
                   description: _isToday
                       ? 'Wo hast du heute gearbeitet?'
                       : 'Wo hast du an diesem Tag gearbeitet?',
@@ -239,6 +240,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 AppSectionHeader(
                   title: 'Tätigkeiten',
                   badge: 'Pflicht',
+                  badgeRequired: true,
                   description: _isToday
                       ? 'Wähle aus, was du heute gemacht hast.'
                       : 'Wähle aus, was du an diesem Tag gemacht hast.',
@@ -269,6 +271,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 const AppSectionHeader(
                   title: 'Besonderheiten',
                   badge: 'Optional',
+                  badgeRequired: false,
                   description: 'Was war heute besonders?',
                 ),
                 const SizedBox(height: 12),
@@ -277,6 +280,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 const AppSectionHeader(
                   title: 'Notiz',
                   badge: 'Optional',
+                  badgeRequired: false,
                   description: 'Kurze Ergänzung, falls etwas Besonderes war.',
                 ),
                 const SizedBox(height: 12),
@@ -759,7 +763,7 @@ class _ReportCard extends StatelessWidget {
           children: [
             Text(
               'Vorschlag fürs Berichtsheft',
-              style: theme.textTheme.titleSmall?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -914,7 +918,7 @@ class _SaveBar extends StatelessWidget {
             if (missingItems.isNotEmpty) ...[
               Text(
                 'Fehlt: ${missingItems.join(' · ')}',
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
@@ -1003,21 +1007,35 @@ class _ActivityGroup extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    activity.isActive
-                                        ? activity.title
-                                        : '${activity.title} (deaktiviert)',
+                                    activity.title,
                                     style: theme.textTheme.bodyLarge?.copyWith(
                                       fontWeight: isSelected
                                           ? FontWeight.w700
                                           : FontWeight.w500,
+                                      color: !activity.isActive && !isSelected
+                                          ? theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.45)
+                                          : null,
                                     ),
                                   ),
-                                  if (markAsCustom) ...[
+                                  if (!activity.isActive) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      markAsCustom
+                                          ? 'Eigene Tätigkeit · Deaktiviert'
+                                          : 'Deaktiviert',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ] else if (markAsCustom) ...[
                                     const SizedBox(height: 2),
                                     Text(
                                       'Eigene Tätigkeit',
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
                                         color:
                                             theme.colorScheme.onSurfaceVariant,
                                       ),
@@ -1168,11 +1186,11 @@ class _UnavailableActivities extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: ids
+          children: ids.indexed
               .map(
-                (id) => InputChip(
-                  label: const Text('Nicht verfügbare Tätigkeit'),
-                  onDeleted: () => onRemove(id),
+                (e) => InputChip(
+                  label: Text('Nicht verfügbar (${e.$1 + 1})'),
+                  onDeleted: () => onRemove(e.$2),
                 ),
               )
               .toList(growable: false),

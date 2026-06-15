@@ -17,7 +17,17 @@ Auszubildende im Bereich Lagerlogistik (Fachlagerist/in, Fachkraft für Lagerlog
 
 ## Setup
 
-Flutter SDK installieren: https://docs.flutter.dev/get-started/install
+Unterstützte lokale und CI-Toolchain:
+
+- Flutter `3.32.1`
+- Dart `3.8.1`
+- Android Gradle Plugin `8.7.3`
+- Kotlin `2.1.0`
+- Gradle `8.12`
+- Android NDK `27.0.12077973`
+
+Toolchain- und Dependency-Upgrades werden nur gemeinsam in einer separat
+geplanten Modernisierung durchgeführt.
 
 ```bash
 /home/d/flutter/bin/flutter pub get
@@ -27,6 +37,9 @@ Flutter SDK installieren: https://docs.flutter.dev/get-started/install
 Flutter liegt unter `/home/d/flutter/bin/flutter` — nicht im System-PATH.
 
 Zielplattform: Android. iOS wird nicht aktiv unterstützt.
+
+Es sind keine Environment-Variablen, API-Schlüssel, Backend-Dienste oder
+Cloud-Zugänge erforderlich.
 
 ## Android-Release
 
@@ -63,7 +76,11 @@ die App deaktiviert.
 | `docs/VALIDATION_MATRIX.md`   | Prüfkommandos pro Änderungstyp                |
 | `docs/DATA_MODEL.md`          | Datenmodell, Storage und Persistenzregeln     |
 | `docs/UI_UX_SPEC.md`          | UI-/UX-Regeln und visuelle Vorgaben           |
-| `docs/PRODUCT_CONCEPT.md`     | Fachliche Spezifikation und Features          |
+| `docs/PRODUCT_CONCEPT.md`     | Historisches Produktkonzept, keine Roadmap    |
+
+Tool-spezifische Dateien wie `CLAUDE.md`, `CODEX.md`, `GEMINI.md`,
+`opencode.json`, Cursor- und Copilot-Regeln bleiben bewusst dünn und verweisen
+auf `AGENTS.md`.
 
 ## Nicht in dieser App
 

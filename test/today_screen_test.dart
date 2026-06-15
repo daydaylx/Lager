@@ -429,7 +429,8 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
 
-    expect(find.text('Alte eigene Tätigkeit (deaktiviert)'), findsOneWidget);
+    expect(find.text('Alte eigene Tätigkeit'), findsOneWidget);
+    expect(find.text('Eigene Tätigkeit · Deaktiviert'), findsOneWidget);
     final checkbox = tester.widget<Checkbox>(
       find.descendant(
         of: find.byKey(const ValueKey('activity_custom_1')),

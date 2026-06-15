@@ -42,14 +42,6 @@ extension ThemePresetDetails on ThemePreset {
 ThemeData buildThemeForPreset(ThemePreset preset) =>
     _buildTheme(preset.brightness, preset.seedColor, preset._surfaceColor);
 
-ThemeData buildDarkAppTheme() => buildThemeForPreset(ThemePreset.lagerTeal);
-
-ThemeData buildAppTheme() => _buildTheme(
-      Brightness.light,
-      const Color(0xFF2E7D6B),
-      const Color(0xFFF8FAF9),
-    );
-
 ThemeData _buildTheme(
   Brightness brightness,
   Color seedColor,
@@ -81,7 +73,7 @@ ThemeData _buildTheme(
       foregroundColor: colorScheme.onSurface,
       scrolledUnderElevation: 3,
       centerTitle: false,
-      titleTextStyle: base.textTheme.headlineSmall?.copyWith(
+      titleTextStyle: base.textTheme.titleLarge?.copyWith(
         color: colorScheme.onSurface,
         fontWeight: FontWeight.w700,
       ),

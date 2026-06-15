@@ -2,6 +2,10 @@
 
 Format: Aufgabe → Dateien lesen → Risiken → Mindestchecks
 
+Context Packs definieren den **Mindestkontext**. Direkte Abhängigkeiten, Aufrufer,
+ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
+Änderung sie berührt.
+
 ---
 
 ## Pack 1: Vorlagenverwaltung und Tagesauswahl
@@ -34,7 +38,7 @@ Format: Aufgabe → Dateien lesen → Risiken → Mindestchecks
 
 ```bash
 /home/d/flutter/bin/flutter analyze    # muss 0 Issues zeigen
-/home/d/flutter/bin/flutter test       # muss alle 28+ Tests bestehen
+/home/d/flutter/bin/flutter test
 ```
 
 ---
@@ -81,13 +85,15 @@ Format: Aufgabe → Dateien lesen → Risiken → Mindestchecks
 | `docs/UI_UX_SPEC.md`                             | Design-Vorgaben für den jeweiligen Screen |
 | Ziel-Screen (z. B. `today_screen.dart`)          | Bestehendes Layout                        |
 | `lib/app/theme.dart`                             | Farben, Theme-Tokens                      |
+| `lib/core/storage/theme_preset_storage.dart`     | Bei Theme-Auswahl oder Persistenz         |
 | `lib/shared/widgets/app_ui.dart`                 | Gemeinsame visuelle Bausteine             |
 | Relevanter Test (z. B. `today_screen_test.dart`) | Was darf sich nicht ändern                |
 | `test/ui_layout_test.dart`                       | Mobile Layout- und Golden-Verträge        |
 
 ### Risiken
 
-- **Theme.of(context) nicht buildAppTheme()** — nie direkt aufrufen.
+- **Theme.of(context) in Widgets:** `buildThemeForPreset()` wird nur zentral beim
+  Aufbau der App verwendet.
 - **Große Touchflächen** — minimum 48×48dp, keine kleinen Buttons.
 - **Bottom Navigation bleibt:** 4 Tabs, keine Änderung ohne expliziten Auftrag.
 - **Keine Web-App-Elemente:** Kein AppBar mit Zurück-Button als Hauptnavigation.
@@ -138,6 +144,8 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 | `lib/app/app.dart`                              | Lifecycle, Tageswechsel und Tap-Ziel        |
 | `android/app/build.gradle.kts`                  | Application ID, NDK und Release-Signierung  |
 | `android/app/src/main/AndroidManifest.xml`      | Permissions, Receiver und Backup-Regeln     |
+| `android/app/src/main/res/xml/backup_rules.xml` | Backup-Regeln bis Android 11                 |
+| `android/app/src/main/res/xml/data_extraction_rules.xml` | Backup und Gerätetransfer ab Android 12 |
 | `docs/PRIVACY_CONTEXT.md`                       | Lokale Daten und Backup-No-Go               |
 | `docs/QA_REMINDER_CHECKLIST.md`                 | Manueller Android-Nachweis                  |
 
@@ -158,3 +166,64 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 ```
 
 Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.
+
+---
+
+## Pack 6: Berichtsvorschlag
+
+**Aufgabe:** Formulierung, Anzeige oder Kopieren des lokalen Tagesberichts ändern.
+
+### Dateien lesen
+
+| Datei | Warum |
+| ----- | ----- |
+| `lib/core/report/daily_report_generator.dart` | Deterministische Textlogik |
+| `lib/features/today/today_screen.dart` | Live-Vorschau und Kopieren |
+| `lib/features/week/week_screen.dart` | Bericht in Wochenzusammenfassung |
+| `test/daily_report_generator_test.dart` | Textverträge je Tagtyp und Flag |
+| `test/today_screen_test.dart` | Heute-Integration |
+| `test/week_screen_test.dart` | Wochen-Integration |
+
+### Risiken
+
+- Keine KI, API oder Netzwerkabhängigkeit einführen.
+- Berichtstext ist nur Vorschlag; gespeicherte Einträge nicht verändern.
+- Unbekannte historische Tätigkeits-IDs müssen lesbar bleiben.
+
+### Mindestchecks
+
+```bash
+/home/d/flutter/bin/flutter analyze
+/home/d/flutter/bin/flutter test test/daily_report_generator_test.dart
+/home/d/flutter/bin/flutter test
+```
+
+---
+
+## Pack 7: Profil, Onboarding und Theme
+
+**Aufgabe:** Ausbildungsprofil, Onboarding, Theme-Auswahl oder deren Persistenz ändern.
+
+### Dateien lesen
+
+| Datei | Warum |
+| ----- | ----- |
+| `lib/core/profile_storage.dart` | Profil- und Onboarding-Persistenz |
+| `lib/core/storage/theme_preset_storage.dart` | Theme-Persistenz |
+| `lib/app/theme.dart` | ThemePreset-Vertrag |
+| `lib/app/bootstrap.dart` | Initiales Laden |
+| `lib/app/app.dart` | App-weite Zustandsübergabe und Reset |
+| Ziel-Screen und relevante Widget-Tests | UI- und Verhaltensvertrag |
+
+### Risiken
+
+- „Alle Daten löschen“ muss Profil, Reminder und Theme zurücksetzen.
+- Theme-Namen sind persistierte Werte; Umbenennungen brauchen Migration.
+- `pubspec.yaml` und `kAppVersion` bei Versionsänderungen gemeinsam prüfen.
+
+### Mindestchecks
+
+```bash
+/home/d/flutter/bin/flutter analyze
+/home/d/flutter/bin/flutter test
+```

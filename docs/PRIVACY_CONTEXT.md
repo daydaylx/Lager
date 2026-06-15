@@ -2,7 +2,12 @@
 
 ## Regel für Agenten
 
-Diese App speichert **ausschließlich lokal**. Kein Netzwerkzugriff, kein Backend, keine Cloud.
+Diese App speichert **ausschließlich lokal**. Der Produktivcode führt keine
+Netzwerkrequests aus und verwendet kein Backend oder Cloud-System.
+
+Die generierten Debug- und Profile-Manifeste enthalten die Flutter-Entwicklungspermission
+`INTERNET` für Debugging und Hot Reload. Sie ist kein Produktfeature und darf nicht
+mit app-initiiertem Netzwerkzugriff verwechselt werden.
 
 ---
 
@@ -15,6 +20,7 @@ Diese App speichert **ausschließlich lokal**. Kein Netzwerkzugriff, kein Backen
 | Ausbildungsprofil | SharedPreferences     | `lib/core/profile_storage.dart`                  |
 | Onboarding-Flag   | SharedPreferences     | `lib/core/constants.dart` (Key)                  |
 | Erinnerungseinstellungen | SharedPreferences | `lib/core/storage/reminder_storage.dart`       |
+| Farbtheme | SharedPreferences | `lib/core/storage/theme_preset_storage.dart` |
 
 ---
 

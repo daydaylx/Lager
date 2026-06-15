@@ -16,10 +16,16 @@ Keine Feature-Ausweitung ohne ausdrückliche Zustimmung.
 
 ## Subagenten
 
-- **Explore** — Codebase-Suche, nicht manuell grep/find
+- **Explore** — bei breiten oder unklaren Codebase-Suchen
 - **Plan** — Architekturentscheidungen
 
-Sparsam einsetzen — kleine lokale Änderungen direkt erledigen.
+Sparsam einsetzen — kleine lokale Änderungen und gezielte Suchen direkt erledigen.
+
+## Git-Sicherheit
+
+Auch wenn lokale Tool-Berechtigungen Git-Befehle erlauben, gelten die Grenzen aus
+`AGENTS.md`: ohne ausdrücklichen Auftrag nichts stagen, committen, pushen,
+resetten oder auschecken.
 
 ---
 

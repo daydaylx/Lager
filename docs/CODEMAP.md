@@ -1,6 +1,7 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–13 im Code abgeschlossen; manueller Android-Test offen.
+Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Aktueller Arbeitsstand:
+`docs/CURRENT_STATUS.md`.
 
 ---
 
@@ -8,23 +9,22 @@ Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–13 im Code
 
 ```
 lib/main.dart                → runApp mit AppBootstrap
-lib/app/bootstrap.dart       → lokale Speicher öffnen, Startfehler + Retry
-lib/app/app.dart             → MaterialApp, MainShell, IndexedStack, NavigationBar
-lib/app/router.dart          → AppRoutes (String-Konstanten)
-lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententheme
+lib/app/bootstrap.dart       → lokale Speicher und Theme öffnen, Startfehler + Retry
+lib/app/app.dart             → MaterialApp, ThemePreset, MainShell, IndexedStack, NavigationBar
+lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Komponententheme
 ```
 
 ---
 
 ## Features (lib/features/)
 
-| Datei                               | Zeilen | Status    | Beschreibung                                              |
-| ----------------------------------- | -----: | --------- | --------------------------------------------------------- |
-| `onboarding/onboarding_screen.dart` |    208 | ✅ fertig | Zweistufiger Erststart                                    |
-| `today/today_screen.dart`           |    909 | ✅ fertig | Tageseintrag mit Checklisten und Eingabeverlustschutz     |
-| `week/week_screen.dart`             |    758 | ✅ fertig | Kompakte Wochenliste + Zusammenfassung                    |
-| `templates/templates_screen.dart`   |    458 | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren     |
-| `profile/profile_screen.dart`       |    549 | ✅ fertig | Übersicht, Bearbeitung, Erinnerungen, Datenverwaltung     |
+| Datei                               | Status    | Beschreibung                                                  |
+| ----------------------------------- | --------- | ------------------------------------------------------------- |
+| `onboarding/onboarding_screen.dart` | ✅ fertig | Zweistufiger Erststart                                        |
+| `today/today_screen.dart`           | ✅ fertig | Tageseintrag, Berichtsvorschau und Eingabeverlustschutz       |
+| `week/week_screen.dart`             | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte     |
+| `templates/templates_screen.dart`   | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren         |
+| `profile/profile_screen.dart`       | ✅ fertig | Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung       |
 
 ---
 
@@ -59,6 +59,7 @@ lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententhem
 | `storage/activity_template_adapter.dart`      | Hive-CE-Adapter, handgeschrieben (typeId: 1) |
 | `storage/hive_activity_template_storage.dart` | Produktiv-Impl., Box `custom_templates`      |
 | `storage/reminder_storage.dart`              | Reminder-Einstellungen in SharedPreferences  |
+| `storage/theme_preset_storage.dart`          | Gewähltes ThemePreset in SharedPreferences   |
 | `storage/preferences_write.dart`             | Prüft SharedPreferences-Schreibergebnisse    |
 
 ### Services
@@ -66,13 +67,14 @@ lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententhem
 | Datei                              | Inhalt                                                                              |
 | ---------------------------------- | ----------------------------------------------------------------------------------- |
 | `services/notification_service.dart` | Scheduler-Interface, Reminder-Plan, Tap-Routing und Produktiv-/Testimplementierung |
+| `report/daily_report_generator.dart` | Deterministische lokale Tagesberichtstexte ohne KI |
 
 ### Sonstiges Core
 
 | Datei                               | Inhalt                                        |
 | ----------------------------------- | --------------------------------------------- |
 | `core/constants.dart`               | `AppStrings` + SharedPreferences-Schlüssel    |
-| `core/profile_storage.dart`         | `UserProfile` in SharedPreferences            |
+| `core/profile_storage.dart`         | `StoredProfile` in SharedPreferences           |
 | `core/week_utils.dart`              | ISO-Kalenderwochen-Helfer                     |
 | `core/data/default_activities.dart` | 87 vordefinierte Tätigkeiten mit stabilen IDs |
 
@@ -82,7 +84,6 @@ lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententhem
 
 | Datei                     | Inhalt                                                     |
 | ------------------------- | ---------------------------------------------------------- |
-| `placeholder_screen.dart` | Wiederverwendbar: Icon + Titel + Beschreibung              |
 | `profile_form.dart`       | Profilmaske (Onboarding + Profil-Screen teilen sich diese) |
 | `app_ui.dart`             | Abschnittsköpfe, Statusmeldungen, Empty States, Gruppen    |
 
@@ -109,6 +110,17 @@ Erinnerungen:
     → notification_service.dart (FlutterLocalNotificationScheduler)
     → flutter_timezone + flutter_local_notifications
 
+Theme:
+  profile_screen.dart
+    → theme_preset_storage.dart
+    → SharedPreferences ("theme_preset")
+    → app.dart / theme.dart
+
+Berichtsvorschlag:
+  today_screen.dart / week_screen.dart
+    → report/daily_report_generator.dart
+    → deterministischer lokaler Text + Clipboard
+
 App-Start:
   main.dart
     → app/bootstrap.dart
@@ -133,11 +145,12 @@ App-Start:
 | `reminder_storage_test.dart`            | SharedPreferences-Roundtrip, mehrere Zeiten/Tage  |
 | `profile_reminder_screen_test.dart`     | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage) |
 | `notification_service_test.dart`        | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload |
+| `daily_report_generator_test.dart`      | Deterministische Berichtstexte je Tagtyp und Flag        |
 | `bootstrap_test.dart`                   | sichtbarer Startfehler und Retry                          |
 | `preferences_write_test.dart`           | fehlgeschlagene SharedPreferences-Schreibvorgänge        |
 | `ui_layout_test.dart`                    | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens |
 
-Letzter Lauf (Phase 13): 145/145 bestanden.
+Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 
 ---
 

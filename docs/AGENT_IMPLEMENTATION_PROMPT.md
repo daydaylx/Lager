@@ -1,6 +1,11 @@
-> ⚠️ **HISTORISCHES DOKUMENT** — Dieser Prompt wurde verwendet, um die App initial zu bootstrappen.
-> Die App ist bereits implementiert (Phase 5 abgeschlossen). Dieses Dokument nicht als Bauanweisung lesen.
-> Für den aktuellen Stand: `docs/CURRENT_STATUS.md` → `TASKS.md` → `docs/AGENT_CONTEXT_PACKS.md`
+> ⚠️ **HISTORISCHES ARCHIVDOKUMENT** — Dieser Prompt wurde ausschließlich zum
+> initialen Bootstrap verwendet. Er enthält absichtlich alte Modelle,
+> Feature-Ideen und Arbeitsanweisungen.
+>
+> **Nicht als Bauanweisung, Spezifikation oder Roadmap verwenden.**
+> Der aktuelle Stand ist Phase 13. Aktive Quellen:
+> `AGENTS.md` → `TASKS.md` → `docs/CURRENT_STATUS.md` →
+> `docs/AGENT_CONTEXT_PACKS.md` plus ausführbarer Code und Tests.
 
 ---
 

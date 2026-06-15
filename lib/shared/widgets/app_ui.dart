@@ -6,6 +6,7 @@ class AppSectionHeader extends StatelessWidget {
   final String title;
   final String? description;
   final String? badge;
+  final bool? badgeRequired;
   final Widget? trailing;
 
   const AppSectionHeader({
@@ -13,6 +14,7 @@ class AppSectionHeader extends StatelessWidget {
     required this.title,
     this.description,
     this.badge,
+    this.badgeRequired,
     this.trailing,
   });
 
@@ -39,7 +41,7 @@ class AppSectionHeader extends StatelessWidget {
                   ),
                   if (badge case final b?) ...[
                     const SizedBox(width: 8),
-                    _BadgePill(label: b),
+                    _BadgePill(label: b, highlighted: badgeRequired ?? (b == 'Pflicht')),
                   ],
                 ],
               ),
@@ -66,17 +68,17 @@ class AppSectionHeader extends StatelessWidget {
 
 class _BadgePill extends StatelessWidget {
   final String label;
+  final bool highlighted;
 
-  const _BadgePill({required this.label});
+  const _BadgePill({required this.label, required this.highlighted});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isPflicht = label == 'Pflicht';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: isPflicht
+        color: highlighted
             ? theme.colorScheme.primaryContainer
             : theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(99),
@@ -84,7 +86,7 @@ class _BadgePill extends StatelessWidget {
       child: Text(
         label,
         style: theme.textTheme.labelSmall?.copyWith(
-          color: isPflicht
+          color: highlighted
               ? theme.colorScheme.onPrimaryContainer
               : theme.colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w700,

@@ -19,8 +19,11 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 | Reminder / Android-Manifest ändern | `flutter analyze` + `flutter test`      | `flutter build apk --debug` + manueller Gerätetest             |
 | Application ID / Signing / Backup ändern | `flutter analyze` + `flutter test` | `flutter build apk --debug` + Manifest prüfen + signierten Release-Build lokal prüfen |
 | Layout / Theme / kritischer Screen ändern | `flutter analyze` + `flutter test test/ui_layout_test.dart` | `flutter test` + manueller Gerätetest |
+| ThemePreset / Theme-Persistenz ändern | `flutter analyze` + `flutter test` | App-Neustart und Datenlöschung manuell prüfen |
+| Berichtsgenerator ändern | `flutter analyze` + `flutter test test/daily_report_generator_test.dart` | `flutter test` |
 | Golden bewusst aktualisieren       | Änderung visuell prüfen                  | `flutter test test/ui_layout_test.dart --update-goldens`       |
-| Phase abschließen                | `flutter analyze` + `flutter test`        | `PROJECT_STATUS.md` + `TASKS.md` + `CURRENT_STATUS.md` updaten |
+| Nur Dokumentation ändern           | Links, Pfade und Aussagen gegen ausführbare Quellen prüfen | bei Befehlsänderungen betroffene Befehle ausführen |
+| Phase abschließen                | `flutter analyze` + `flutter test`        | `PROJECT_STATUS.md` + `TASKS.md` + `docs/CURRENT_STATUS.md` updaten |
 
 ---
 
@@ -47,7 +50,10 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 # Android-Konfiguration und Debug-Artefakt prüfen
 /home/d/flutter/bin/flutter build apk --debug
 
-# Nur mit lokalem android/key.properties + Release-Keystore
+# Ohne android/key.properties: bewusst unsignierten Release-Fallback prüfen
+/home/d/flutter/bin/flutter build apk --release
+
+# Mit android/key.properties: signierten Release-Build lokal prüfen
 /home/d/flutter/bin/flutter build apk --release
 ```
 
@@ -61,3 +67,5 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 - Neue Packages: erst `flutter pub get`, dann `flutter analyze`
 - Release-Builds nie mit Debug-Schlüssel signieren; Keystores und Passwörter nie committen
 - Android-Backup und Gerätetransfer für lokale Daten nicht ohne explizite Entscheidung aktivieren
+- Flutter 3.32.1, Dart 3.8.1, AGP 8.7.3, Kotlin 2.1.0, Gradle 8.12 und
+  NDK 27.0.12077973 nicht nebenbei aktualisieren

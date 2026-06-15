@@ -1,6 +1,11 @@
 # PRODUCT_CONCEPT.md  
 # Berichtsheft-Merker Lagerlogistik
 
+> **Historisches Produktkonzept.** Dieses Dokument erklärt Ursprung und
+> Produktziel, ist aber keine aktive Roadmap oder technische Spezifikation.
+> Aktuelle Grenzen stehen in `AGENTS.md` und `DECISIONS.md`; aktuelle Aufgaben in
+> `TASKS.md`.
+
 ## 1. Projektname
 
 **Berichtsheft-Merker Lagerlogistik**
@@ -226,7 +231,8 @@ Ausbildungsjahre:
 - 2. Ausbildungsjahr
 - 3. Ausbildungsjahr
 
-Das Ausbildungsjahr beeinflusst, welche Tätigkeiten bevorzugt angezeigt werden.
+Das Ausbildungsjahr wird im Profil gespeichert. Eine Filterung oder Sortierung
+der Tätigkeiten nach Ausbildungsjahr ist aktuell nicht implementiert.
 
 ---
 
@@ -238,18 +244,9 @@ Die Nutzerin kann Tätigkeiten per Chip, Checkbox oder Karte auswählen.
 
 Eigene Tätigkeiten können ergänzt werden.
 
-Eigene Tätigkeiten sollen optional dauerhaft als Vorlage gespeichert werden können.
-
-Beispiel:
-
-```text
-Eigene Tätigkeit:
-"Kassensystem erklärt bekommen"
-
-Optionen:
-[ ] Nur heute verwenden
-[ ] Als Vorlage speichern
-```
+Eigene Tätigkeiten werden im Vorlagen-Screen dauerhaft gespeichert und können
+deaktiviert oder reaktiviert werden. Eine nur für einen einzelnen Tag angelegte
+freie Tätigkeit ist nicht implementiert.
 
 ---
 
@@ -488,7 +485,7 @@ Empfohlene Technik:
 - Flutter
 - lokale Speicherung
 - Android-App als Hauptziel
-- optional später iOS
+- Android als einzige unterstützte Zielplattform
 - kein Backend
 - keine Cloud
 - keine Anmeldung
@@ -526,7 +523,10 @@ Die App ist schlecht, wenn:
 
 ---
 
-## 13. Prioritäten
+## 13. Historische Prioritäten
+
+Die folgende Liste dokumentiert frühe Ideen und ist keine aktive Roadmap.
+`TASKS.md` ist die einzige Quelle für aktuelle Phasen und offene Aufgaben.
 
 ### Phase 1: Nutzbarer Kern
 
@@ -557,9 +557,10 @@ Die App ist schlecht, wenn:
 
 - Erinnerungen
 - APK-Release
-- PDF-Export
 - weitere Ausbildungsprofile
-- KI-Formulierungshilfe
+
+PDF-Export, KI-Funktionen, Cloud, Backup-Sync und iOS sind ohne neue explizite
+Entscheidung ausgeschlossen.
 
 ---
 

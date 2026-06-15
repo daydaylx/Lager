@@ -20,6 +20,7 @@ class WeekScreen extends StatefulWidget {
   final DateTime? currentDate;
   final int refreshSignal;
   final int templateRefreshSignal;
+  final VoidCallback? onNavigateToToday;
 
   const WeekScreen({
     super.key,
@@ -29,6 +30,7 @@ class WeekScreen extends StatefulWidget {
     this.currentDate,
     this.refreshSignal = 0,
     this.templateRefreshSignal = 0,
+    this.onNavigateToToday,
   });
 
   @override
@@ -148,7 +150,7 @@ class _WeekScreenState extends State<WeekScreen> {
           ],
           if (!hasEntries) ...[
             const SizedBox(height: 16),
-            const _EmptyWeekCard(),
+            _EmptyWeekCard(onNavigateToToday: widget.onNavigateToToday),
           ],
           if (_templatesLoadFailed) ...[
             const SizedBox(height: 16),
@@ -480,15 +482,30 @@ class _MissingDaysBanner extends StatelessWidget {
 }
 
 class _EmptyWeekCard extends StatelessWidget {
-  const _EmptyWeekCard();
+  final VoidCallback? onNavigateToToday;
+
+  const _EmptyWeekCard({this.onNavigateToToday});
 
   @override
   Widget build(BuildContext context) {
-    return const AppMessage(
-      icon: Icons.edit_calendar_outlined,
-      title: 'Noch keine Einträge',
-      message:
-          'Tippe auf einen vergangenen Tag, um ihn für diese Woche einzutragen.',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const AppMessage(
+          icon: Icons.edit_calendar_outlined,
+          title: 'Noch keine Einträge',
+          message:
+              'Tippe auf einen vergangenen Tag, um ihn für diese Woche einzutragen.',
+        ),
+        if (onNavigateToToday != null) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onNavigateToToday,
+            icon: const Icon(Icons.today_outlined),
+            label: const Text('Heute eintragen'),
+          ),
+        ],
+      ],
     );
   }
 }

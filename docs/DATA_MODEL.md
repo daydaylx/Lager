@@ -1,7 +1,10 @@
 # DATA_MODEL.md — Datenmodell-Referenz
 
-Dieses Dokument beschreibt die Dart-Datenstrukturen und ihre geplanten Erweiterungen.
-**Status: Phase-3-Modelle und Enums implementiert. DailyEntry wird seit Phase 4 mit Hive CE persistiert.**
+Dieses Dokument beschreibt die aktuell implementierten Dart-Datenstrukturen und
+Persistenzverträge. Der ausführbare Code bleibt die Quelle der Wahrheit.
+
+**Status:** `DailyEntry` und eigene Tätigkeiten werden mit Hive CE persistiert;
+Profil, Onboarding, Reminder und Theme-Preset liegen in SharedPreferences.
 
 Vollständiger Tätigkeitskatalog (87 Einträge): `lib/core/data/default_activities.dart`
 
@@ -99,17 +102,21 @@ class ActivityTemplate {
 }
 ```
 
-### UserProfile
+### Profilrepräsentation
 
 ```dart
-class UserProfile {
-  final TrainingOccupation occupation; // Ausbildungsberuf
-  final int trainingYear;              // 1, 2 oder 3
-  final String? name;                  // optional — kein Login
-  final String? company;               // optional — Betriebsname
-  final bool onboardingCompleted;      // steuert ob Onboarding gezeigt wird
-}
+typedef StoredProfile = ({
+  String? name,
+  String? company,
+  String? occupation,
+  int? trainingYear,
+  bool onboardingCompleted,
+});
 ```
+
+Es gibt bewusst keine persistierte `UserProfile`-Klasse und keinen
+`TrainingOccupation`-Enum. Ausbildungsberufe werden als stabile String-Werte aus
+`TrainingOccupationValues` gespeichert.
 
 ---
 
@@ -136,14 +143,15 @@ lib/core/
     hive_activity_template_storage.dart
 ```
 
-`UserProfile` und `TrainingOccupation` werden aktuell durch
-`StoredProfile`, Konstanten und SharedPreferences abgebildet.
+Reminder-Einstellungen liegen in `ReminderSettings`; das gewählte Farbtheme ist
+ein `ThemePreset` aus `lib/app/theme.dart`.
 
 ---
 
 ## Persistenz
 
-**Speicher-Technologie:** Hive CE für Tageseinträge, SharedPreferences für das Profil.
+**Speicher-Technologie:** Hive CE für Tageseinträge und eigene Tätigkeiten;
+SharedPreferences für kleine Einstellungen.
 
 Hive-CE-Boxen:
 | Box-Name | Typ | Inhalt |
@@ -159,10 +167,15 @@ Enum-Adapter benötigt werden.
 rückwärtskompatibel: Fehlt es in bestehenden Hive-Daten, wird `true` verwendet.
 Eigene Tätigkeiten werden deaktiviert statt hart gelöscht.
 
-**SharedPreferences** (ab Phase 2):
+**SharedPreferences-Schlüssel:**
 
-- `'onboarding_completed'` (bool)
-- Profildaten als Alternative zu Hive in Phase 2 (einfacher für MVP)
+- Profil und Onboarding: `onboarding_completed`, `profile_name`,
+  `profile_company`, `training_occupation`, `training_year`
+- Reminder: `reminder_enabled`, `reminder_times`, `reminder_weekdays`
+- Darstellung: `theme_preset`
+
+Reminder-Zeiten und Wochentage werden als JSON-Listen gespeichert und beim Laden
+normalisiert. `theme_preset` speichert den stabilen Namen des `ThemePreset`.
 
 ---
 
@@ -179,7 +192,8 @@ Eigene Tätigkeiten werden deaktiviert statt hart gelöscht.
 
 ## Vordefinierte Tätigkeitskategorien (Übersicht)
 
-Vollständige Liste mit 87 Einträgen: `docs/AGENT_IMPLEMENTATION_PROMPT.md`
+Kanonische vollständige Liste mit stabilen IDs:
+`lib/core/data/default_activities.dart`
 
 | Kategorie          | Beispiel-Tätigkeiten                                            |
 | ------------------ | --------------------------------------------------------------- |

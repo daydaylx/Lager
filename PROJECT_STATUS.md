@@ -10,10 +10,11 @@ Zuletzt aktualisiert: 2026-06-15
 
 ## Was existiert
 
-- Git-Repository mit initialem Commit
-- `docs/` mit den vier Planungsdokumenten (aus ZIP entpackt)
+- Git-Repository mit aktiver Flutter-Implementierung
+- `docs/` mit aktiver technischer Dokumentation und klar markierten historischen Konzeptunterlagen
 - `README.md` mit Projektbeschreibung und Setup-Anleitung
-- `AGENTS.md`, `CLAUDE.md`, `TASKS.md`, `DECISIONS.md` — Agentendateien vollständig
+- `AGENTS.md` als kanonische Agentenregel plus dünne Bridges für Claude, Codex,
+  Gemini, OpenCode, Cursor und Copilot
 - `pubspec.yaml` — Flutter-Projektdatei (berichtsheft_merker, SDK >=3.0.0)
 - `pubspec.lock` — Abhängigkeiten aufgelöst
 - `analysis_options.yaml`
@@ -21,23 +22,22 @@ Zuletzt aktualisiert: 2026-06-15
 - Flutter-Ordnerstruktur unter `lib/`:
   - `lib/main.dart` — startet den fehlertoleranten App-Bootstrap
   - `lib/app/bootstrap.dart` — öffnet lokale Speicher und bietet bei Fehlern Retry ohne Datenlöschung
-  - `lib/app/app.dart` — MaterialApp + Onboarding-Gate + NavigationBar Shell (M3, IndexedStack)
-  - `lib/app/theme.dart` — explizites reduziertes Material-3-Komponententheme
-  - `lib/app/router.dart` — Route-Konstanten
+  - `lib/app/app.dart` — MaterialApp + persistiertes ThemePreset + Onboarding-Gate + NavigationBar Shell
+  - `lib/app/theme.dart` — fünf Theme-Presets und explizites Material-3-Komponententheme
   - `lib/core/constants.dart` — Text-, SharedPreferences-, Berufs- und Ausbildungsjahr-Konstanten
   - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für das Ausbildungsprofil
   - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien und Besonderheiten mit UI-Labels
   - `lib/core/models/` — `DailyEntry` und `ActivityTemplate`
   - `lib/core/data/default_activities.dart` — 87 vordefinierte Tätigkeiten mit stabilen IDs
-  - `lib/core/storage/` — Speicher-Schnittstellen, Hive-CE-Adapter, SharedPreferences-Prüfung und In-Memory-Testspeicher
+  - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
+  - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge ohne KI
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
-  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit kompakter Tätigkeits-Checkliste
-  - `lib/features/week/week_screen.dart` — kompakte Wochenliste, Tagesstatus und Zusammenfassung
+  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Checkliste und Berichtsvorschau
+  - `lib/features/week/week_screen.dart` — Wochenliste, Tagesstatus, Zusammenfassung und kopierbare Berichte
   - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung mit Suche und Bottom Sheet
-  - `lib/features/profile/profile_screen.dart` — Profilübersicht, Bearbeitung, Erinnerungen und Datenverwaltung
+  - `lib/features/profile/profile_screen.dart` — Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung
   - `lib/shared/widgets/app_ui.dart` — gemeinsame Abschnitts-, Status- und Empty-State-Bausteine
-  - `lib/shared/widgets/placeholder_screen.dart` — wiederverwendbarer leerer Screen
 - `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
 - `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
 - `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge und eigene Tätigkeiten dauerhaft
@@ -52,6 +52,10 @@ Zuletzt aktualisiert: 2026-06-15
 - `test/hive_daily_entry_storage_test.dart` — echter Persistenztest über Box-Neuöffnung
 - `test/week_utils_test.dart` — ISO-Kalenderwochen inklusive Jahreswechsel
 - `test/week_screen_test.dart` — Wochenstatus, Navigation, Zusammenfassung und Fehlerbehandlung
+- `test/daily_report_generator_test.dart` — Berichtstexte je Tagtyp und Besonderheit
+- `test/persistence_stability_test.dart` — stabile Enum-Namen und Tätigkeits-IDs
+- `test/notification_service_test.dart` — Reminder-Plan, IDs und Tap-Payload
+- `test/bootstrap_test.dart` — sichtbarer Bootstrap-Fehler und Retry
 - `test/ui_layout_test.dart` — kleine Displays, große Schrift, Tastatur, Touchflächen und Goldens
 - `test/goldens/` — vier visuelle Referenzen zentraler UI-Zustände
 
@@ -78,6 +82,8 @@ Release-Build wurden damit erfolgreich erzeugt.
 
 - Favoriten und zuletzt verwendete Tätigkeiten
 - Bearbeiten eigener Tätigkeitstitel
+- Favoriten und Tätigkeiten nach Ausbildungsjahr filtern
+- Direkte „nur heute“-Tätigkeit ohne Vorlage
 - PDF-Export (nicht geplant)
 - Cloud/Backend (nicht geplant)
 

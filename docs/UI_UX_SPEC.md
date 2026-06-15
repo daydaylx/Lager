@@ -50,12 +50,13 @@ Die App soll angenehm wirken, aber nicht kindisch oder kitschig.
 Implementierter Look seit Phase 11:
 
 - reduzierte native Material-3-Optik
-- sehr heller neutraler Hintergrund
+- standardmäßig dunkles Theme `Lager Teal`
+- fünf lokal wählbare und persistierte Farbthemes, darunter ein helles Theme
 - Karten nur zur sinnvollen Gruppierung
 - große Touchflächen
 - klare Icons
 - deutliche Statusanzeigen
-- Teal als dezente Akzentfarbe
+- ruhige Akzentfarbe aus dem gewählten Theme-Preset
 - ruhige Typografie
 - explizite Komponentenregeln aus `lib/app/theme.dart`
 
@@ -82,9 +83,9 @@ Empfohlene Farblogik:
 
 ### Hintergrund
 
-- sehr helles Grau
-- warmes Off-White
-- optional dunkler Modus später
+- dunkle Presets: ruhige, kontrastreiche dunkle Flächen
+- helles Preset: sehr helles neutrales Grau
+- Preset-Auswahl im Profil unter „Darstellung“
 
 ### Primärfarbe
 
@@ -199,6 +200,7 @@ Optionen:
 - Urlaub
 - Krank
 - Feiertag
+- Sonstiges
 
 Die Auswahl muss sofort sichtbar sein.
 
@@ -253,11 +255,10 @@ Anforderungen:
 - ausgewählt/nicht ausgewählt klar erkennbar
 - gesamte Zeile antippbar, mindestens 48 dp hoch
 - Kategorie sichtbar
-- häufig genutzte Tätigkeiten oben
 - aktive eigene Tätigkeiten passend zur Kategorie anzeigen
 - deaktivierte eigene Tätigkeiten nur in historischen Einträgen lesbar halten
 
-Optional:
+Nicht implementiert und nicht ohne neue Entscheidung ergänzen:
 
 - Favoritenbereich
 - zuletzt benutzt
@@ -266,23 +267,11 @@ Optional:
 
 ## 11. Eigene Tätigkeit hinzufügen
 
-Unterhalb der Tätigkeiten:
+Eigene Tätigkeiten werden im Vorlagen-Screen über ein keyboard-sicheres Modal
+Bottom Sheet mit Titel und Kategorie angelegt. Danach erscheinen aktive eigene
+Tätigkeiten passend zur Kategorie im Heute-Screen.
 
-```text
-+ Eigene Tätigkeit hinzufügen
-```
-
-Nach Antippen öffnet sich ein kleines Eingabefeld oder Bottom Sheet.
-
-Felder:
-
-- Tätigkeitstext
-- Option: nur heute verwenden
-- Option: als Vorlage speichern
-
-Wichtig:
-
-Nicht direkt auf dem Hauptscreen zu viel Platz verschwenden. Eigene Tätigkeit soll schnell erreichbar sein, aber nicht dominieren.
+Es gibt bewusst keine direkte „nur heute“-Eingabe im Heute-Screen.
 
 ---
 
@@ -445,6 +434,10 @@ Ziel:
 
 Die Nutzerin soll daraus ihr schriftliches Berichtsheft leichter schreiben können.
 
+Zusätzlich erzeugt die App lokal einen deterministischen Berichtsvorschlag pro
+Tag. Er ist in Heute und in der Wochenzusammenfassung sichtbar und kopierbar. Das
+ist keine KI-Funktion und keine offizielle Exportfunktion.
+
 ---
 
 ## 18. Vorlagen-Screen
@@ -485,6 +478,7 @@ Felder:
 - optional Name
 - optional Betrieb
 - Datenverwaltung
+- Darstellung / Farbtheme
 
 Die Profilfelder selbst liegen auf einem separaten Bearbeitungsscreen.
 Erinnerungen sowie Daten & Datenschutz sind klar getrennte Einstellungsgruppen.
@@ -492,8 +486,7 @@ Erinnerungen sowie Daten & Datenschutz sind klar getrennte Einstellungsgruppen.
 Datenverwaltung:
 
 - lokale Daten löschen
-- später Backup exportieren
-- später Backup importieren
+- Hinweis, dass alle Inhalte lokal bleiben
 
 Keine überladene Einstellungsseite.
 
@@ -655,17 +648,13 @@ Muss:
 - moderne App-Optik
 - lokale Speicherung sichtbar machen
 
-Sollte:
+Implementiert:
 
-- Favoriten
-- zuletzt genutzte Tätigkeiten
-- Tätigkeit vom Vortag übernehmen
 - einfache Wochenzusammenfassung
+- lokaler kopierbarer Tagesberichtsvorschlag
 
-Später:
+Bewusst nicht ohne neue Entscheidung:
 
-- Dark Mode
-- Erinnerungen
-- Backup
-- Export
+- Favoriten, zuletzt genutzte Tätigkeiten oder Vortag übernehmen
+- Backup oder Export
 - KI-Formulierungshilfe

@@ -98,6 +98,13 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] Release-APK wird nur mit lokalem Release-Keystore signiert, nicht mit Debug-Key
 - [ ] Android-Backup/Restore oder Gerätetransfer übernimmt keine App-Daten
 
+## 14. Darstellung
+
+- [ ] Standardtheme nach frischer Installation ist "Lager Teal"
+- [ ] Jedes Farbtheme lässt sich auswählen und bleibt nach App-Neustart erhalten
+- [ ] Helles Preset bleibt auf kleinem Display und mit großer Systemschrift lesbar
+- [ ] "Alle Daten löschen" setzt das Farbtheme auf "Lager Teal" zurück
+
 ## Testumgebung
 
 | Feld            | Wert |

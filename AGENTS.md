@@ -1,7 +1,8 @@
 # AGENTS.md — Regeln für Coding-Agenten
 
-Dieses Dokument gilt für **alle** Coding-Agenten: Claude Code, Codex CLI, OpenCode und ähnliche Tools.
-Agentenspezifische Dateien: `CLAUDE.md` (Claude Code), `CODEX.md` (Codex CLI), `opencode.json` (OpenCode).
+Dieses Dokument gilt für **alle** Coding-Agenten: Claude Code, Codex CLI,
+Gemini CLI, OpenCode, Cursor, Kilo Code, Copilot und ähnliche Tools.
+Tool-spezifische Dateien bleiben dünne Verweise auf diese kanonischen Regeln.
 
 ---
 
@@ -22,7 +23,10 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 | `TASKS.md`               | Aktuelle Phase und offene Aufgaben             |
 | `docs/CURRENT_STATUS.md` | Aktiver Stand, letzte Checks, nächster Schritt |
 
-**Dann:** `docs/AGENT_CONTEXT_PACKS.md` öffnen und das passende Context Pack zur Aufgabe wählen. Nur die dort genannten Dateien laden.
+**Dann:** `docs/AGENT_CONTEXT_PACKS.md` öffnen und das passende Context Pack zur Aufgabe wählen.
+Context Packs sind **Mindestkontext**, keine abschließenden Dateilisten. Direkte
+Abhängigkeiten, Aufrufer, Tests und ausführbare Konfigurationen müssen zusätzlich
+gelesen werden, wenn sie für eine sichere Änderung relevant sind.
 
 **Nur bei konkretem Bedarf** (nicht pauschal):
 
@@ -37,9 +41,7 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Aktuelle Phase
 
-**Phase 13: Robustheit und Release-Härtung** — Code und automatisierte Prüfungen abgeschlossen; manueller Android-Gerätetest und lokale Release-Signierung offen.
-
----
+Die einzige Quelle für aktive Phase und offene Aufgaben ist `TASKS.md`.
 
 ---
 
@@ -63,12 +65,23 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 1. **Erst analysieren, dann umsetzen.** Relevante Dateien lesen bevor du änderst.
 2. **Kein Feature ohne Plan.** Größere Änderungen erst abstimmen.
-3. **Phase einhalten.** Nur bauen was in der aktiven Phase steht (`TASKS.md`).
+3. **Phase einhalten.** Nur bauen was in `TASKS.md` steht oder vom User
+   ausdrücklich beauftragt wurde. Bugfixes, Sicherheitskorrekturen und
+   Dokumentationskorrekturen dürfen nicht wegen einer Phasenbezeichnung ignoriert
+   werden.
 4. **Keine Architektur-Inflation.** `setState` reicht für den MVP.
 5. **Keine Dependencies ohne Grund.** Pakete nur hinzufügen wenn konkret benötigt.
 6. **UI/UX respektieren.** Material 3, Bottom Navigation, große Touchflächen, kein Web-App-Feel.
 7. **Analyze nach jeder Dart-Änderung.** 0 Issues ist Pflicht.
 8. **Docs aktuell halten.** Nach Phase-Abschluss `PROJECT_STATUS.md`, `TASKS.md` und `docs/CURRENT_STATUS.md` aktualisieren.
+9. **Fremde Änderungen schützen.** Bestehende uncommittete Änderungen nie
+   verwerfen, überschreiben oder ungefragt in den eigenen Scope aufnehmen.
+10. **Git-Aktionen nur auf Auftrag.** Nicht ungefragt committen, pushen, resetten,
+    auschecken oder Dateien stagen. Destruktive Git-Befehle sind ohne explizite
+    Freigabe verboten.
+11. **Toolchain nicht nebenbei aktualisieren.** Flutter, Dart, Gradle, AGP,
+    Kotlin, NDK und Dependencies nur im Rahmen einer separat geplanten
+    Modernisierung ändern.
 
 ---
 
@@ -88,21 +101,21 @@ Check the relevant existing files, such as:
 - `AGENTS.md`
 - `CLAUDE.md`
 - `GEMINI.md`
+- `CODEX.md`
+- `opencode.json`
+- `.cursor/rules/agents.mdc`
 - `.github/copilot-instructions.md`
 - `docs/CODEMAP.md`
 - `docs/AGENT_CONTEXT_PACKS.md`
 - `docs/CURRENT_STATUS.md`
 - `docs/VALIDATION_MATRIX.md`
-- `docs/UI_CONTEXT.md`
-- `docs/DESIGN_CONTEXT.md`
+- `docs/UI_UX_SPEC.md`
 - `docs/DATA_MODEL.md`
-- `docs/SECURITY_PRIVACY_CONTEXT.md`
 - `docs/PRIVACY_CONTEXT.md`
-- `docs/MANUAL_TEST_SCENARIOS.md`
-- `docs/OPEN_ISSUES_AGENT.md`
-- `docs/DEPLOYMENT_CONTEXT.md`
-- `docs/MODEL_PROVIDER_CONTEXT.md`
-- `docs/decisions/*.md`
+- `docs/QA_REMINDER_CHECKLIST.md`
+- `DECISIONS.md`
+- `PROJECT_STATUS.md`
+- `TASKS.md`
 
 Only update files that exist and are relevant to the current change.
 
@@ -179,28 +192,23 @@ Tool-specific files should stay thin and should not duplicate long project docum
 **Imports innerhalb von lib/:** relativ (nicht absolut)
 
 ```dart
-import '../../shared/widgets/placeholder_screen.dart';  // korrekt
+import '../../shared/widgets/app_ui.dart';  // korrekt
 import 'package:berichtsheft_merker/shared/...';        // vermeiden
 ```
 
 **Const wo möglich** — `flutter analyze` erzwingt es:
 
 ```dart
-const Scaffold(body: PlaceholderScreen(...))  // korrekt
-Scaffold(body: const PlaceholderScreen(...))  // auch ok
+const SizedBox(height: 12)  // korrekt
+SizedBox(height: 12)        // vermeiden
 ```
 
-**PlaceholderScreen** für leere Feature-Screens:
+**Leere und Fehlerzustände:** Vorhandene Bausteine aus
+`lib/shared/widgets/app_ui.dart` verwenden. Keine neuen Placeholder-Screens für
+bereits implementierte Features einführen.
 
-```dart
-PlaceholderScreen(
-  icon: Icons.today_outlined,
-  title: 'Heute',
-  description: 'Hier entsteht die schnelle Tagesnotiz.',
-)
-```
-
-**Theme:** Immer aus Context, nie `buildAppTheme()` direkt aufrufen:
+**Theme:** In Widgets immer aus dem Context lesen. Die App wählt das persistierte
+`ThemePreset` zentral über `buildThemeForPreset()`:
 
 ```dart
 final theme = Theme.of(context);          // korrekt
@@ -215,7 +223,7 @@ final color = theme.colorScheme.primary;
 - `setState` vergessen nach Zustandsänderungen in StatefulWidgets
 - Neue Pakete in `pubspec.yaml` eintragen ohne danach `flutter pub get` auszuführen
 - Features aus späteren Phasen einbauen ohne Abstimmung
-- `buildAppTheme()` aus theme.dart direkt aufrufen statt `Theme.of(context)` zu verwenden
+- Theme-Presets oder `ThemePresetStorage` bei UI-Änderungen übersehen
 
 ---
 
@@ -228,16 +236,17 @@ Flutter ist unter `/home/d/flutter/bin/flutter` installiert — **nicht** im Sys
 /home/d/flutter/bin/flutter analyze       # nach jeder Dart-Änderung — muss 0 Issues zeigen
 /home/d/flutter/bin/flutter test          # nach Feature-Implementierung
 /home/d/flutter/bin/flutter run           # App starten (Gerät/Emulator)
-/home/d/flutter/bin/flutter build apk    # Android APK (Phase 8)
+/home/d/flutter/bin/flutter build apk --debug  # Android-Konfiguration prüfen
 ```
 
 ---
 
 ## Technologie-Stack
 
-- Flutter 3.x / Dart 3.x
+- Flutter 3.32.1 / Dart 3.8.1
 - Android-first (Kotlin-Wrapper generiert)
 - Material 3
-- Lokale Speicherung: Hive CE für Tageseinträge, SharedPreferences für Profil
-- SharedPreferences: Onboarding-Flag, Profil (ab Phase 2)
+- Lokale Speicherung: Hive CE für Tageseinträge und eigene Tätigkeiten
+- SharedPreferences: Profil, Onboarding, Reminder und Theme-Preset
+- Deterministischer lokaler Tagesberichtsgenerator; keine KI
 - Kein Backend, keine Cloud, kein Login

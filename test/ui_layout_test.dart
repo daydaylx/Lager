@@ -19,7 +19,7 @@ final _fixedToday = DateTime(2026, 6, 10);
 
 Widget _themed(Widget child, {double textScale = 1}) {
   return MaterialApp(
-    theme: buildAppTheme(),
+    theme: buildThemeForPreset(ThemePreset.lagerTeal),
     builder: (context, child) {
       final mediaQuery = MediaQuery.of(context);
       return MediaQuery(

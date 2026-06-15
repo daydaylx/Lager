@@ -262,6 +262,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             refreshSignal: _weekRefreshSignal,
             templateRefreshSignal: _templateRefreshSignal,
             currentDate: _currentDate,
+            onNavigateToToday: () => setState(() => _currentIndex = 0),
           ),
           TemplatesScreen(
             storage: widget.templateStorage,

@@ -34,7 +34,14 @@ Schneller Alltagseinsatz: Heute, Woche, Vorlagen, Profil. Alles mit einem Daumen
 **Reduziertes Material 3 mit explizitem Komponenten-Theme**
 Die App bleibt visuell nah an Android, verwendet aber feste Regeln für AppBars,
 Navigation, Buttons, Eingaben, Chips, Karten, Dialoge und Statusflächen. Teal
-bleibt die zurückhaltende Akzentfarbe; Custom Fonts und neue UI-Pakete sind nicht nötig.
+ist das Standardpreset; weitere ruhige Farbpresets sind lokal wählbar. Custom
+Fonts und neue UI-Pakete sind nicht nötig.
+
+**Lokale Theme-Presets statt System-Dark-Mode**
+Die Nutzerin wählt eines von fünf Farbthemes im Profil. Das Preset wird lokal in
+SharedPreferences gespeichert und zentral über `buildThemeForPreset()` auf die
+gesamte App angewendet. Widgets lesen Farben weiterhin ausschließlich über
+`Theme.of(context)`.
 
 **IndexedStack für Tab-Persistence**
 Scroll-Position und Screen-State bleiben beim Tab-Wechsel erhalten. Bessere UX als Navigator-Pop/Push für jeden Tab.
@@ -77,3 +84,8 @@ Release-Builds ausgeschlossen.
 Tageseinträge speichern Tätigkeit-IDs. Eigene Tätigkeiten bleiben deshalb mit
 stabiler ID und Titel erhalten; deaktivierte Vorlagen verschwinden nur aus neuen
 Auswahlen und bleiben für historische Einträge lesbar.
+
+**Deterministischer Tagesbericht statt KI-Formulierung**
+Der lokale `DailyReportGenerator` erzeugt aus Tagestyp, Bereich, Tätigkeiten und
+ausgewählten Besonderheiten einen kopierbaren Berichtsvorschlag. Er verwendet
+keine externe API, kein Sprachmodell und verändert keine gespeicherten Daten.
