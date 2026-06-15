@@ -1,6 +1,6 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-06-15
+Stand: 2026-06-15 (nach UI/UX-Audit Phase 3)
 
 ---
 
@@ -12,7 +12,23 @@ Stand: 2026-06-15
 
 ## Was fertig ist
 
-Phasen 0–13 im Code abgeschlossen. Neu in Phase 13:
+Phasen 0–13 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3. Neu in Audit Phase 3:
+
+- `today_screen.dart`: `_DayStatusCard` aus ListView extrahiert → bleibt beim Scrollen sichtbar
+- `week_screen.dart`: `_WeekHeader` aus ListView extrahiert → bleibt beim Scrollen sichtbar
+- `week_screen.dart`: `Semantics(label, value)` auf `LinearProgressIndicator` in `_WeekHeader`
+- `ui_layout_test.dart`: 5 neue Accessibility-Guideline-Tests (WCAG-Kontrast für 3 Screens + helles Preset, Tap-Target)
+- Golden-Referenzen (`today_empty.png`, `week_mixed.png`) nach Sticky-Header-Änderung aktualisiert
+- `flutter test` → 150/150 bestanden
+
+Neu im UI-Audit Phase 1 und Phase 2:
+
+- `app_ui.dart`: `AppMessageTone.success` nutzt jetzt `secondaryContainer` statt `primaryContainer`
+- `today_screen.dart`: Besonderheiten & Notiz hinter `ExpansionTile` (optional, auto-expandiert bei Sonstiges), Report-Vorschau als Bottom Sheet via SaveBar-Button, Selektionszähler direkt in SaveBar
+- `week_screen.dart`: „Wochenzusammenfassung"-Button aus `_WeekHeader` nach AppBar verschoben
+- Tests: `today_screen_test.dart` und `ui_layout_test.dart` angepasst, alle Golden-Referenzen aktualisiert
+
+Neu in Phase 13:
 
 - Sichtbarer Bootstrap-Fehler mit Retry statt stiller oder destruktiver Wiederherstellung
 - Tageswechsel bei Resume; offene Heute-Eingaben bleiben dem bisherigen Datum zugeordnet
@@ -37,7 +53,7 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ```
 flutter analyze  →  0 Issues
-flutter test     →  145/145 bestanden
+flutter test     →  150/150 bestanden (inkl. 5 neue Accessibility-Tests und aktualisierte Goldens)
 flutter build apk --debug    →  erfolgreich mit NDK 27
 flutter build apk --release  →  erfolgreich erzeugt, bewusst unsigniert
 ```

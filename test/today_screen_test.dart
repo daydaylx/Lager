@@ -186,6 +186,8 @@ void main() {
       find.byKey(const ValueKey('activity_einlagerung_01')),
     );
     await tapSave(tester);
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Besonderheiten & Notiz'));
     await tapVisible(
       tester,
       find.byKey(const ValueKey('special_selbststaendig')),
@@ -257,6 +259,7 @@ void main() {
   ) async {
     await pumpToday(tester);
 
+    await tapVisible(tester, find.text('Besonderheiten & Notiz'));
     await tapVisible(
       tester,
       find.byKey(const ValueKey('special_selbststaendig')),
@@ -738,11 +741,9 @@ void main() {
         find.byKey(const ValueKey('activity_wareneingang_01')),
       );
 
-      await tester.scrollUntilVisible(
-        find.text('Vorschlag fürs Berichtsheft'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await tester.tap(find.byKey(const ValueKey('preview_daily_report')));
+      await tester.pumpAndSettle();
+
       expect(find.text('Vorschlag fürs Berichtsheft'), findsOneWidget);
       expect(find.byKey(const Key('copy_daily_report')), findsOneWidget);
     });
@@ -761,12 +762,7 @@ void main() {
         find.byKey(const ValueKey('activity_wareneingang_01')),
       );
 
-      // Scroll with large delta so button center lands inside viewport
-      await tester.scrollUntilVisible(
-        find.byKey(const Key('copy_daily_report')),
-        500,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await tester.tap(find.byKey(const ValueKey('preview_daily_report')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('copy_daily_report')));
       await tester.pump();

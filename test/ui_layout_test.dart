@@ -31,6 +31,13 @@ Widget _themed(Widget child, {double textScale = 1}) {
   );
 }
 
+Widget _themedLight(Widget child) {
+  return MaterialApp(
+    theme: buildThemeForPreset(ThemePreset.hell),
+    home: child,
+  );
+}
+
 Future<void> _setSize(WidgetTester tester, Size size) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -160,14 +167,18 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.pumpAndSettle();
       await tester.tap(sonstiges);
       await tester.pumpAndSettle();
+      // After selecting sonstiges the optional section auto-expands;
+      // scroll to the note field which is now in the expanded tile
       final note = find.byKey(const ValueKey('daily_note_field'));
       await tester.scrollUntilVisible(
         note,
         200,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.pumpAndSettle();
       await tester.showKeyboard(note);
       tester.view.viewInsets = const FakeViewPadding(bottom: 280);
       addTearDown(tester.view.resetViewInsets);
@@ -288,6 +299,90 @@ void main() {
         find.byType(Scaffold),
         matchesGoldenFile('goldens/profile_overview.png'),
       );
+    });
+  });
+
+  group('accessibility guidelines', () {
+    testWidgets('Heute-Screen erfüllt Text-Kontrastrichtlinie', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _setSize(tester, _phoneSize);
+      await tester.pumpWidget(
+        _themed(
+          TodayScreen(
+            storage: InMemoryDailyEntryStorage(),
+            templateStorage: InMemoryActivityTemplateStorage(),
+            currentDate: _fixedToday,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
+    });
+
+    testWidgets('Woche-Screen erfüllt Text-Kontrastrichtlinie', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _setSize(tester, _phoneSize);
+      await tester.pumpWidget(
+        _themed(
+          WeekScreen(
+            storage: InMemoryDailyEntryStorage(),
+            templateStorage: InMemoryActivityTemplateStorage(),
+            currentDate: _fixedToday,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
+    });
+
+    testWidgets('Profil-Screen erfüllt Text-Kontrastrichtlinie',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      await _setSize(tester, _phoneSize);
+      await tester.pumpWidget(
+        _themed(ProfileScreen(onDataCleared: () async {})),
+      );
+      await tester.pumpAndSettle();
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
+    });
+
+    testWidgets(
+        'Heute-Screen (helles Preset) erfüllt Text-Kontrastrichtlinie',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      await _setSize(tester, _phoneSize);
+      await tester.pumpWidget(
+        _themedLight(
+          TodayScreen(
+            storage: InMemoryDailyEntryStorage(),
+            templateStorage: InMemoryActivityTemplateStorage(),
+            currentDate: _fixedToday,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
+    });
+
+    testWidgets('Heute-Screen erfüllt Tap-Target-Richtlinie', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _setSize(tester, _phoneSize);
+      await tester.pumpWidget(
+        _themed(
+          TodayScreen(
+            storage: InMemoryDailyEntryStorage(),
+            templateStorage: InMemoryActivityTemplateStorage(),
+            currentDate: _fixedToday,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      handle.dispose();
     });
   });
 }

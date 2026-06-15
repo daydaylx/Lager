@@ -178,7 +178,26 @@ Issues #14–#20 aus GitHub abgearbeitet.
 
 ## Bereits implementierte Ergänzungen
 
-Issues #12/#13 und #21–#28 sind im Code abgeschlossen:
+### UI/UX-Audit Phase 1 + Phase 2 ✅
+
+- [x] `AppMessageTone.success` → `secondaryContainer` (nicht `primaryContainer`)
+- [x] Besonderheiten & Notiz hinter `ExpansionTile` (auto-expandiert bei Sonstiges, `maintainState: true`)
+- [x] Report-Vorschau als Bottom Sheet über SaveBar-Button „Vorschau"
+- [x] Selektionszähler in SaveBar integriert (immer sichtbar beim Scrollen)
+- [x] WeekHeader entschlackt — „Wochenzusammenfassung" → AppBar-IconButton
+- [x] Golden-Referenzen und Tests nach strukturellen UI-Änderungen aktualisiert
+
+### UI/UX-Audit Phase 3 ✅
+
+- [x] `_DayStatusCard` aus ListView extrahiert — bleibt beim Scrollen sichtbar (Heute-Screen)
+- [x] `_WeekHeader` aus ListView extrahiert — bleibt beim Scrollen sichtbar (Woche-Screen)
+- [x] `Semantics(label, value)` auf `LinearProgressIndicator` in `_WeekHeader`
+- [x] WCAG-Kontrast-Tests für Heute, Woche und Profil (Standard-Theme)
+- [x] Kontrast-Test für helles Preset ("Hell")
+- [x] Tap-Target-Richtlinien-Test für Heute-Screen
+- [x] `flutter test` — 150/150 bestanden (14 neue Tests in `ui_layout_test.dart`)
+
+### Issues #12/#13 und #21–#28 (ebenfalls abgeschlossen):
 
 - [x] Deterministischer lokaler Tagesberichtsvorschlag in Heute und Woche
 - [x] Berichtsvorschläge lokal kopierbar, ohne KI oder externe API

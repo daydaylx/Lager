@@ -253,11 +253,6 @@ void main() {
     );
 
     await pumpWeek(tester, storage: storage, initialDate: today);
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('show_week_summary')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
     await tester.tap(find.byKey(const ValueKey('show_week_summary')));
     await tester.pumpAndSettle();
 
@@ -275,12 +270,7 @@ void main() {
   ) async {
     await pumpWeek(tester);
 
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('show_week_summary')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    final button = tester.widget<FilledButton>(
+    final button = tester.widget<IconButton>(
       find.byKey(const ValueKey('show_week_summary')),
     );
     expect(button.onPressed, isNull);
@@ -313,11 +303,6 @@ void main() {
       storage: storage,
       templateStorage: templateStorage,
       initialDate: today,
-    );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('show_week_summary')),
-      300,
-      scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(find.byKey(const ValueKey('show_week_summary')));
     await tester.pumpAndSettle();
@@ -449,11 +434,6 @@ void main() {
       );
 
       await pumpWeek(tester, storage: storage, initialDate: today);
-      await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('show_week_summary')),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
       await tester.tap(find.byKey(const ValueKey('show_week_summary')));
       await tester.pumpAndSettle();
 
@@ -472,11 +452,6 @@ void main() {
       );
 
       await pumpWeek(tester, storage: storage, initialDate: today);
-      await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('show_week_summary')),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
       await tester.tap(find.byKey(const ValueKey('show_week_summary')));
       await tester.pumpAndSettle();
 

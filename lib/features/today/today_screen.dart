@@ -51,6 +51,7 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _isApplyingEntry = false;
   bool _templatesLoadFailed = false;
   bool _specialFlagsExpanded = false;
+  bool _optionalSectionExpanded = false;
   late DateTime _activeDate;
   DateTime? _pendingDate;
 
@@ -171,16 +172,22 @@ class _TodayScreenState extends State<TodayScreen> {
         appBar: AppBar(title: Text(_screenTitle)),
         body: IgnorePointer(
           ignoring: _isSaving,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
             children: [
-              _DayStatusCard(
-                date: _today,
-                statusLabel: _statusLabel,
-                isSaved: _savedEntry != null && !_hasUnsavedChanges,
-                hasUnsavedChanges: _hasUnsavedChanges,
-                missingItems: _missingItems,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: _DayStatusCard(
+                  date: _today,
+                  statusLabel: _statusLabel,
+                  isSaved: _savedEntry != null && !_hasUnsavedChanges,
+                  hasUnsavedChanges: _hasUnsavedChanges,
+                  missingItems: _missingItems,
+                ),
               ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  children: [
               if (_pendingDate != null) ...[
                 const SizedBox(height: 16),
                 AppMessage(
@@ -267,48 +274,66 @@ class _TodayScreenState extends State<TodayScreen> {
                 ),
               ],
               if (!_selectedDayType.isAbsence) ...[
-                const SizedBox(height: 24),
-                const AppSectionHeader(
-                  title: 'Besonderheiten',
-                  badge: 'Optional',
-                  badgeRequired: false,
-                  description: 'Was war heute besonders?',
-                ),
-                const SizedBox(height: 12),
-                _buildSpecialFlags(),
-                const SizedBox(height: 24),
-                const AppSectionHeader(
-                  title: 'Notiz',
-                  badge: 'Optional',
-                  badgeRequired: false,
-                  description: 'Kurze Ergänzung, falls etwas Besonderes war.',
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('daily_note_field'),
-                  controller: _noteController,
-                  minLines: 2,
-                  maxLines: 4,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Kurze Notiz, falls etwas Besonderes war ...',
+                const SizedBox(height: 16),
+                ExpansionTile(
+                  key: ValueKey(
+                    'optional_${_selectedDayType.name}_${_savedEntry?.id}',
                   ),
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: EdgeInsets.zero,
+                  maintainState: true,
+                  initiallyExpanded: _optionalSectionExpanded,
+                  onExpansionChanged: (expanded) =>
+                      setState(() => _optionalSectionExpanded = expanded),
+                  title: Text(
+                    'Besonderheiten & Notiz',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  subtitle: Text(
+                    'Optional',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  children: [
+                    const SizedBox(height: 8),
+                    const AppSectionHeader(
+                      title: 'Besonderheiten',
+                      badge: 'Optional',
+                      badgeRequired: false,
+                      description: 'Was war heute besonders?',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSpecialFlags(),
+                    const SizedBox(height: 24),
+                    const AppSectionHeader(
+                      title: 'Notiz',
+                      badge: 'Optional',
+                      badgeRequired: false,
+                      description: 'Kurze Ergänzung, falls etwas Besonderes war.',
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      key: const ValueKey('daily_note_field'),
+                      controller: _noteController,
+                      minLines: 2,
+                      maxLines: 4,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Kurze Notiz, falls etwas Besonderes war ...',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ],
-              if (_canSave) ...[
-                const SizedBox(height: 24),
-                _ReportCard(
-                  report: _currentReport()!,
-                  note: (_selectedDayType == DayType.betrieb ||
-                          _selectedDayType == DayType.berufsschule)
-                      ? (_noteController.text.trim().isEmpty
-                          ? null
-                          : _noteController.text.trim())
-                      : null,
-                  hasUnsavedChanges: _hasUnsavedChanges,
+                  ],
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -319,6 +344,9 @@ class _TodayScreenState extends State<TodayScreen> {
           isNewEntry: _savedEntry == null,
           isToday: _isToday,
           onSave: _saveEntry,
+          selectedActivityCount: _selectedActivityIds.length,
+          supportsActivities: _selectedDayType.supportsActivities,
+          onPreview: _canSave ? _showReportPreview : null,
         ),
       ),
     );
@@ -470,6 +498,7 @@ class _TodayScreenState extends State<TodayScreen> {
       if (dayType.isAbsence) {
         _selectedSpecialFlags.clear();
       }
+      _optionalSectionExpanded = dayType == DayType.sonstiges;
       _setChanged();
     });
 
@@ -658,6 +687,8 @@ class _TodayScreenState extends State<TodayScreen> {
       _hasUnsavedChanges = false;
       _isLoading = false;
       _loadFailed = false;
+      _optionalSectionExpanded =
+          _selectedSpecialFlags.isNotEmpty || _noteController.text.isNotEmpty;
     });
 
     _isApplyingEntry = false;
@@ -737,71 +768,70 @@ class _TodayScreenState extends State<TodayScreen> {
     );
     return DailyReportGenerator.generate(entry, _buildActivityTitlesMap());
   }
-}
 
-class _ReportCard extends StatelessWidget {
-  final String report;
-  final String? note;
-  final bool hasUnsavedChanges;
-
-  const _ReportCard({
-    required this.report,
-    required this.note,
-    required this.hasUnsavedChanges,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Vorschlag fürs Berichtsheft',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (hasUnsavedChanges) ...[
-              const SizedBox(height: 4),
+  void _showReportPreview() {
+    final report = _currentReport();
+    if (report == null) return;
+    final note = (_selectedDayType == DayType.betrieb ||
+            _selectedDayType == DayType.berufsschule)
+        ? (_noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim())
+        : null;
+    final unsaved = _hasUnsavedChanges;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                'Vorschau aus aktueller Auswahl – noch nicht gespeichert',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                'Vorschlag fürs Berichtsheft',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
-            const SizedBox(height: 12),
-            SelectableText(report),
-            if (note != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Zusatznotiz – bei Bedarf übernehmen: $note',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              if (unsaved) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Vorschau aus aktueller Auswahl – noch nicht gespeichert',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
+              ],
+              const SizedBox(height: 12),
+              SelectableText(report),
+              if (note != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Zusatznotiz – bei Bedarf übernehmen: $note',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                key: const Key('copy_daily_report'),
+                icon: const Icon(Icons.copy_outlined),
+                label: const Text('Kopieren'),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: report));
+                  ScaffoldMessenger.of(sheetContext).showSnackBar(
+                    const SnackBar(content: Text('Tagesbericht kopiert.')),
+                  );
+                },
               ),
             ],
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              key: const Key('copy_daily_report'),
-              icon: const Icon(Icons.copy_outlined),
-              label: const Text('Kopieren'),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: report));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tagesbericht kopiert.')),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -895,6 +925,9 @@ class _SaveBar extends StatelessWidget {
   final bool isNewEntry;
   final bool isToday;
   final VoidCallback onSave;
+  final int selectedActivityCount;
+  final bool supportsActivities;
+  final VoidCallback? onPreview;
 
   const _SaveBar({
     required this.missingItems,
@@ -903,6 +936,9 @@ class _SaveBar extends StatelessWidget {
     required this.isNewEntry,
     required this.isToday,
     required this.onSave,
+    required this.selectedActivityCount,
+    required this.supportsActivities,
+    this.onPreview,
   });
 
   @override
@@ -924,26 +960,48 @@ class _SaveBar extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-            ],
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                key: const ValueKey('save_daily_entry'),
-                onPressed: canSubmit ? onSave : null,
-                icon: isSaving
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(isNewEntry ? Icons.save_outlined : Icons.update),
-                label: Text(
-                  isNewEntry
-                      ? isToday
-                          ? 'Heute speichern'
-                          : 'Tag speichern'
-                      : 'Änderungen speichern',
+            ] else if (supportsActivities && selectedActivityCount > 0) ...[
+              Text(
+                '$selectedActivityCount '
+                '${selectedActivityCount == 1 ? 'Tätigkeit' : 'Tätigkeiten'} gewählt',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
                 ),
+                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 8),
+            ],
+            Row(
+              children: [
+                if (onPreview != null) ...[
+                  OutlinedButton.icon(
+                    key: const ValueKey('preview_daily_report'),
+                    onPressed: onPreview,
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: const Text('Vorschau'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: FilledButton.icon(
+                    key: const ValueKey('save_daily_entry'),
+                    onPressed: canSubmit ? onSave : null,
+                    icon: isSaving
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(isNewEntry ? Icons.save_outlined : Icons.update),
+                    label: Text(
+                      isNewEntry
+                          ? isToday
+                              ? 'Heute speichern'
+                              : 'Tag speichern'
+                          : 'Änderungen speichern',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

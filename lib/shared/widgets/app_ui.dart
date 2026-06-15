@@ -166,8 +166,8 @@ class AppMessage extends StatelessWidget {
           foreground: scheme.onSurfaceVariant,
         ),
       AppMessageTone.success => (
-          background: scheme.primaryContainer,
-          foreground: scheme.onPrimaryContainer,
+          background: scheme.secondaryContainer,
+          foreground: scheme.onSecondaryContainer,
         ),
       AppMessageTone.warning => (
           background: scheme.tertiaryContainer,

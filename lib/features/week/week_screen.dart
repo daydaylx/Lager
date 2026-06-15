@@ -97,7 +97,18 @@ class _WeekScreenState extends State<WeekScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Woche')),
+      appBar: AppBar(
+        title: const Text('Woche'),
+        actions: [
+          if (!_isLoading && !_loadFailed)
+            IconButton(
+              key: const ValueKey('show_week_summary'),
+              onPressed: _entries.isNotEmpty ? _openSummary : null,
+              tooltip: 'Wochenzusammenfassung',
+              icon: const Icon(Icons.summarize_outlined),
+            ),
+        ],
+      ),
       body: _buildBody(context),
     );
   }
@@ -128,22 +139,26 @@ class _WeekScreenState extends State<WeekScreen> {
     final isCurrentWeek = _selectedWeekStart == _currentWeekStart;
     final missingCount = dueWeekDays.length - enteredDueDays;
 
-    return RefreshIndicator(
-      onRefresh: _loadWeek,
-      child: ListView(
-        key: const ValueKey('week_list'),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          _WeekHeader(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: _WeekHeader(
             weekStart: _selectedWeekStart,
             enteredDays: enteredDueDays,
             dueDays: dueWeekDays.length,
             canGoForward: _selectedWeekStart.isBefore(_currentWeekStart),
-            hasEntries: hasEntries,
             onPrevious: () => _changeWeek(-7),
             onNext: () => _changeWeek(7),
-            onSummary: _openSummary,
           ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadWeek,
+            child: ListView(
+              key: const ValueKey('week_list'),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              children: [
           if (isCurrentWeek && missingCount > 0) ...[
             const SizedBox(height: 16),
             _MissingDaysBanner(count: missingCount),
@@ -177,8 +192,11 @@ class _WeekScreenState extends State<WeekScreen> {
               }).toList(growable: false),
             ),
           ),
-        ],
-      ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -359,20 +377,16 @@ class _WeekHeader extends StatelessWidget {
   final int enteredDays;
   final int dueDays;
   final bool canGoForward;
-  final bool hasEntries;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
-  final VoidCallback onSummary;
 
   const _WeekHeader({
     required this.weekStart,
     required this.enteredDays,
     required this.dueDays,
     required this.canGoForward,
-    required this.hasEntries,
     required this.onPrevious,
     required this.onNext,
-    required this.onSummary,
   });
 
   @override
@@ -443,16 +457,15 @@ class _WeekHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: dueDays == 0 ? 0 : enteredDays / dueDays,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        const SizedBox(height: 14),
-        FilledButton.tonalIcon(
-          key: const ValueKey('show_week_summary'),
-          onPressed: hasEntries ? onSummary : null,
-          icon: const Icon(Icons.summarize_outlined),
-          label: const Text('Wochenzusammenfassung'),
+        Semantics(
+          label: '$enteredDays von $dueDays Tagen eingetragen',
+          value: dueDays == 0
+              ? '0 Prozent'
+              : '${((enteredDays / dueDays) * 100).round()} Prozent',
+          child: LinearProgressIndicator(
+            value: dueDays == 0 ? 0 : enteredDays / dueDays,
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ],
     );

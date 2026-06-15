@@ -620,7 +620,7 @@ class _ThemeSection extends StatelessWidget {
           leading: const Icon(Icons.palette_outlined),
           title: const Text('Farbtheme'),
           subtitle: Text(current.label),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(Icons.expand_more),
           onTap: onChanged == null
               ? null
               : () => _openSelector(context),
