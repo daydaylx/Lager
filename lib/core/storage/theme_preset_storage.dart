@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/theme.dart';
+import 'preferences_write.dart';
 
 class ThemePresetStorage {
   static const _key = 'theme_preset';
@@ -16,6 +17,9 @@ class ThemePresetStorage {
 
   static Future<void> save(ThemePreset preset) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, preset.name);
+    await requirePreferenceWrite(
+      prefs.setString(_key, preset.name),
+      message: 'Das Farbtheme konnte nicht gespeichert werden.',
+    );
   }
 }

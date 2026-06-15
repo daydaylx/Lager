@@ -13,6 +13,7 @@ import 'package:berichtsheft_merker/core/storage/daily_entry_storage.dart';
 import 'package:berichtsheft_merker/core/storage/activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
+import 'package:berichtsheft_merker/core/week_utils.dart';
 import 'package:berichtsheft_merker/features/today/today_screen.dart';
 
 Future<void> tapVisible(
@@ -478,6 +479,76 @@ void main() {
     await tester.tap(find.text(AppStrings.tabToday));
     await tester.pumpAndSettle();
     expect(find.text('Gespeichert'), findsOneWidget);
+  });
+
+  testWidgets('sauberer Tageswechsel lädt den neuen Tag', (tester) async {
+    final storage = InMemoryDailyEntryStorage();
+    final dayOne = DateTime(2026, 6, 12);
+    final dayTwo = DateTime(2026, 6, 13);
+
+    Widget subject(DateTime currentDate) => MaterialApp(
+          home: TodayScreen(
+            storage: storage,
+            templateStorage: InMemoryActivityTemplateStorage(),
+            currentDate: currentDate,
+          ),
+        );
+
+    await tester.pumpWidget(subject(dayOne));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+    await tapSave(tester);
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(subject(dayTwo));
+    await tester.pumpAndSettle();
+    expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
+    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
+
+    await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+    await tapSave(tester);
+    expect(await storage.loadByDate(dayOne), isNotNull);
+    expect(await storage.loadByDate(dayTwo), isNotNull);
+  });
+
+  testWidgets('offene Änderungen bleiben beim bisherigen Tag', (tester) async {
+    final dayOne = DateTime(2026, 6, 12);
+    final dayTwo = DateTime(2026, 6, 13);
+    final storage = InMemoryDailyEntryStorage();
+
+    Widget subject(DateTime currentDate) => MaterialApp(
+          home: TodayScreen(
+            storage: storage,
+            templateStorage: InMemoryActivityTemplateStorage(),
+            currentDate: currentDate,
+          ),
+        );
+
+    await tester.pumpWidget(subject(dayOne));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const ValueKey('day_type_sonstiges')));
+    await tester.enterText(
+      find.byKey(const ValueKey('daily_note_field')),
+      'Offene Notiz',
+    );
+
+    await tester.pumpWidget(subject(dayTwo));
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byType(Scrollable).first,
+      const Offset(0, 2000),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('new_day_pending')), findsOneWidget);
+    expect(find.text(formatDayDate(dayOne)), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('switch_to_current_day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Änderungen verwerfen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
+    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
   });
 
   testWidgets('Vorhandener Eintrag wird vollständig in das Formular geladen', (

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../models/reminder_settings.dart';
+import 'preferences_write.dart';
 
 class ReminderStorage {
   static Future<ReminderSettings> load() async {
@@ -20,9 +21,10 @@ class ReminderStorage {
           parsed = [];
         } else {
           final entries = decoded
-              .map((s) {
+              .whereType<String>()
+              .map((value) {
                 try {
-                  return ReminderTime.fromString(s as String);
+                  return ReminderTime.fromString(value);
                 } on FormatException {
                   return null;
                 }
@@ -30,7 +32,9 @@ class ReminderStorage {
               .whereType<ReminderTime>()
               .toList();
           // Fall back to defaults only when every entry was corrupt.
-          parsed = entries.isEmpty ? List.of(ReminderSettings.defaults.times) : entries;
+          parsed = entries.isEmpty
+              ? List.of(ReminderSettings.defaults.times)
+              : entries;
         }
       } catch (_) {
         parsed = List.of(ReminderSettings.defaults.times);
@@ -58,19 +62,33 @@ class ReminderStorage {
       weekdays = parsed;
     }
 
-    return ReminderSettings(enabled: enabled, times: times, weekdays: weekdays);
+    return ReminderSettings(
+      enabled: enabled,
+      times: times,
+      weekdays: weekdays,
+    ).normalized();
   }
 
   static Future<void> save(ReminderSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(PreferenceKeys.reminderEnabled, settings.enabled);
-    await prefs.setString(
-      PreferenceKeys.reminderTimes,
-      jsonEncode(settings.times.map((t) => t.toDisplayString()).toList()),
+    final normalized = settings.normalized();
+    await requirePreferenceWrite(
+      prefs.setBool(PreferenceKeys.reminderEnabled, normalized.enabled),
+      message: 'Erinnerungseinstellungen konnten nicht gespeichert werden.',
     );
-    await prefs.setString(
-      PreferenceKeys.reminderWeekdays,
-      jsonEncode(settings.weekdays),
+    await requirePreferenceWrite(
+      prefs.setString(
+        PreferenceKeys.reminderTimes,
+        jsonEncode(normalized.times.map((t) => t.toDisplayString()).toList()),
+      ),
+      message: 'Erinnerungseinstellungen konnten nicht gespeichert werden.',
+    );
+    await requirePreferenceWrite(
+      prefs.setString(
+        PreferenceKeys.reminderWeekdays,
+        jsonEncode(normalized.weekdays),
+      ),
+      message: 'Erinnerungseinstellungen konnten nicht gespeichert werden.',
     );
   }
 }

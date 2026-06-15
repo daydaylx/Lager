@@ -42,5 +42,6 @@ class HiveActivityTemplateStorage implements ActivityTemplateStorage {
   @override
   Future<void> clearAll() async {
     await _box.clear();
+    await _box.compact();
   }
 }

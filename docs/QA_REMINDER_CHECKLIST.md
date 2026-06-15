@@ -10,7 +10,8 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] Permission erteilen → Reminder wird eingerichtet, kein Fehler
 - [ ] Permission verweigern → Fehlermeldung mit "Bitte in den Einstellungen aktivieren" sichtbar
 - [ ] "Benachrichtigungseinstellungen öffnen" → App-Einstellungen öffnen sich auf Notification-Seite
-- [ ] Berechtigung nachträglich in Einstellungen sperren → Profil-Screen zeigt Warnung beim nächsten Öffnen
+- [ ] Berechtigung nachträglich in Einstellungen sperren → Profil-Screen zeigt Warnung nach Rückkehr in die App
+- [ ] Berechtigung nachträglich erlauben → Warnung verschwindet nach Rückkehr in die App
 
 ## 2. Notification-Channel (Issue #15)
 
@@ -27,12 +28,14 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] Notification im Benachrichtigungsfeld sichtbar
 - [ ] Tap auf Notification → App öffnet sich auf Heute-Tab (Index 0)
 - [ ] Tap bei laufender App im Hintergrund → Heute-Tab wird ausgewählt
+- [ ] App vollständig beenden, dann Notification antippen → Kaltstart öffnet Heute-Tab
 
 ## 4. Zweite Erinnerung (Issue #17)
 
 - [ ] 30 Minuten nach primärer Uhrzeit erscheint zweite Notification
-- [ ] Text: "Immer noch kein Eintrag? Das dauert wirklich nur kurz."
+- [ ] Text: "Falls dein Eintrag noch fehlt: jetzt kurz nachtragen."
 - [ ] Zweite Erinnerung erscheint nur an konfigurierten Wochentagen
+- [ ] Primärzeit 23:45 → zweite Erinnerung erscheint am Folgetag um 00:15
 
 ## 5. Wochencheck (Issue #17)
 
@@ -73,10 +76,27 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] App nach Neustart → Reminder werden automatisch neu geplant (RECEIVE_BOOT_COMPLETED)
 - [ ] Reminder erscheinen wieder zur konfigurierten Uhrzeit
 
-## 11. "Alle Daten löschen"
+## 11. Zeitzone und Tageswechsel
+
+- [ ] Gerätezeitzone ändern, App öffnen und Reminder speichern → Hinweise folgen der neuen lokalen Uhrzeit
+- [ ] App vor Mitternacht im Hintergrund lassen und danach öffnen → Heute-Screen zeigt den neuen Tag
+- [ ] Offene Heute-Eingaben über Mitternacht → bleiben dem bisherigen Tag zugeordnet
+- [ ] Wechsel zum neuen Tag mit offenen Eingaben → Bestätigung vor Verwerfen erscheint
+- [ ] Aktuelle Wochenansicht über Wochenwechsel → wechselt zur neuen Woche
+- [ ] Historisch ausgewählte Woche über Tageswechsel → bleibt ausgewählt
+
+## 12. "Alle Daten löschen"
 
 - [ ] Alle Daten löschen → keine weiteren Notifications bis Reminder neu aktiviert
 - [ ] cancelAll() bricht primäre, zweite und Wochencheck-Notifications ab
+- [ ] Nach Neustart sind Profil, Einträge, eigene Vorlagen, Reminder und Theme zurückgesetzt
+
+## 13. Release und Datenschutz
+
+- [ ] Installierte App verwendet Package `com.daydaylx.berichtsheftmerker`
+- [ ] Debug-APK lässt sich installieren und starten
+- [ ] Release-APK wird nur mit lokalem Release-Keystore signiert, nicht mit Debug-Key
+- [ ] Android-Backup/Restore oder Gerätetransfer übernimmt keine App-Daten
 
 ## Testumgebung
 

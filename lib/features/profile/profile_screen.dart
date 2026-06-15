@@ -13,7 +13,7 @@ class ProfileScreen extends StatefulWidget {
   final Future<void> Function() onDataCleared;
   final NotificationScheduler? notificationScheduler;
   final ThemePreset themePreset;
-  final ValueChanged<ThemePreset>? onThemeChanged;
+  final Future<void> Function(ThemePreset)? onThemeChanged;
 
   const ProfileScreen({
     super.key,
@@ -27,7 +27,11 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with WidgetsBindingObserver {
+  static const _permissionError =
+      'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.';
+
   StoredProfile? _profile;
   bool _loadFailed = false;
   ReminderSettings _reminderSettings = ReminderSettings.defaults;
@@ -40,6 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _scheduler = widget.notificationScheduler ??
         const FlutterLocalNotificationScheduler();
     _loadProfile();
@@ -47,10 +52,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _checkNotificationPermission();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkNotificationPermission();
+    }
+  }
+
   Future<void> _checkNotificationPermission() async {
     try {
       final enabled = await _scheduler.areNotificationsEnabled();
-      if (mounted) setState(() => _notificationsBlockedBySystem = !enabled);
+      if (mounted) {
+        setState(() {
+          _notificationsBlockedBySystem = !enabled;
+          if (enabled && _reminderError == _permissionError) {
+            _reminderError = null;
+          } else if (!enabled && _reminderSettings.enabled) {
+            _reminderError = _permissionError;
+          }
+        });
+      }
     } catch (_) {
       // Silently skip if the plugin is not available (e.g. in tests).
     }
@@ -108,7 +135,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadReminderSettings() async {
     try {
       final settings = await ReminderStorage.load();
-      if (mounted) setState(() => _reminderSettings = settings);
+      if (mounted) {
+        setState(() {
+          _reminderSettings = settings;
+          if (settings.enabled && _notificationsBlockedBySystem) {
+            _reminderError = _permissionError;
+          }
+        });
+      }
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -122,38 +156,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveAndReschedule(ReminderSettings settings) async {
     if (_isReminderSaving) return;
     final previous = _reminderSettings;
+    final normalized = settings.normalized();
     setState(() {
       _isReminderSaving = true;
       _reminderError = null;
     });
 
     try {
-      final result = await _scheduler.schedule(settings);
+      final result = await _scheduler.schedule(normalized);
       if (result == NotificationScheduleResult.permissionDenied) {
-        await _scheduler.schedule(previous);
+        await _restoreSchedule(previous);
         if (mounted) {
           setState(() {
             _isReminderSaving = false;
             _notificationsBlockedBySystem = true;
-            _reminderError =
-                'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.';
+            _reminderError = _permissionError;
           });
         }
         return;
       }
-      await ReminderStorage.save(settings);
+      await ReminderStorage.save(normalized);
       if (mounted) {
         setState(() {
-          _reminderSettings = settings;
+          _reminderSettings = normalized;
           _isReminderSaving = false;
+          _notificationsBlockedBySystem = false;
         });
       }
     } catch (_) {
-      try {
-        await _scheduler.schedule(previous);
-      } catch (_) {
-        // The visible error below covers both scheduling failures.
-      }
+      await _restoreReminderState(previous);
       if (mounted) {
         setState(() {
           _isReminderSaving = false;
@@ -161,6 +192,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.';
         });
       }
+    }
+  }
+
+  Future<void> _restoreSchedule(ReminderSettings previous) async {
+    try {
+      await _scheduler.schedule(previous);
+    } catch (_) {
+      // The visible save error covers both the initial and rollback failures.
+    }
+  }
+
+  Future<void> _restoreReminderState(ReminderSettings previous) async {
+    await _restoreSchedule(previous);
+    try {
+      await ReminderStorage.save(previous);
+    } catch (_) {
+      // The visible save error covers native and persisted rollback failures.
     }
   }
 
@@ -178,6 +226,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final newTime = ReminderTime(hour: picked.hour, minute: picked.minute);
     if (_reminderSettings.times.contains(newTime)) {
       setState(() => _reminderError = 'Diese Uhrzeit ist bereits eingetragen.');
+      return;
+    }
+    if (_reminderSettings.times.length >= ReminderSettings.maxTimes) {
+      setState(() {
+        _reminderError =
+            'Es können höchstens ${ReminderSettings.maxTimes} Uhrzeiten gespeichert werden.';
+      });
       return;
     }
     final times = [
@@ -534,7 +589,7 @@ class _ReminderSection extends StatelessWidget {
 
 class _ThemeSection extends StatelessWidget {
   final ThemePreset current;
-  final ValueChanged<ThemePreset>? onChanged;
+  final Future<void> Function(ThemePreset)? onChanged;
 
   const _ThemeSection({required this.current, required this.onChanged});
 
@@ -569,10 +624,22 @@ class _ThemeSection extends StatelessWidget {
             title: Text(preset.label),
             value: preset,
             groupValue: current,
-            onChanged: (value) {
+            onChanged: (value) async {
               if (value != null) {
-                onChanged!(value);
-                Navigator.of(context).pop();
+                try {
+                  await onChanged!(value);
+                  if (context.mounted) Navigator.of(context).pop();
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Das Farbtheme konnte nicht gespeichert werden.',
+                        ),
+                      ),
+                    );
+                  }
+                }
               }
             },
           );

@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
+import 'storage/preferences_write.dart';
 
 typedef StoredProfile = ({
   String? name,
@@ -63,7 +64,10 @@ class ProfileStorage {
 
   static Future<void> clearAll() async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.clear();
+    await requirePreferenceWrite(
+      preferences.clear(),
+      message: 'Lokale Einstellungen konnten nicht gelöscht werden.',
+    );
   }
 
   static Future<void> _writeOptionalString(
@@ -79,8 +83,9 @@ class ProfileStorage {
   }
 
   static Future<void> _requireWrite(Future<bool> operation) async {
-    if (!await operation) {
-      throw StateError('Profildaten konnten nicht gespeichert werden.');
-    }
+    await requirePreferenceWrite(
+      operation,
+      message: 'Profildaten konnten nicht gespeichert werden.',
+    );
   }
 }

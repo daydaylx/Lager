@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/app/app.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
+import 'package:berichtsheft_merker/core/models/reminder_settings.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
@@ -13,6 +16,31 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
+}
+
+class DelayedInitialNotificationScheduler implements NotificationScheduler {
+  final Completer<String?> initialPayload = Completer<String?>();
+
+  @override
+  Future<String?> initialize(void Function(String?) onTap) {
+    return initialPayload.future;
+  }
+
+  @override
+  void clearOnTap() {}
+
+  @override
+  Future<bool> areNotificationsEnabled() async => true;
+
+  @override
+  Future<void> cancelAll() async {}
+
+  @override
+  Future<NotificationScheduleResult> schedule(ReminderSettings settings) async {
+    return settings.enabled
+        ? NotificationScheduleResult.scheduled
+        : NotificationScheduleResult.disabled;
+  }
 }
 
 void main() {
@@ -223,6 +251,73 @@ void main() {
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
     expect(find.text('Ausbildungsprofil'), findsOneWidget);
+  });
+
+  testWidgets('Notification-Tap öffnet den Heute-Tab', (tester) async {
+    final scheduler = NoOpNotificationScheduler();
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: scheduler,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+
+    scheduler.emitTap('today');
+    await tester.pumpAndSettle();
+
+    final navigation = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(navigation.selectedIndex, 0);
+  });
+
+  testWidgets('Notification-Kaltstart öffnet den Heute-Tab', (tester) async {
+    final scheduler = DelayedInitialNotificationScheduler();
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: scheduler,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+
+    scheduler.initialPayload.complete('today');
+    await tester.pumpAndSettle();
+
+    final navigation = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(navigation.selectedIndex, 0);
+  });
+
+  testWidgets('Resume nach Tageswechsel aktualisiert den Heute-Screen', (
+    tester,
+  ) async {
+    var now = DateTime(2026, 6, 12, 23, 50);
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: NoOpNotificationScheduler(),
+        clock: () => now,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Freitag, 12. Juni'), findsOneWidget);
+
+    now = DateTime(2026, 6, 13, 0, 10);
+    tester.binding.handleAppLifecycleStateChanged(
+      AppLifecycleState.resumed,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Samstag, 13. Juni'), findsOneWidget);
   });
 
   testWidgets('Alle Daten löschen bricht geplante Erinnerungen ab', (

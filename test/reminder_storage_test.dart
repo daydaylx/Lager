@@ -144,6 +144,20 @@ void main() {
       expect(loaded.weekdays, [1, 3, 5]);
     });
 
+    test('Ungültige Zeiteinträge verwerfen gültige Zeiten nicht', () async {
+      SharedPreferences.setMockInitialValues({
+        'reminder_times': '["08:00", 42, "ungültig", "20:00"]',
+      });
+      final loaded = await ReminderStorage.load();
+      expect(
+        loaded.times,
+        const [
+          ReminderTime(hour: 8, minute: 0),
+          ReminderTime(hour: 20, minute: 0),
+        ],
+      );
+    });
+
     test('copyWith erzeugt unmodifiable Liste', () {
       final settings = ReminderSettings.defaults.copyWith(weekdays: [1, 2, 3]);
       expect(() => settings.weekdays.add(4), throwsUnsupportedError);

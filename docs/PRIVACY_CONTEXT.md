@@ -30,6 +30,16 @@ Diese App speichert **ausschließlich lokal**. Kein Netzwerkzugriff, kein Backen
 Lokale Android-Benachrichtigungen sind erlaubt. Sie werden ausschließlich auf
 dem Gerät geplant, verwenden die Gerätezeitzone und benötigen keinen Netzwerkzugriff.
 
+Android-Cloud-Backup und Gerätetransfer sind in
+`android/app/src/main/AndroidManifest.xml` sowie den XML-Regeln unter
+`android/app/src/main/res/xml/` deaktiviert. Dadurch werden Profil,
+Einstellungen, Tageseinträge und eigene Tätigkeiten nicht durch Android in die
+Cloud oder auf ein neues Gerät übertragen.
+
+„Alle Daten löschen“ leert SharedPreferences und beide Hive-Boxen. Die
+Hive-Dateien werden danach komprimiert, damit gelöschte Inhalte nicht unnötig
+in freien Dateibereichen verbleiben.
+
 ---
 
 ## Warum

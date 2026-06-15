@@ -37,7 +37,7 @@ Sie ist keine offizielle Anwendung und hat kein Backend.
 
 ## Aktuelle Phase
 
-**Phase 11: UI-Redesign** — Code und automatisierte UI-Prüfungen abgeschlossen; manueller Android-Gerätetest offen.
+**Phase 13: Robustheit und Release-Härtung** — Code und automatisierte Prüfungen abgeschlossen; manueller Android-Gerätetest und lokale Release-Signierung offen.
 
 ---
 

@@ -30,6 +30,8 @@ class ReminderTime {
 }
 
 class ReminderSettings {
+  static const int maxTimes = 7;
+
   final bool enabled;
   final List<ReminderTime> times;
   final List<int> weekdays;
@@ -55,6 +57,21 @@ class ReminderSettings {
       enabled: enabled ?? this.enabled,
       times: List.unmodifiable(times ?? this.times),
       weekdays: List.unmodifiable(weekdays ?? this.weekdays),
+    );
+  }
+
+  ReminderSettings normalized() {
+    final normalizedTimes = times.toSet().toList()
+      ..sort((a, b) => a.hour == b.hour
+          ? a.minute.compareTo(b.minute)
+          : a.hour.compareTo(b.hour));
+    final normalizedWeekdays =
+        weekdays.where((day) => day >= 1 && day <= 7).toSet().toList()..sort();
+
+    return ReminderSettings(
+      enabled: enabled,
+      times: List.unmodifiable(normalizedTimes.take(maxTimes)),
+      weekdays: List.unmodifiable(normalizedWeekdays),
     );
   }
 

@@ -1,13 +1,14 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–11 im Code abgeschlossen; manueller Android-Test offen.
+Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Phasen 0–13 im Code abgeschlossen; manueller Android-Test offen.
 
 ---
 
 ## Einstiegspunkte
 
 ```
-lib/main.dart                → runApp, Hive-Init, Profil laden
+lib/main.dart                → runApp mit AppBootstrap
+lib/app/bootstrap.dart       → lokale Speicher öffnen, Startfehler + Retry
 lib/app/app.dart             → MaterialApp, MainShell, IndexedStack, NavigationBar
 lib/app/router.dart          → AppRoutes (String-Konstanten)
 lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententheme
@@ -58,12 +59,13 @@ lib/app/theme.dart           → buildAppTheme(), reduziertes M3-Komponententhem
 | `storage/activity_template_adapter.dart`      | Hive-CE-Adapter, handgeschrieben (typeId: 1) |
 | `storage/hive_activity_template_storage.dart` | Produktiv-Impl., Box `custom_templates`      |
 | `storage/reminder_storage.dart`              | Reminder-Einstellungen in SharedPreferences  |
+| `storage/preferences_write.dart`             | Prüft SharedPreferences-Schreibergebnisse    |
 
 ### Services
 
 | Datei                              | Inhalt                                                                              |
 | ---------------------------------- | ----------------------------------------------------------------------------------- |
-| `services/notification_service.dart` | `NotificationScheduler` (Interface), `NoOpNotificationScheduler` (Tests), `FlutterLocalNotificationScheduler` (Produktiv) |
+| `services/notification_service.dart` | Scheduler-Interface, Reminder-Plan, Tap-Routing und Produktiv-/Testimplementierung |
 
 ### Sonstiges Core
 
@@ -107,8 +109,11 @@ Erinnerungen:
     → notification_service.dart (FlutterLocalNotificationScheduler)
     → flutter_timezone + flutter_local_notifications
 
-Onboarding-Flag:
-  main.dart / constants.dart (SharedPreferences-Key)
+App-Start:
+  main.dart
+    → app/bootstrap.dart
+    → Hive-Speicher + Profil + Theme
+    → app.dart
 ```
 
 ---
@@ -127,9 +132,12 @@ Onboarding-Flag:
 | `reminder_settings_test.dart`           | Modell-Defaults, Gleichheit, Serialisierung       |
 | `reminder_storage_test.dart`            | SharedPreferences-Roundtrip, mehrere Zeiten/Tage  |
 | `profile_reminder_screen_test.dart`     | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage) |
+| `notification_service_test.dart`        | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload |
+| `bootstrap_test.dart`                   | sichtbarer Startfehler und Retry                          |
+| `preferences_write_test.dart`           | fehlgeschlagene SharedPreferences-Schreibvorgänge        |
 | `ui_layout_test.dart`                    | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens |
 
-Letzter Lauf (Phase 11): 87/87 bestanden.
+Letzter Lauf (Phase 13): 145/145 bestanden.
 
 ---
 

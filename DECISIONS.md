@@ -62,6 +62,17 @@ Erinnerungen werden ausschließlich auf dem Android-Gerät geplant. Sie verwende
 die Gerätezeitzone, benötigen keine Push-Infrastruktur und werden beim Löschen
 aller Daten abgebrochen.
 
+**Android-Backup und Gerätetransfer deaktiviert**
+Die App enthält private Ausbildungsnotizen und verspricht rein lokale
+Datenhaltung. Android-Cloud-Backup und automatischer Gerätetransfer sind deshalb
+für alle App-Daten deaktiviert.
+
+**Eindeutige Application ID und keine Debug-Signatur für Releases**
+Android-Builds verwenden `com.daydaylx.berichtsheftmerker`. Release-Artefakte
+werden nur signiert, wenn lokal eine ignorierte `android/key.properties` mit
+einem privaten Release-Keystore vorhanden ist; der Debug-Schlüssel ist für
+Release-Builds ausgeschlossen.
+
 **Eigene Tätigkeiten deaktivieren statt hart löschen**
 Tageseinträge speichern Tätigkeit-IDs. Eigene Tätigkeiten bleiben deshalb mit
 stabiler ID und Titel erhalten; deaktivierte Vorlagen verschwinden nur aus neuen

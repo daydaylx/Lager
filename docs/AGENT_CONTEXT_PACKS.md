@@ -121,3 +121,40 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 /home/d/flutter/bin/flutter analyze
 /home/d/flutter/bin/flutter test
 ```
+
+---
+
+## Pack 5: Reminder, Lifecycle und Android-Release
+
+**Aufgabe:** Reminder-Planung, App-Resume, Android-Manifest, Backup oder Release-Build ändern.
+
+### Dateien lesen
+
+| Datei                                           | Warum                                      |
+| ----------------------------------------------- | ------------------------------------------ |
+| `lib/core/services/notification_service.dart`   | Reminder-Plan, Berechtigung und Tap-Routing |
+| `lib/core/storage/reminder_storage.dart`        | Persistierte Reminder-Einstellungen         |
+| `lib/features/profile/profile_screen.dart`      | Reminder-UI und Rollback                    |
+| `lib/app/app.dart`                              | Lifecycle, Tageswechsel und Tap-Ziel        |
+| `android/app/build.gradle.kts`                  | Application ID, NDK und Release-Signierung  |
+| `android/app/src/main/AndroidManifest.xml`      | Permissions, Receiver und Backup-Regeln     |
+| `docs/PRIVACY_CONTEXT.md`                       | Lokale Daten und Backup-No-Go               |
+| `docs/QA_REMINDER_CHECKLIST.md`                 | Manueller Android-Nachweis                  |
+
+### Risiken
+
+- Notification-IDs müssen für Primär-, Folge- und Wochenhinweise eindeutig bleiben.
+- Permission-Verweigerung oder Speicherfehler dürfen den bestehenden Zeitplan nicht unbemerkt zerstören.
+- Offene Heute-Eingaben dürfen beim Tageswechsel nicht dem neuen Datum zugeordnet werden.
+- Release-Builds dürfen nie mit Debug-Schlüssel signiert werden.
+- Keystore, `key.properties` und Passwörter dürfen nie committet werden.
+
+### Mindestchecks
+
+```bash
+/home/d/flutter/bin/flutter analyze
+/home/d/flutter/bin/flutter test
+/home/d/flutter/bin/flutter build apk --debug
+```
+
+Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.

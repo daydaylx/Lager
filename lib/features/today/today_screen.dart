@@ -51,11 +51,15 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _isApplyingEntry = false;
   bool _templatesLoadFailed = false;
   bool _specialFlagsExpanded = false;
+  late DateTime _activeDate;
+  DateTime? _pendingDate;
 
-  DateTime get _today {
+  DateTime get _widgetDate {
     final value = widget.date ?? widget.currentDate ?? DateTime.now();
     return DateTime(value.year, value.month, value.day);
   }
+
+  DateTime get _today => _activeDate;
 
   bool get _isToday {
     final now = widget.currentDate ?? DateTime.now();
@@ -107,6 +111,7 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void initState() {
     super.initState();
+    _activeDate = _widgetDate;
     _noteController.addListener(_markChanged);
     _loadEntry();
     _loadTemplates();
@@ -117,6 +122,9 @@ class _TodayScreenState extends State<TodayScreen> {
     super.didUpdateWidget(oldWidget);
     if (widget.templateRefreshSignal != oldWidget.templateRefreshSignal) {
       _loadTemplates();
+    }
+    if (_widgetDate != _activeDate) {
+      _handleExternalDateChange(_widgetDate);
     }
   }
 
@@ -173,6 +181,23 @@ class _TodayScreenState extends State<TodayScreen> {
                 hasUnsavedChanges: _hasUnsavedChanges,
                 missingItems: _missingItems,
               ),
+              if (_pendingDate != null) ...[
+                const SizedBox(height: 16),
+                AppMessage(
+                  key: const ValueKey('new_day_pending'),
+                  icon: Icons.today_outlined,
+                  title: 'Ein neuer Tag hat begonnen.',
+                  message:
+                      'Deine offenen Änderungen bleiben beim bisherigen Tag.',
+                  tone: AppMessageTone.warning,
+                  action: IconButton(
+                    key: const ValueKey('switch_to_current_day'),
+                    onPressed: _switchToPendingDate,
+                    tooltip: 'Zum heutigen Tag wechseln',
+                    icon: const Icon(Icons.arrow_forward),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               AppSectionHeader(
                 title: 'Tagestyp',
@@ -576,6 +601,40 @@ class _TodayScreenState extends State<TodayScreen> {
         });
       }
     }
+  }
+
+  void _handleExternalDateChange(DateTime nextDate) {
+    if (_hasUnsavedChanges) {
+      if (_pendingDate != nextDate && mounted) {
+        setState(() => _pendingDate = nextDate);
+      }
+      return;
+    }
+    _switchToDate(nextDate);
+  }
+
+  Future<void> _switchToPendingDate() async {
+    final pendingDate = _pendingDate;
+    if (pendingDate == null) return;
+    if (_hasUnsavedChanges &&
+        !await _confirmDiscard(
+          'Zum heutigen Tag wechseln?',
+          'Deine noch nicht gespeicherten Änderungen gehen verloren.',
+        )) {
+      return;
+    }
+    if (!mounted) return;
+    await _switchToDate(pendingDate);
+  }
+
+  Future<void> _switchToDate(DateTime date) async {
+    if (!mounted || date == _activeDate) return;
+    setState(() {
+      _activeDate = date;
+      _pendingDate = null;
+      _hasUnsavedChanges = false;
+    });
+    await _loadEntry();
   }
 
   void _applyEntry(DailyEntry? entry) {

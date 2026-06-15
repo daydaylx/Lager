@@ -28,6 +28,27 @@ Flutter liegt unter `/home/d/flutter/bin/flutter` — nicht im System-PATH.
 
 Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
+## Android-Release
+
+Application ID: `com.daydaylx.berichtsheftmerker`
+
+Release-Builds verwenden bewusst **nicht** den Debug-Schlüssel. Für einen
+signierten lokalen Release-Build muss `android/key.properties` angelegt werden:
+
+```properties
+storeFile=/absoluter/pfad/zum/release-key.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+`android/key.properties` und Keystore-Dateien sind ignoriert und dürfen nicht
+committet werden. Ohne diese Datei erzeugt der Release-Build nur ein
+unsigniertes, nicht zur Installation oder Verteilung bestimmtes APK.
+
+Alle App-Daten bleiben lokal. Android-Cloud-Backup und Gerätetransfer sind für
+die App deaktiviert.
+
 ## Projektdokumente
 
 | Datei                         | Inhalt                                        |
@@ -56,4 +77,5 @@ Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
 ## Nächster Schritt
 
-Siehe `TASKS.md` → manueller Android-Gerätetest für Phase 9–11.
+Siehe `TASKS.md` → manueller Android-Gerätetest und lokale Release-Signierung
+für Phase 13.

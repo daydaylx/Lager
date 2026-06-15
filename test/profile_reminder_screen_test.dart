@@ -93,8 +93,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('20:00'), findsNothing);
-      expect(find.text('08:00'), findsOneWidget);
+      expect(find.text('08:00'), findsNothing);
+      expect(find.text('20:00'), findsOneWidget);
     });
 
     testWidgets('Zeit-hinzufügen-Button ist vorhanden wenn aktiviert',
@@ -214,6 +214,37 @@ void main() {
         find.byKey(const ValueKey('reminder_toggle')),
       );
       expect(toggle.value, isFalse);
+    });
+
+    testWidgets('Berechtigungsstatus wird nach Rückkehr erneut geprüft', (
+      tester,
+    ) async {
+      final spy = NoOpNotificationScheduler(notificationsEnabled: false);
+      await pumpScreen(
+        tester,
+        prefs: {'reminder_enabled': true},
+        scheduler: spy,
+      );
+
+      expect(
+        find.text(
+          'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.',
+        ),
+        findsOneWidget,
+      );
+
+      spy.notificationsEnabled = true;
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.',
+        ),
+        findsNothing,
+      );
     });
   });
 }

@@ -43,6 +43,7 @@ Future<void> pumpWeek(
   DailyEntryStorage? storage,
   InMemoryActivityTemplateStorage? templateStorage,
   DateTime? initialDate,
+  DateTime? currentDate,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -50,6 +51,7 @@ Future<void> pumpWeek(
         storage: storage ?? InMemoryDailyEntryStorage(),
         templateStorage: templateStorage ?? InMemoryActivityTemplateStorage(),
         initialDate: initialDate,
+        currentDate: currentDate,
       ),
     ),
   );
@@ -168,6 +170,70 @@ void main() {
         'KW ${isoWeekNumber(currentMonday)} / ${isoWeekYear(currentMonday)}',
       ),
       findsOneWidget,
+    );
+  });
+
+  testWidgets('aktuelle Woche folgt einem externen Wochenwechsel', (
+    WidgetTester tester,
+  ) async {
+    final storage = InMemoryDailyEntryStorage();
+    final templateStorage = InMemoryActivityTemplateStorage();
+    final firstWeek = DateTime(2026, 6, 12);
+    final nextWeek = DateTime(2026, 6, 15);
+
+    Widget subject(DateTime currentDate) => MaterialApp(
+          home: WeekScreen(
+            storage: storage,
+            templateStorage: templateStorage,
+            currentDate: currentDate,
+          ),
+        );
+
+    await tester.pumpWidget(subject(firstWeek));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('week_number'))).data,
+      'KW ${isoWeekNumber(firstWeek)} / ${isoWeekYear(firstWeek)}',
+    );
+
+    await tester.pumpWidget(subject(nextWeek));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('week_number'))).data,
+      'KW ${isoWeekNumber(nextWeek)} / ${isoWeekYear(nextWeek)}',
+    );
+  });
+
+  testWidgets('historisch ausgewählte Woche bleibt beim Wochenwechsel', (
+    WidgetTester tester,
+  ) async {
+    final storage = InMemoryDailyEntryStorage();
+    final templateStorage = InMemoryActivityTemplateStorage();
+
+    Widget subject(DateTime currentDate) => MaterialApp(
+          home: WeekScreen(
+            storage: storage,
+            templateStorage: templateStorage,
+            currentDate: currentDate,
+          ),
+        );
+
+    await tester.pumpWidget(subject(DateTime(2026, 6, 12)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('previous_week')));
+    await tester.pumpAndSettle();
+    final selectedWeek =
+        startOfWeek(DateTime(2026, 6, 12)).subtract(const Duration(days: 7));
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('week_number'))).data,
+      'KW ${isoWeekNumber(selectedWeek)} / ${isoWeekYear(selectedWeek)}',
+    );
+
+    await tester.pumpWidget(subject(DateTime(2026, 6, 15)));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('week_number'))).data,
+      'KW ${isoWeekNumber(selectedWeek)} / ${isoWeekYear(selectedWeek)}',
     );
   });
 

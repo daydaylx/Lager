@@ -1,10 +1,10 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-06-14
+Zuletzt aktualisiert: 2026-06-15
 
 ## Aktueller Stand
 
-**Phasen 0–12 im Code abgeschlossen. Manueller Android-Gerätetest ist der nächste Schritt.**
+**Phasen 0–13 im Code abgeschlossen. Manueller Android-Gerätetest und lokale Release-Signierung sind offen.**
 
 ---
 
@@ -19,7 +19,8 @@ Zuletzt aktualisiert: 2026-06-14
 - `analysis_options.yaml`
 - `android/` — vollständig generiert (Kotlin, Gradle, AndroidManifest)
 - Flutter-Ordnerstruktur unter `lib/`:
-  - `lib/main.dart` — öffnet beim Start Hive CE und liest das Ausbildungsprofil
+  - `lib/main.dart` — startet den fehlertoleranten App-Bootstrap
+  - `lib/app/bootstrap.dart` — öffnet lokale Speicher und bietet bei Fehlern Retry ohne Datenlöschung
   - `lib/app/app.dart` — MaterialApp + Onboarding-Gate + NavigationBar Shell (M3, IndexedStack)
   - `lib/app/theme.dart` — explizites reduziertes Material-3-Komponententheme
   - `lib/app/router.dart` — Route-Konstanten
@@ -28,7 +29,7 @@ Zuletzt aktualisiert: 2026-06-14
   - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien und Besonderheiten mit UI-Labels
   - `lib/core/models/` — `DailyEntry` und `ActivityTemplate`
   - `lib/core/data/default_activities.dart` — 87 vordefinierte Tätigkeiten mit stabilen IDs
-  - `lib/core/storage/` — Speicher-Schnittstelle, Hive-CE-Adapter und In-Memory-Testspeicher
+  - `lib/core/storage/` — Speicher-Schnittstellen, Hive-CE-Adapter, SharedPreferences-Prüfung und In-Memory-Testspeicher
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
   - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit kompakter Tätigkeits-Checkliste
@@ -42,6 +43,9 @@ Zuletzt aktualisiert: 2026-06-14
 - `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge und eigene Tätigkeiten dauerhaft
 - `flutter_local_notifications` / `flutter_timezone` — lokale Erinnerungen in Gerätezeitzone
 - `app_settings` — öffnet Android-Benachrichtigungseinstellungen direkt aus der App
+- Android Application ID `com.daydaylx.berichtsheftmerker`
+- Android-Cloud-Backup und Gerätetransfer für lokale Daten deaktiviert
+- Release-Signierung optional über lokale, ignorierte `android/key.properties`
 - `test/widget_test.dart` — Onboarding-, Profil- und Navigationstests
 - `test/today_screen_test.dart` — Validierungs-, Speicher-, Bearbeitungs- und Tagtyp-Tests
 - `test/default_activities_test.dart` — Katalogumfang und eindeutige IDs
@@ -58,15 +62,17 @@ Zuletzt aktualisiert: 2026-06-14
 | `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
 | `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
 | `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 130/130 Tests bestanden               |
-| `flutter build apk --debug`            | Erfolgreich, Debug-APK 94.7 MB        |
+| `flutter test`                         | 145/145 Tests bestanden               |
+| `flutter build apk --debug`            | Erfolgreich, Debug-APK 91 MB           |
+| `flutter build apk --release`          | Erfolgreich erzeugt, bewusst unsigniert |
+| Release-Signatur ohne lokalen Keystore | `apksigner`: keine Signatur vorhanden  |
+| Zusammengeführtes Release-Manifest     | Package-ID und Backup-Sperre bestätigt |
 | Start auf Android-Gerät oder Emulator  | Kein ADB-Gerät/Emulator verfügbar     |
 
 Debug-APK: `build/app/outputs/flutter-apk/app-debug.apk`
 
-Der erfolgreiche Build nutzt NDK 26.3.11579264. Die installierte NDK-27-Kopie
-ist unvollständig; Plugins melden deshalb weiterhin eine abweichende
-NDK-Empfehlung, der Debug-Build ist davon nicht blockiert.
+Android ist auf NDK `27.0.12077973` gepinnt. Debug- und unsignierter
+Release-Build wurden damit erfolgreich erzeugt.
 
 ## Bewusst noch nicht gebaut
 
@@ -77,6 +83,5 @@ NDK-Empfehlung, der Debug-Build ist davon nicht blockiert.
 
 ## Nächster Schritt
 
-Manuellen Android-Gerätetest durchführen — QA-Checkliste unter `docs/QA_REMINDER_CHECKLIST.md`:
-visuelle Wirkung, Einhandbedienung, große Systemschrift, Tastatur, Zurück-Geste,
-Permission-Dialog, Notifications (Ton, Vibration, Tap), Samsung-spezifisches Verhalten.
+Manuellen Android-Gerätetest über `docs/QA_REMINDER_CHECKLIST.md` durchführen
+und lokalen Release-Keystore für einen signierten Release-Build konfigurieren.

@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 11: UI-Redesign** — Code und automatisierte UI-Prüfungen abgeschlossen, manueller Android-Test offen
+**Phase 13: Robustheit und Release-Härtung** — Code und automatisierte Prüfungen abgeschlossen, manueller Android-Gerätetest und lokale Release-Signierung offen
 
 ---
 
@@ -173,3 +173,33 @@ Issues #14–#20 aus GitHub abgearbeitet.
 - [x] `flutter test` — 130/130 bestanden
 - [x] `flutter build apk --debug` — erfolgreich
 - [ ] Manueller Android-Gerätetest: Permission-Dialog, Notifications, Samsung-spezifisches Verhalten
+
+---
+
+## Phase 13: Robustheit und Release-Härtung ✅
+
+- [x] App-Startfehler sichtbar behandeln und ohne Datenlöschung erneut versuchen
+- [x] Tageswechsel nach Resume in Heute- und Wochenansicht aktualisieren; offene Eingaben schützen
+- [x] Notification-Taps bei laufender App und Kaltstart zuverlässig zum Heute-Tab leiten
+- [x] Reminder-Plan normalisieren, auf 7 Uhrzeiten begrenzen und eindeutige IDs verwenden
+- [x] Folgeerinnerung ehrlich formulieren und Mitternachtswechsel korrekt planen
+- [x] Reminder-Speicherung und nativen Zeitplan bei Fehlern zurückrollen
+- [x] Benachrichtigungsberechtigung nach Rückkehr aus Android-Einstellungen neu prüfen
+- [x] Fehlgeschlagene SharedPreferences-Schreibvorgänge sichtbar machen
+- [x] Hive-Dateien nach „Alle Daten löschen“ komprimieren
+- [x] Android-Backup und Gerätetransfer für lokale App-Daten deaktivieren
+- [x] Eindeutige Application ID und optionale lokale Release-Signierung konfigurieren
+- [x] CI um Debug-APK-Build erweitern
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 145/145 bestanden
+- [x] `flutter build apk --debug` mit NDK 27 — erfolgreich
+- [x] Release-Build ohne Keystore ist unsigniert und nicht mit Debug-Key signiert
+- [ ] Manueller Android-Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`
+- [ ] Release-Keystore lokal erstellen und signierten Release-Build prüfen
+
+---
+
+## Spätere Phase: Toolchain- und Dependency-Modernisierung
+
+- [ ] Flutter, Android Gradle Plugin, Kotlin und Dependencies gemeinsam aktualisieren
+- [ ] Migration separat planen und mit vollständiger Regression absichern

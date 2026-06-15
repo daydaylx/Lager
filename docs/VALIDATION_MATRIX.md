@@ -17,6 +17,7 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 | Hive-Adapter ändern              | `flutter analyze`                         | `flutter test` (passender Hive-Storage-Test)                    |
 | `default_activities.dart` ändern | `flutter analyze`                         | `flutter test` (default_activities_test.dart)                  |
 | Reminder / Android-Manifest ändern | `flutter analyze` + `flutter test`      | `flutter build apk --debug` + manueller Gerätetest             |
+| Application ID / Signing / Backup ändern | `flutter analyze` + `flutter test` | `flutter build apk --debug` + Manifest prüfen + signierten Release-Build lokal prüfen |
 | Layout / Theme / kritischer Screen ändern | `flutter analyze` + `flutter test test/ui_layout_test.dart` | `flutter test` + manueller Gerätetest |
 | Golden bewusst aktualisieren       | Änderung visuell prüfen                  | `flutter test test/ui_layout_test.dart --update-goldens`       |
 | Phase abschließen                | `flutter analyze` + `flutter test`        | `PROJECT_STATUS.md` + `TASKS.md` + `CURRENT_STATUS.md` updaten |
@@ -42,6 +43,12 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 
 # App starten (Gerät/Emulator muss verbunden sein)
 /home/d/flutter/bin/flutter run
+
+# Android-Konfiguration und Debug-Artefakt prüfen
+/home/d/flutter/bin/flutter build apk --debug
+
+# Nur mit lokalem android/key.properties + Release-Keystore
+/home/d/flutter/bin/flutter build apk --release
 ```
 
 ---
@@ -52,3 +59,5 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 - Enum-Werte **nie umbenennen** — sie werden als String-Namen in Hive gespeichert
 - ActivityTemplate-IDs in `default_activities.dart` **nie ändern** — Fremdschlüssel in DailyEntry
 - Neue Packages: erst `flutter pub get`, dann `flutter analyze`
+- Release-Builds nie mit Debug-Schlüssel signieren; Keystores und Passwörter nie committen
+- Android-Backup und Gerätetransfer für lokale Daten nicht ohne explizite Entscheidung aktivieren

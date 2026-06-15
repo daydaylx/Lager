@@ -13,6 +13,8 @@ import '../features/week/week_screen.dart';
 import '../features/templates/templates_screen.dart';
 import '../features/profile/profile_screen.dart';
 
+typedef AppClock = DateTime Function();
+
 class BerichtsheftApp extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
@@ -23,6 +25,7 @@ class BerichtsheftApp extends StatefulWidget {
   final int? initialTrainingYear;
   final NotificationScheduler? notificationScheduler;
   final ThemePreset initialThemePreset;
+  final AppClock clock;
 
   const BerichtsheftApp({
     super.key,
@@ -35,6 +38,7 @@ class BerichtsheftApp extends StatefulWidget {
     this.initialTrainingYear,
     this.notificationScheduler,
     this.initialThemePreset = ThemePreset.lagerTeal,
+    this.clock = DateTime.now,
   });
 
   @override
@@ -101,6 +105,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
         _company = null;
         _occupation = null;
         _trainingYear = null;
+        _themePreset = ThemePreset.lagerTeal;
       });
     }
   }
@@ -124,6 +129,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               notificationScheduler: _notificationScheduler,
               themePreset: _themePreset,
               onThemeChanged: _onThemeChanged,
+              clock: widget.clock,
             )
           : OnboardingScreen(
               initialName: _name,
@@ -143,7 +149,8 @@ class MainShell extends StatefulWidget {
   final Future<void> Function() onDataCleared;
   final NotificationScheduler notificationScheduler;
   final ThemePreset themePreset;
-  final ValueChanged<ThemePreset> onThemeChanged;
+  final Future<void> Function(ThemePreset) onThemeChanged;
+  final AppClock clock;
 
   const MainShell({
     super.key,
@@ -153,28 +160,51 @@ class MainShell extends StatefulWidget {
     required this.notificationScheduler,
     required this.themePreset,
     required this.onThemeChanged,
+    this.clock = DateTime.now,
   });
 
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
   int _weekRefreshSignal = 0;
   int _templateRefreshSignal = 0;
+  late DateTime _currentDate;
 
   @override
   void initState() {
     super.initState();
-    FlutterLocalNotificationScheduler.setOnTap(_handleNotificationTap);
+    WidgetsBinding.instance.addObserver(this);
+    _currentDate = _normalizedDate(widget.clock());
+    _initializeNotifications();
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkTodayEntry());
   }
 
   @override
   void dispose() {
-    FlutterLocalNotificationScheduler.setOnTap(null);
+    WidgetsBinding.instance.removeObserver(this);
+    widget.notificationScheduler.clearOnTap();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshCurrentDate();
+      _checkTodayEntry();
+    }
+  }
+
+  Future<void> _initializeNotifications() async {
+    try {
+      final initialPayload =
+          await widget.notificationScheduler.initialize(_handleNotificationTap);
+      _handleNotificationTap(initialPayload);
+    } catch (_) {
+      // Reminder errors remain manageable from the profile screen.
+    }
   }
 
   void _handleNotificationTap(String? payload) {
@@ -185,19 +215,32 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _checkTodayEntry() async {
     if (!mounted) return;
-    final now = DateTime.now();
+    final now = widget.clock();
     if (now.weekday > DateTime.friday) return;
-    final today = DateTime(now.year, now.month, now.day);
-    final entry = await widget.dailyEntryStorage.loadByDate(today);
-    if (!mounted || entry != null) return;
-    final settings = await ReminderStorage.load();
-    if (!mounted || !settings.enabled) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Heutiger Eintrag fehlt noch – jetzt kurz eintragen?'),
-        duration: Duration(seconds: 5),
-      ),
-    );
+    try {
+      final today = _normalizedDate(now);
+      final entry = await widget.dailyEntryStorage.loadByDate(today);
+      if (!mounted || entry != null) return;
+      final settings = await ReminderStorage.load();
+      if (!mounted || !settings.enabled) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Heutiger Eintrag fehlt noch – jetzt kurz eintragen?'),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    } catch (_) {
+      // The relevant screen provides retry actions for local storage failures.
+    }
+  }
+
+  void _refreshCurrentDate() {
+    final nextDate = _normalizedDate(widget.clock());
+    if (nextDate == _currentDate || !mounted) return;
+    setState(() {
+      _currentDate = nextDate;
+      _weekRefreshSignal++;
+    });
   }
 
   @override
@@ -211,12 +254,14 @@ class _MainShellState extends State<MainShell> {
             templateStorage: widget.templateStorage,
             templateRefreshSignal: _templateRefreshSignal,
             protectBackNavigation: _currentIndex == 0,
+            currentDate: _currentDate,
           ),
           WeekScreen(
             storage: widget.dailyEntryStorage,
             templateStorage: widget.templateStorage,
             refreshSignal: _weekRefreshSignal,
             templateRefreshSignal: _templateRefreshSignal,
+            currentDate: _currentDate,
           ),
           TemplatesScreen(
             storage: widget.templateStorage,
@@ -267,4 +312,7 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
+
+  static DateTime _normalizedDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 }

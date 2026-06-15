@@ -61,7 +61,8 @@ class _WeekScreenState extends State<WeekScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedWeekStart = startOfWeek(widget.initialDate ?? DateTime.now());
+    _selectedWeekStart =
+        startOfWeek(widget.initialDate ?? widget.currentDate ?? DateTime.now());
     _loadWeek();
     _loadTemplates();
   }
@@ -69,13 +70,27 @@ class _WeekScreenState extends State<WeekScreen> {
   @override
   void didUpdateWidget(covariant WeekScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.refreshSignal != oldWidget.refreshSignal) {
-      _loadWeek();
+    var shouldLoadWeek = widget.refreshSignal != oldWidget.refreshSignal;
+    if (widget.currentDate != null &&
+        oldWidget.currentDate != null &&
+        _normalizedDate(widget.currentDate!) !=
+            _normalizedDate(oldWidget.currentDate!)) {
+      final oldCurrentWeek = startOfWeek(oldWidget.currentDate!);
+      if (_selectedWeekStart == oldCurrentWeek) {
+        _selectedWeekStart = startOfWeek(widget.currentDate!);
+      }
+      shouldLoadWeek = true;
     }
     if (widget.templateRefreshSignal != oldWidget.templateRefreshSignal) {
       _loadTemplates();
     }
+    if (shouldLoadWeek) {
+      _loadWeek();
+    }
   }
+
+  static DateTime _normalizedDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   @override
   Widget build(BuildContext context) {

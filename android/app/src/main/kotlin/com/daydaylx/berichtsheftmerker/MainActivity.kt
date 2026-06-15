@@ -1,4 +1,4 @@
-package com.example.berichtsheft_merker
+package com.daydaylx.berichtsheftmerker
 
 import io.flutter.embedding.android.FlutterActivity
 
