@@ -1,12 +1,12 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-06-15 (nach UI/UX-Audit Phase 3)
+Stand: 2026-06-15 (nach signierter Release-APK-Installation)
 
 ---
 
 ## Aktive Phase
 
-**Phase 13: Robustheit und Release-Härtung** — Code und automatisierte Prüfungen abgeschlossen
+**Phase 13: Robustheit und Release-Härtung** — Code, automatisierte Prüfungen und lokale Release-Signierung abgeschlossen; manueller Android-Gerätetest offen
 
 ---
 
@@ -38,7 +38,7 @@ Neu in Phase 13:
 - SharedPreferences-Schreibfehler werden geprüft; Hive wird nach Komplettlöschung komprimiert
 - Android-Backup und Gerätetransfer sind für alle lokalen Daten deaktiviert
 - Application ID `com.daydaylx.berichtsheftmerker`; Release nutzt keinen Debug-Schlüssel
-- Optionale lokale Release-Signierung über ignorierte Datei `android/key.properties`
+- Lokale Release-Signierung ist in dieser Arbeitskopie über ignorierte Dateien `android/key.properties` und `android/app/upload-keystore.jks` eingerichtet
 - CI führt zusätzlich `flutter build apk --debug` aus
 
 Weitere akzeptierte aktuelle Funktionen:
@@ -55,18 +55,19 @@ Weitere akzeptierte aktuelle Funktionen:
 flutter analyze  →  0 Issues
 flutter test     →  150/150 bestanden (inkl. 5 neue Accessibility-Tests und aktualisierte Goldens)
 flutter build apk --debug    →  erfolgreich mit NDK 27
-flutter build apk --release  →  erfolgreich erzeugt, bewusst unsigniert
+flutter build apk --release  →  erfolgreich signiert erzeugt (24.1 MB)
+adb install -r app-release.apk auf Samsung SM-S931B  →  erfolgreich
 ```
 
 Das zusammengeführte Release-Manifest bestätigt
 `com.daydaylx.berichtsheftmerker`, `allowBackup=false` und die
-Backup-/Transfer-Regeln. `apksigner` bestätigt, dass der Release-Build ohne
-lokalen Keystore keine Debug-Signatur enthält.
+Backup-/Transfer-Regeln. `apksigner` bestätigt v1/v2-Signatur mit lokalem
+Release-Zertifikat; der installierte Build meldet `apkSigningVersion=2`.
 
 ---
 
 ## Nächster Schritt
 
-1. Debug-APK auf echtem Android-Gerät nach `docs/QA_REMINDER_CHECKLIST.md` testen, einschließlich Theme-Auswahl und Neustart.
-2. Lokalen Release-Keystore konfigurieren und signierten Release-Build prüfen.
+1. Installierte Release-APK auf echtem Android-Gerät nach `docs/QA_REMINDER_CHECKLIST.md` testen, einschließlich Reminder, Theme-Auswahl und Neustart.
+2. Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.
 3. Toolchain- und Dependency-Modernisierung als separate spätere Phase planen.

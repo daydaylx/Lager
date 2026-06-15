@@ -4,7 +4,7 @@ Zuletzt aktualisiert: 2026-06-15
 
 ## Aktueller Stand
 
-**Phasen 0–13 im Code abgeschlossen. Manueller Android-Gerätetest und lokale Release-Signierung sind offen.**
+**Phasen 0–13 im Code abgeschlossen. Lokale Release-Signierung und Installation sind erledigt; manueller Android-Gerätetest ist offen.**
 
 ---
 
@@ -45,7 +45,7 @@ Zuletzt aktualisiert: 2026-06-15
 - `app_settings` — öffnet Android-Benachrichtigungseinstellungen direkt aus der App
 - Android Application ID `com.daydaylx.berichtsheftmerker`
 - Android-Cloud-Backup und Gerätetransfer für lokale Daten deaktiviert
-- Release-Signierung optional über lokale, ignorierte `android/key.properties`
+- Release-Signierung über lokale, ignorierte `android/key.properties` und `android/app/upload-keystore.jks`
 - `test/widget_test.dart` — Onboarding-, Profil- und Navigationstests
 - `test/today_screen_test.dart` — Validierungs-, Speicher-, Bearbeitungs- und Tagtyp-Tests
 - `test/default_activities_test.dart` — Katalogumfang und eindeutige IDs
@@ -66,16 +66,17 @@ Zuletzt aktualisiert: 2026-06-15
 | `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
 | `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
 | `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 145/145 Tests bestanden               |
+| `flutter test`                         | 150/150 Tests bestanden               |
 | `flutter build apk --debug`            | Erfolgreich, Debug-APK 91 MB           |
-| `flutter build apk --release`          | Erfolgreich erzeugt, bewusst unsigniert |
-| Release-Signatur ohne lokalen Keystore | `apksigner`: keine Signatur vorhanden  |
+| `flutter build apk --release`          | Erfolgreich signiert erzeugt, 24.1 MB  |
+| Release-Signatur                       | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |
 | Zusammengeführtes Release-Manifest     | Package-ID und Backup-Sperre bestätigt |
-| Start auf Android-Gerät oder Emulator  | Kein ADB-Gerät/Emulator verfügbar     |
+| Installation und Start auf Android-Gerät | Samsung SM-S931B: installiert und gestartet |
 
 Debug-APK: `build/app/outputs/flutter-apk/app-debug.apk`
+Release-APK: `build/app/outputs/flutter-apk/app-release.apk`
 
-Android ist auf NDK `27.0.12077973` gepinnt. Debug- und unsignierter
+Android ist auf NDK `27.0.12077973` gepinnt. Debug- und signierter
 Release-Build wurden damit erfolgreich erzeugt.
 
 ## Bewusst noch nicht gebaut
@@ -89,5 +90,6 @@ Release-Build wurden damit erfolgreich erzeugt.
 
 ## Nächster Schritt
 
-Manuellen Android-Gerätetest über `docs/QA_REMINDER_CHECKLIST.md` durchführen
-und lokalen Release-Keystore für einen signierten Release-Build konfigurieren.
+Manuellen Android-Gerätetest über `docs/QA_REMINDER_CHECKLIST.md` mit der
+installierten Release-APK durchführen. Den lokalen Release-Keystore sicher
+aufbewahren, weil spätere Release-Updates dieselbe Signatur benötigen.

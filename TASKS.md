@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 13: Robustheit und Release-Härtung** — Code und automatisierte Prüfungen abgeschlossen, manueller Android-Gerätetest und lokale Release-Signierung offen
+**Phase 13: Robustheit und Release-Härtung** — Code, automatisierte Prüfungen und lokale Release-Signierung abgeschlossen; manueller Android-Gerätetest offen
 
 ---
 
@@ -227,7 +227,7 @@ Issues #14–#20 aus GitHub abgearbeitet.
 - [x] `flutter build apk --debug` mit NDK 27 — erfolgreich
 - [x] Release-Build ohne Keystore ist unsigniert und nicht mit Debug-Key signiert
 - [ ] Manueller Android-Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`
-- [ ] Release-Keystore lokal erstellen und signierten Release-Build prüfen
+- [x] Release-Keystore lokal erstellen und signierten Release-Build prüfen
 
 ---
 
