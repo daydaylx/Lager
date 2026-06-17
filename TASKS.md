@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 13: Robustheit und Release-Härtung** — Code, automatisierte Prüfungen und lokale Release-Signierung abgeschlossen; manueller Android-Gerätetest offen
+**Phase 13: Robustheit und Release-Härtung** — Code, automatisierte Prüfungen und lokale Release-Signierung abgeschlossen; manueller Android-Gerätetest offen. Danach folgt die priorisierte Abarbeitung der offenen Issues #29–#49.
 
 ---
 
@@ -228,6 +228,86 @@ Issues #14–#20 aus GitHub abgearbeitet.
 - [x] Release-Build ohne Keystore ist unsigniert und nicht mit Debug-Key signiert
 - [ ] Manueller Android-Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`
 - [x] Release-Keystore lokal erstellen und signierten Release-Build prüfen
+
+---
+
+## Nächste Schritte: priorisierte Abarbeitung offener Issues #29–#49
+
+Diese Reihenfolge ist bewusst nicht nach Issue-Nummern sortiert. Einige Issues hängen technisch voneinander ab. Vor allem darf der Tätigkeitskatalog nicht stark erweitert werden, bevor die UI und der `TodayScreen` dafür vorbereitet sind. Sonst entsteht nur eine größere Button-Tapete mit mehr Wartungsrisiko.
+
+### Phase 14: Dokumentations- und Datenmodell-Basis absichern
+
+Ziel: Erst die Grundlagen korrigieren, damit Agenten und spätere Änderungen nicht gegen falsche Dokumentation oder fragile Persistenz arbeiten.
+
+- [ ] #43 `DATA_MODEL.md`: `TrainingOccupation`-Widerspruch korrigieren.
+- [ ] #44 `UI_UX_SPEC.md`: aktuelle zweispaltige Bereichsauswahl dokumentieren oder begründet anpassen.
+- [ ] #42 App-Version aus einer Quelle pflegen oder Drift technisch verhindern.
+- [ ] #48 Enum-/Hive-Persistenz robuster gegen spätere Änderungen absichern.
+- [ ] #38 Ausbildungsjahr abhängig vom Ausbildungsberuf validieren.
+- [ ] Nach Phase 14: `flutter analyze` und `flutter test` ausführen.
+
+### Phase 15: Heute-Screen entlasten, bevor neue UI-Features dazukommen
+
+Ziel: Struktur schaffen, bevor weitere Tätigkeiten-, Such- und Berichtsfunktionen eingebaut werden. Ohne diese Phase wird jede spätere Änderung unnötig riskant.
+
+- [ ] #47 `TodayScreen` in kleinere wartbare Widgets/Dateien zerlegen.
+- [ ] Extraktion ohne Verhaltensänderung durchführen: Bereichsauswahl, Tätigkeitsauswahl, SaveBar, Statuskarte, Berichtsvorschau/Berichtskarte.
+- [ ] Bestehende Widget-Tests nach Extraktion unverändert grün halten.
+- [ ] Nach Phase 15: `flutter analyze`, `flutter test` und bei UI-Änderungen Golden-Checks ausführen.
+
+### Phase 16: Tagesbericht fachlich und sichtbar verbessern
+
+Ziel: Erst Textqualität verbessern, dann die prominente UI-Karte einbauen. Eine schöne Karte mit schwachem Text wäre nur hübsch verpackter Mittelmaß-Kram.
+
+- [ ] #40 Tagesbericht-Generator: ignorierte Besonderheiten und Notizen sauber einbinden.
+- [ ] #35 Tagesbericht-Generator mit mehreren festen Satzmustern verbessern.
+- [ ] #49 Tagesbericht als prominente Berichtskarte im Heute-Screen anzeigen.
+- [ ] Bestehenden Bottom-Sheet-Preview-Flow prüfen: entfernen, sekundär machen oder durch Berichtskarte ersetzen.
+- [ ] Unit-Tests für Generator-Kombinationen erweitern.
+- [ ] Widget-Tests für sichtbare Berichtskarte und Kopieren aus der Karte ergänzen.
+- [ ] Nach Phase 16: `flutter analyze`, `flutter test`, visuelle Prüfung Heute-Screen.
+
+### Phase 17: Tätigkeitskatalog und Tätigkeiten-UI skalierbar machen
+
+Ziel: Erst Bedienbarkeit schaffen, dann Inhalte erweitern. Mehr Tätigkeiten ohne bessere UI ist keine Verbesserung, sondern nur mehr Scroll-Arbeit.
+
+- [ ] #30 Tätigkeiten-UI um „Häufig genutzt“, Suche und kompakte Anzeige erweitern.
+- [ ] #31 Tätigkeiten nach Arbeitsschritten / Untergruppen strukturieren.
+- [ ] #41 Eigene Tätigkeiten gegen Duplikate prüfen.
+- [ ] #29 Tätigkeitskatalog fachlich für Lagerlogistik erweitern.
+- [ ] #32 EDV-, Scanner- und Warenwirtschafts-Tätigkeiten ergänzen.
+- [ ] #34 Qualität, Ordnung und 5S praxisnäher erfassen.
+- [ ] #33 Ausbildungsfortschritt und Unterweisung als Tätigkeiten/Besonderheiten abbilden.
+- [ ] #36 Tätigkeiten optional nach Ausbildungsjahr priorisieren.
+- [ ] Nach Phase 17: kleine Displaygrößen, große Systemschrift, Scroll-Verhalten und Einhandbedienung prüfen.
+
+### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung
+
+Ziel: Die App robuster für echte tägliche Nutzung machen. Das ist weniger sichtbar als UI, aber praktisch wichtig.
+
+- [ ] #45 Notification-Initialisierungsfehler sichtbar diagnostizierbar machen.
+- [ ] #46 SnackBar „Eintrag fehlt“ mit direkter Aktion erweitern.
+- [ ] #39 Lokalen Datenexport und Import als einfache Sicherung prüfen.
+- [ ] Export/Import nur lokal und einfach halten; keine Cloud, kein Account, kein PDF-Overhead.
+- [ ] Nach Phase 18: Reminder-Flows und Datenlöschung erneut testen.
+
+### Phase 19: Release-QA auf echtem Android-Gerät
+
+Ziel: Erst nach den obigen Änderungen ernsthaft testen. Vorher ist ein kompletter manueller Release-Test nur Beschäftigungstherapie, weil danach ohnehin wieder UI und Datenmodell verändert werden.
+
+- [ ] #37 Manuellen Android-Release-QA-Durchlauf dokumentieren und durchführen.
+- [ ] Offene manuelle Tests aus Phase 8–13 zusammenführen.
+- [ ] Installation, App-Start, Tagesbericht, Woche, Vorlagen, Profil, Reminder, Theme-Persistenz und Datenlöschung prüfen.
+- [ ] Signierte Release-APK auf echtem Android-Gerät testen.
+- [ ] Ergebnis in QA-Dokumentation festhalten.
+
+### Harte Arbeitsregel für die nächsten Phasen
+
+- Pro Phase möglichst kleine PRs/Commits statt einem Riesenumbau.
+- Nach jeder Phase mindestens `flutter analyze` und `flutter test`.
+- Bei UI-Änderungen Screenshots/Golden-Referenzen prüfen.
+- Keine neuen Features einbauen, die nicht durch ein Issue gedeckt sind.
+- Keine KI/API/PDF/Cloud-Funktion einschleppen, solange die App bewusst lokaler Berichtsheft-Merker bleibt.
 
 ---
 
