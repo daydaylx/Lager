@@ -1,5 +1,6 @@
 import 'package:berichtsheft_merker/app/bootstrap.dart';
 import 'package:berichtsheft_merker/app/theme.dart';
+import 'package:berichtsheft_merker/core/constants.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
@@ -45,6 +46,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(attempts, 2);
+    expect(find.byType(OnboardingScreen), findsOneWidget);
+  });
+
+  testWidgets('ungültige Beruf-Jahr-Kombination öffnet Onboarding', (
+    tester,
+  ) async {
+    Future<BootstrapData> loader() async {
+      return BootstrapData(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        profile: (
+          name: null,
+          company: null,
+          occupation: TrainingOccupationValues.fachlagerist,
+          trainingYear: 3,
+          onboardingCompleted: true,
+        ),
+        themePreset: ThemePreset.lagerTeal,
+      );
+    }
+
+    await tester.pumpWidget(
+      AppBootstrap(
+        loader: loader,
+        notificationScheduler: NoOpNotificationScheduler(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 }

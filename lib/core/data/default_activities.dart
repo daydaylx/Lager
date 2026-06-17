@@ -53,6 +53,31 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.wareneingang,
   ),
   ActivityTemplate(
+    id: 'wareneingang_11',
+    title: 'Wareneingang mit Scanner erfasst',
+    category: ActivityCategory.wareneingang,
+  ),
+  ActivityTemplate(
+    id: 'wareneingang_12',
+    title: 'Lieferdaten im Warenwirtschaftssystem nachvollzogen',
+    category: ActivityCategory.wareneingang,
+  ),
+  ActivityTemplate(
+    id: 'wareneingang_13',
+    title: 'Chargen- oder Seriennummern abgeglichen',
+    category: ActivityCategory.wareneingang,
+  ),
+  ActivityTemplate(
+    id: 'wareneingang_14',
+    title: 'Begleitpapiere sortiert und weitergegeben',
+    category: ActivityCategory.wareneingang,
+  ),
+  ActivityTemplate(
+    id: 'wareneingang_15',
+    title: 'Auffälligkeiten bei der Lieferung gemeldet',
+    category: ActivityCategory.wareneingang,
+  ),
+  ActivityTemplate(
     id: 'einlagerung_01',
     title: 'Ware eingelagert',
     category: ActivityCategory.einlagerung,
@@ -103,6 +128,31 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.einlagerung,
   ),
   ActivityTemplate(
+    id: 'einlagerung_11',
+    title: 'Lagerplatz im System geprüft',
+    category: ActivityCategory.einlagerung,
+  ),
+  ActivityTemplate(
+    id: 'einlagerung_12',
+    title: 'Einlagerung mit Scanner bestätigt',
+    category: ActivityCategory.einlagerung,
+  ),
+  ActivityTemplate(
+    id: 'einlagerung_13',
+    title: 'Ware nach FIFO-Prinzip einsortiert',
+    category: ActivityCategory.einlagerung,
+  ),
+  ActivityTemplate(
+    id: 'einlagerung_14',
+    title: 'Regalfach und Artikelnummer abgeglichen',
+    category: ActivityCategory.einlagerung,
+  ),
+  ActivityTemplate(
+    id: 'einlagerung_15',
+    title: 'Bestandsabweichung an zuständige Person weitergegeben',
+    category: ActivityCategory.einlagerung,
+  ),
+  ActivityTemplate(
     id: 'transport_01',
     title: 'Ware mit Hubwagen transportiert',
     category: ActivityCategory.transport,
@@ -135,6 +185,21 @@ const List<ActivityTemplate> defaultActivities = [
   ActivityTemplate(
     id: 'transport_07',
     title: 'Sicherheitsvorgaben beim Transport beachtet',
+    category: ActivityCategory.transport,
+  ),
+  ActivityTemplate(
+    id: 'transport_08',
+    title: 'Ware sicher auf Ladungsträger umgesetzt',
+    category: ActivityCategory.transport,
+  ),
+  ActivityTemplate(
+    id: 'transport_09',
+    title: 'Transportauftrag mit Scanner nachvollzogen',
+    category: ActivityCategory.transport,
+  ),
+  ActivityTemplate(
+    id: 'transport_10',
+    title: 'Ladehilfsmittel bereitgestellt',
     category: ActivityCategory.transport,
   ),
   ActivityTemplate(
@@ -178,6 +243,31 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.kommissionierung,
   ),
   ActivityTemplate(
+    id: 'kommissionierung_09',
+    title: 'Pickauftrag im System nachvollzogen',
+    category: ActivityCategory.kommissionierung,
+  ),
+  ActivityTemplate(
+    id: 'kommissionierung_10',
+    title: 'Entnahme mit Scanner bestätigt',
+    category: ActivityCategory.kommissionierung,
+  ),
+  ActivityTemplate(
+    id: 'kommissionierung_11',
+    title: 'Artikel nach Lagerplatzreihenfolge entnommen',
+    category: ActivityCategory.kommissionierung,
+  ),
+  ActivityTemplate(
+    id: 'kommissionierung_12',
+    title: 'Ersatzartikel nach Rücksprache bereitgestellt',
+    category: ActivityCategory.kommissionierung,
+  ),
+  ActivityTemplate(
+    id: 'kommissionierung_13',
+    title: 'Kommissionierfehler gemeldet und korrigiert',
+    category: ActivityCategory.kommissionierung,
+  ),
+  ActivityTemplate(
     id: 'verpackung_01',
     title: 'Ware verpackt',
     category: ActivityCategory.verpackung,
@@ -215,6 +305,31 @@ const List<ActivityTemplate> defaultActivities = [
   ActivityTemplate(
     id: 'verpackung_08',
     title: 'Verpackungsmaterial aufgefüllt',
+    category: ActivityCategory.verpackung,
+  ),
+  ActivityTemplate(
+    id: 'verpackung_09',
+    title: 'Ware auf Transportschäden geprüft',
+    category: ActivityCategory.verpackung,
+  ),
+  ActivityTemplate(
+    id: 'verpackung_10',
+    title: 'Packliste mit Ware abgeglichen',
+    category: ActivityCategory.verpackung,
+  ),
+  ActivityTemplate(
+    id: 'verpackung_11',
+    title: 'Sendung im System fertiggemeldet',
+    category: ActivityCategory.verpackung,
+  ),
+  ActivityTemplate(
+    id: 'verpackung_12',
+    title: 'Füllmaterial passend eingesetzt',
+    category: ActivityCategory.verpackung,
+  ),
+  ActivityTemplate(
+    id: 'verpackung_13',
+    title: 'Gefahr- oder Hinweissymbole beachtet',
     category: ActivityCategory.verpackung,
   ),
   ActivityTemplate(
@@ -268,6 +383,31 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.versand,
   ),
   ActivityTemplate(
+    id: 'versand_11',
+    title: 'Sendungsdaten im System geprüft',
+    category: ActivityCategory.versand,
+  ),
+  ActivityTemplate(
+    id: 'versand_12',
+    title: 'Verladung anhand der Tourenliste unterstützt',
+    category: ActivityCategory.versand,
+  ),
+  ActivityTemplate(
+    id: 'versand_13',
+    title: 'Packstücke nach Versandart sortiert',
+    category: ActivityCategory.versand,
+  ),
+  ActivityTemplate(
+    id: 'versand_14',
+    title: 'Palette für den Transport gesichert',
+    category: ActivityCategory.versand,
+  ),
+  ActivityTemplate(
+    id: 'versand_15',
+    title: 'Abholung der Ware vorbereitet',
+    category: ActivityCategory.versand,
+  ),
+  ActivityTemplate(
     id: 'inventur_01',
     title: 'Lagerbestand gezählt',
     category: ActivityCategory.inventur,
@@ -303,6 +443,26 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.inventur,
   ),
   ActivityTemplate(
+    id: 'inventur_08',
+    title: 'Zählbereich vorbereitet',
+    category: ActivityCategory.inventur,
+  ),
+  ActivityTemplate(
+    id: 'inventur_09',
+    title: 'Artikel mit Scanner gezählt',
+    category: ActivityCategory.inventur,
+  ),
+  ActivityTemplate(
+    id: 'inventur_10',
+    title: 'Bestand unter Anleitung im System geprüft',
+    category: ActivityCategory.inventur,
+  ),
+  ActivityTemplate(
+    id: 'inventur_11',
+    title: 'Doppelzählung zur Kontrolle unterstützt',
+    category: ActivityCategory.inventur,
+  ),
+  ActivityTemplate(
     id: 'retouren_01',
     title: 'Retoure angenommen',
     category: ActivityCategory.retouren,
@@ -330,6 +490,26 @@ const List<ActivityTemplate> defaultActivities = [
   ActivityTemplate(
     id: 'retouren_06',
     title: 'Nicht verwendbare Ware gekennzeichnet',
+    category: ActivityCategory.retouren,
+  ),
+  ActivityTemplate(
+    id: 'retouren_07',
+    title: 'Retourengrund aufgenommen',
+    category: ActivityCategory.retouren,
+  ),
+  ActivityTemplate(
+    id: 'retouren_08',
+    title: 'Retoure mit Scanner erfasst',
+    category: ActivityCategory.retouren,
+  ),
+  ActivityTemplate(
+    id: 'retouren_09',
+    title: 'Ware für Prüfung durch zuständige Person bereitgestellt',
+    category: ActivityCategory.retouren,
+  ),
+  ActivityTemplate(
+    id: 'retouren_10',
+    title: 'Rücksendung nach Vorgabe sortiert',
     category: ActivityCategory.retouren,
   ),
   ActivityTemplate(
@@ -388,6 +568,26 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.berufsschule,
   ),
   ActivityTemplate(
+    id: 'berufsschule_12',
+    title: 'Warenwirtschaft und Lagerkennzahlen behandelt',
+    category: ActivityCategory.berufsschule,
+  ),
+  ActivityTemplate(
+    id: 'berufsschule_13',
+    title: 'Rechte und Pflichten in der Ausbildung besprochen',
+    category: ActivityCategory.berufsschule,
+  ),
+  ActivityTemplate(
+    id: 'berufsschule_14',
+    title: 'Ladungssicherung theoretisch bearbeitet',
+    category: ActivityCategory.berufsschule,
+  ),
+  ActivityTemplate(
+    id: 'berufsschule_15',
+    title: 'Qualitätssicherung im Lager besprochen',
+    category: ActivityCategory.berufsschule,
+  ),
+  ActivityTemplate(
     id: 'sicherheit_01',
     title: 'Persönliche Schutzausrüstung getragen',
     category: ActivityCategory.sicherheit,
@@ -435,6 +635,31 @@ const List<ActivityTemplate> defaultActivities = [
   ActivityTemplate(
     id: 'sicherheit_10',
     title: 'Neue Aufgabe gelernt',
+    category: ActivityCategory.sicherheit,
+  ),
+  ActivityTemplate(
+    id: 'sicherheit_11',
+    title: '5S-Regeln am Arbeitsplatz angewendet',
+    category: ActivityCategory.sicherheit,
+  ),
+  ActivityTemplate(
+    id: 'sicherheit_12',
+    title: 'Arbeitsplatz nach Vorgabe geordnet',
+    category: ActivityCategory.sicherheit,
+  ),
+  ActivityTemplate(
+    id: 'sicherheit_13',
+    title: 'Qualitätsmangel erkannt und weitergegeben',
+    category: ActivityCategory.sicherheit,
+  ),
+  ActivityTemplate(
+    id: 'sicherheit_14',
+    title: 'Unterweisung zur Arbeitssicherheit erhalten',
+    category: ActivityCategory.sicherheit,
+  ),
+  ActivityTemplate(
+    id: 'sicherheit_15',
+    title: 'Prüfpunkte aus Arbeitsanweisung nachvollzogen',
     category: ActivityCategory.sicherheit,
   ),
 ];

@@ -24,7 +24,7 @@ void main() {
 
     expect(find.text('Alle'), findsOneWidget);
     expect(find.text('Wareneingang'), findsWidgets);
-    expect(find.text('Vordefiniert (87)'), findsOneWidget);
+    expect(find.text('Vordefiniert (132)'), findsOneWidget);
   });
 
   testWidgets('Kategorie-Filter zeigt nur passende Tätigkeiten', (
@@ -36,8 +36,9 @@ void main() {
     await tester.tap(find.text('Wareneingang').first);
     await tester.pump();
 
-    expect(find.text('Vordefiniert (10)'), findsOneWidget);
+    expect(find.text('Vordefiniert (15)'), findsOneWidget);
     expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Wareneingang · Annahme'), findsWidgets);
   });
 
   testWidgets('Kategorie erneut antippen hebt Auswahl auf', (tester) async {
@@ -46,11 +47,11 @@ void main() {
 
     await tester.tap(find.text('Wareneingang').first);
     await tester.pump();
-    expect(find.text('Vordefiniert (10)'), findsOneWidget);
+    expect(find.text('Vordefiniert (15)'), findsOneWidget);
 
     await tester.tap(find.text('Wareneingang').first);
     await tester.pump();
-    expect(find.text('Vordefiniert (87)'), findsOneWidget);
+    expect(find.text('Vordefiniert (132)'), findsOneWidget);
   });
 
   testWidgets('Suche filtert Tätigkeiten lokal', (tester) async {
@@ -108,6 +109,54 @@ void main() {
     expect(find.text('Gib eine Bezeichnung ein.'), findsOneWidget);
   });
 
+  testWidgets('Duplikat zu Standardtätigkeit wird normalisiert verhindert', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pump();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('template_title_field')),
+      '  WARE   ANGENOMMEN ',
+    );
+    await tester.tap(find.text('Hinzufügen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Diese Tätigkeit ist bereits vorhanden.'), findsOneWidget);
+    expect(find.text('Hinzufügen'), findsOneWidget);
+    expect(await storage.loadCustom(), isEmpty);
+  });
+
+  testWidgets('Duplikat zu inaktiver eigener Tätigkeit wird verhindert', (
+    tester,
+  ) async {
+    await storage.save(
+      const ActivityTemplate(
+        id: 'custom_1',
+        title: 'Ware verräumt',
+        category: ActivityCategory.einlagerung,
+        isCustom: true,
+        isActive: false,
+      ),
+    );
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('template_title_field')),
+      ' ware   verräumt ',
+    );
+    await tester.tap(find.text('Hinzufügen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Diese Tätigkeit ist bereits vorhanden.'), findsOneWidget);
+    expect(await storage.loadCustom(), hasLength(1));
+  });
+
   testWidgets('eigene Tätigkeit kann deaktiviert und reaktiviert werden', (
     tester,
   ) async {
@@ -124,7 +173,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // Wareneingang-Filter: 10 Einträge + Eigene-Sektion passen in Viewport
+    // Wareneingang-Filter: vordefinierte Einträge + Eigene-Sektion.
     await tester.tap(find.text('Wareneingang').first);
     await tester.pump();
 

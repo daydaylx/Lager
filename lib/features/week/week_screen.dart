@@ -248,7 +248,7 @@ class _WeekScreenState extends State<WeekScreen> {
 
     return switch (entry.dayType) {
       DayType.betrieb =>
-        '${entry.area?.label ?? 'Betrieb'} · ${_activityCountLabel(entry)}',
+        '${entry.areas.isEmpty ? 'Betrieb' : entry.areas.map((a) => a.label).join(', ')} · ${_activityCountLabel(entry)}',
       DayType.berufsschule => _topicCountLabel(entry.selectedActivities.length),
       DayType.frei ||
       DayType.urlaub ||
@@ -721,8 +721,8 @@ class _SummaryDayCard extends StatelessWidget {
               Text(isMissing ? 'Kein Eintrag – fehlt' : 'Kein Eintrag')
             else ...[
               Text(
-                entry!.dayType == DayType.betrieb && entry!.area != null
-                    ? '${entry!.dayType.label} · ${entry!.area!.label}'
+                entry!.dayType == DayType.betrieb && entry!.areas.isNotEmpty
+                    ? '${entry!.dayType.label} · ${entry!.areas.map((a) => a.label).join(', ')}'
                     : entry!.dayType.label,
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: theme.colorScheme.primary,

@@ -6,7 +6,7 @@ class DailyEntry {
   final String id;
   final DateTime date;
   final DayType dayType;
-  final TrainingArea? area;
+  final List<TrainingArea> areas;
   final List<String> selectedActivities;
   final List<SpecialFlag> specialFlags;
   final String? note;
@@ -17,7 +17,7 @@ class DailyEntry {
     required this.id,
     required this.date,
     required this.dayType,
-    required this.area,
+    required this.areas,
     required this.selectedActivities,
     required this.specialFlags,
     required this.note,

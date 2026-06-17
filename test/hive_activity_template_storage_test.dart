@@ -24,6 +24,7 @@ void main() {
           category: ActivityCategory.wareneingang,
           isCustom: true,
           isActive: false,
+          subcategory: 'Prüfung',
         ),
       );
       await Hive.close();
@@ -36,6 +37,7 @@ void main() {
       expect(loaded.single.title, 'Eigene Warenprüfung');
       expect(loaded.single.isCustom, isTrue);
       expect(loaded.single.isActive, isFalse);
+      expect(loaded.single.subcategory, 'Prüfung');
     } finally {
       await Hive.close();
       await directory.delete(recursive: true);
@@ -76,6 +78,7 @@ void main() {
 
       expect(loaded, isNotNull);
       expect(loaded!.isActive, isTrue);
+      expect(loaded.subcategory, isNull);
     } finally {
       await Hive.close();
       await directory.delete(recursive: true);

@@ -18,10 +18,11 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 | ---------------------------------------------- | ------------------------------------------------------- |
 | `TASKS.md`                                     | Genaue Anforderungen Phase 6                            |
 | `lib/features/templates/templates_screen.dart` | Eigene Tätigkeiten verwalten                             |
-| `lib/core/data/default_activities.dart`        | 87 Tätigkeiten mit stabilen IDs und Kategorien          |
+| `lib/core/data/default_activities.dart`        | 132 Tätigkeiten mit stabilen IDs und Kategorien         |
+| `lib/core/data/activity_subcategories.dart`    | UI-Untergruppen für vordefinierte Tätigkeiten           |
 | `lib/core/models/activity_template.dart`       | ActivityTemplate-Modell                                 |
 | `lib/core/enums/activity_category.dart`        | ActivityCategory-Enum (10 Kategorien)                   |
-| `lib/features/today/today_screen.dart`         | Wie Tätigkeiten heute gewählt werden (Pattern-Referenz) |
+| `lib/features/today/today_screen.dart`         | Heute-Auswahl mit Suche, häufig genutzt und Auswahlchips |
 | `docs/UI_UX_SPEC.md`                           | Abschnitt "18. Vorlagen-Screen" (Zeile ~447)            |
 | `docs/DATA_MODEL.md`                           | ActivityTemplate-Persistenz-Konzept                     |
 
@@ -32,6 +33,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 - **setState reicht:** Kein State-Management-Framework einführen.
 - **Kategorie-Filter als Chips:** Nicht als Dropdown — sieh UI_UX_SPEC.md.
 - **Eigene Tätigkeiten:** Stabile IDs nie ändern. Deaktivieren statt hart löschen, damit historische Einträge lesbar bleiben.
+- **Duplikate:** Eigene Tätigkeiten gegen normalisierte Standard- und eigene Titel prüfen.
 - **Katalog-Synchronisierung:** Änderungen müssen Heute- und Wochen-Screen ohne App-Neustart erreichen.
 
 ### Mindestchecks nach Änderung
@@ -54,6 +56,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 | `docs/DATA_MODEL.md`                             | Vollständige Referenz, Persistenz-Strategie                 |
 | `lib/core/models/daily_entry.dart`               | Model-Definition                                            |
 | `lib/core/storage/daily_entry_adapter.dart`      | Hive-CE-Adapter — muss bei Felderweiterung angepasst werden |
+| `lib/core/storage/persisted_enum.dart`           | Kontrollierte Parser für persistierte Enum-Namen             |
 | `lib/core/storage/hive_daily_entry_storage.dart` | Produktiv-Impl.                                             |
 | `test/hive_daily_entry_storage_test.dart`        | Persistenz-Tests                                            |
 | `test/hive_activity_template_storage_test.dart`  | Bei ActivityTemplate-/Adapter-Änderungen                    |
@@ -64,6 +67,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 - **Hive CE Adapter manuell:** Kein Codegenerator. Bei neuen Feldern `daily_entry_adapter.dart` anpassen.
 - **Vorwärtskompatibilität:** Bestehende gespeicherte Daten müssen lesbar bleiben. Neue Felder optional (nullable) oder mit Default.
 - **Enum-Namen als String gespeichert:** Enum-Werte werden als String-Name persistiert (nicht als Index). Umbenennungen brechen bestehende Daten.
+- **Enum-Reads:** Keine direkten `values.byName(...)` in Adaptern; zentrale Parser verwenden, damit Fehler diagnostizierbar bleiben.
 
 ### Mindestchecks
 
@@ -209,6 +213,7 @@ Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.
 | Datei | Warum |
 | ----- | ----- |
 | `lib/core/profile_storage.dart` | Profil- und Onboarding-Persistenz |
+| `lib/core/constants.dart` | Ausbildungsberufe, zulässige Jahre und App-Version |
 | `lib/core/storage/theme_preset_storage.dart` | Theme-Persistenz |
 | `lib/app/theme.dart` | ThemePreset-Vertrag |
 | `lib/app/bootstrap.dart` | Initiales Laden |
@@ -218,8 +223,9 @@ Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.
 ### Risiken
 
 - „Alle Daten löschen“ muss Profil, Reminder und Theme zurücksetzen.
+- Fachlagerist/in erlaubt nur Ausbildungsjahr 1–2; Fachkraft für Lagerlogistik 1–3.
 - Theme-Namen sind persistierte Werte; Umbenennungen brauchen Migration.
-- `pubspec.yaml` und `kAppVersion` bei Versionsänderungen gemeinsam prüfen.
+- `pubspec.yaml` und `kAppVersion` müssen synchron bleiben; `test/version_consistency_test.dart` prüft das.
 
 ### Mindestchecks
 

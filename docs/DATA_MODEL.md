@@ -6,7 +6,8 @@ Persistenzverträge. Der ausführbare Code bleibt die Quelle der Wahrheit.
 **Status:** `DailyEntry` und eigene Tätigkeiten werden mit Hive CE persistiert;
 Profil, Onboarding, Reminder und Theme-Preset liegen in SharedPreferences.
 
-Vollständiger Tätigkeitskatalog (87 Einträge): `lib/core/data/default_activities.dart`
+Vollständiger Tätigkeitskatalog (132 Einträge):
+`lib/core/data/default_activities.dart`
 
 ---
 
@@ -49,11 +50,6 @@ enum ActivityCategory {
   sicherheit,     // Sicherheit/Ordnung/Qualität
 }
 
-enum TrainingOccupation {
-  fachlagerist,           // Fachlagerist/in (2 Jahre)
-  fachkraftLagerlogistik, // Fachkraft für Lagerlogistik (3 Jahre)
-}
-
 enum SpecialFlag {
   // Besonderheiten beim Tageseintrag
   selbststaendig,
@@ -81,7 +77,7 @@ class DailyEntry {
   final String id;                        // Datum im Format yyyy-MM-dd
   final DateTime date;                    // Datum des Eintrags
   final DayType dayType;                  // Tagtyp
-  final TrainingArea? area;               // nur wenn dayType == betrieb
+  final List<TrainingArea> areas;         // nur wenn dayType == betrieb
   final List<String> selectedActivities;  // IDs aus ActivityTemplate
   final List<SpecialFlag> specialFlags;   // Besonderheiten
   final String? note;                     // optionale Freitext-Notiz
@@ -99,6 +95,7 @@ class ActivityTemplate {
   final ActivityCategory category;  // Kategorie
   final bool isCustom;              // true bei selbst angelegten Tätigkeiten
   final bool isActive;              // false = nur noch für historische Einträge sichtbar
+  final String? subcategory;        // optionale Arbeitsschritt-Untergruppe
 }
 ```
 
@@ -118,6 +115,13 @@ Es gibt bewusst keine persistierte `UserProfile`-Klasse und keinen
 `TrainingOccupation`-Enum. Ausbildungsberufe werden als stabile String-Werte aus
 `TrainingOccupationValues` gespeichert.
 
+Gültige Ausbildungsberufe:
+
+| String-Wert | Bedeutung | Zulässige Ausbildungsjahre |
+| ----------- | --------- | -------------------------- |
+| `fachlagerist` | Fachlagerist/in | 1, 2 |
+| `fachkraft_lagerlogistik` | Fachkraft für Lagerlogistik | 1, 2, 3 |
+
 ---
 
 ## Dateistruktur
@@ -133,7 +137,7 @@ lib/core/
     activity_category.dart
     special_flag.dart
   data/
-    default_activities.dart    ← 87 vordefinierte Tätigkeiten als const List
+    default_activities.dart    ← 132 vordefinierte Tätigkeiten als const List
   storage/
     daily_entry_storage.dart
     daily_entry_adapter.dart
@@ -161,11 +165,20 @@ Hive-CE-Boxen:
 
 `DailyEntry` verwendet einen handgeschriebenen Adapter mit dauerhaft reserviertem
 `typeId: 0`. Enum-Werte werden als Namen gespeichert, damit keine zusätzlichen
-Enum-Adapter benötigt werden.
+Enum-Adapter benötigt werden. Das aktuelle `areas`-Feld liest auch ältere
+Einträge mit einem einzelnen gespeicherten Bereich.
+Gespeicherte Enum-Strings werden über zentrale Parser gelesen; unbekannte Werte
+werfen eine lesbare `FormatException` statt eines unklaren `byName`-Fehlers.
 
-`ActivityTemplate` verwendet `typeId: 1`. Das Feld `isActive` ist
-rückwärtskompatibel: Fehlt es in bestehenden Hive-Daten, wird `true` verwendet.
-Eigene Tätigkeiten werden deaktiviert statt hart gelöscht.
+`DailyEntryStorage.loadAll()` liefert die lokal gespeicherten Einträge für
+abgeleitete UI-Funktionen wie „Häufig genutzt"; es speichert keine zusätzlichen
+Zähler.
+
+`ActivityTemplate` verwendet `typeId: 1`. Die Felder `isActive` und
+`subcategory` sind rückwärtskompatibel: Fehlt `isActive`, wird `true`
+verwendet; fehlt `subcategory`, bleibt die Untergruppe `null`. Eigene
+Tätigkeiten werden deaktiviert statt hart gelöscht. Vordefinierte Tätigkeiten
+werden im UI zusätzlich über stabile ID-Bereiche fachlich untergruppiert.
 
 **SharedPreferences-Schlüssel:**
 
@@ -181,12 +194,12 @@ normalisiert. `theme_preset` speichert den stabilen Namen des `ThemePreset`.
 
 ## Tagestyp-Logik
 
-| DayType                          | area erforderlich? | Tätigkeiten wählbar?         |
-| -------------------------------- | ------------------ | ---------------------------- |
-| betrieb                          | ja                 | ja                           |
-| berufsschule                     | nein               | ja (Kategorie: berufsschule) |
-| frei / urlaub / krank / feiertag | nein               | nein                         |
-| sonstiges                        | nein               | nein; Besonderheiten/Notiz   |
+| DayType                          | Bereiche erforderlich?  | Tätigkeiten wählbar?         |
+| -------------------------------- | ----------------------- | ---------------------------- |
+| betrieb                          | ja, mindestens einer    | ja                           |
+| berufsschule                     | nein                    | ja (Kategorie: berufsschule) |
+| frei / urlaub / krank / feiertag | nein                    | nein                         |
+| sonstiges                        | nein                    | nein; Besonderheiten/Notiz   |
 
 ---
 
@@ -197,13 +210,13 @@ Kanonische vollständige Liste mit stabilen IDs:
 
 | Kategorie          | Beispiel-Tätigkeiten                                            |
 | ------------------ | --------------------------------------------------------------- |
-| Wareneingang       | Lieferschein prüfen, Ware ausladen, Wareneingangsprüfung        |
-| Einlagerung/Lager  | Einlagerung nach Plan, Lagerplatzverwaltung, FIFO kontrollieren |
-| Transport          | Flurförderzeug bedienen, Transportwege planen                   |
-| Kommissionierung   | Kommissionierliste abarbeiten, Picklisten bearbeiten            |
-| Verpackung         | Waren verpacken, Versandlabels erstellen                        |
-| Versand/Verladung  | Lieferung vorbereiten, Laderampe koordinieren                   |
-| Inventur           | Bestand zählen, Differenzen erfassen                            |
-| Retouren           | Retoure erfassen, Rücksendung prüfen                            |
-| Berufsschule       | Lernfeld X, Klassenarbeit, Gruppenarbeit                        |
-| Sicherheit/Ordnung | 5S-Methode, Sicherheitsrundgang, Unfallverhütung                |
+| Wareneingang       | Lieferschein prüfen, Scanner-Erfassung, Begleitpapiere          |
+| Einlagerung/Lager  | Einlagerung, Lagerplatz im System prüfen, FIFO anwenden         |
+| Transport          | Hubwagen, Transportauftrag nachvollziehen, Ladehilfsmittel      |
+| Kommissionierung   | Pickliste, Entnahme scannen, Fehlbestand melden                 |
+| Verpackung         | Packliste abgleichen, Füllmaterial, Versandlabel                |
+| Versand/Verladung  | Versandpapiere, Tourenliste, Palette sichern                    |
+| Inventur           | Bestand zählen, Scanner-Zählung, Doppelzählung unterstützen     |
+| Retouren           | Retoure erfassen, Retourengrund, Prüfung bereitstellen          |
+| Berufsschule       | Lernfeld, Ladungssicherung, Warenwirtschaft, Qualitätsgrundlagen |
+| Sicherheit/Ordnung | PSA, 5S, Arbeitsanweisung, Qualitätsmangel weitergeben          |

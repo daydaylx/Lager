@@ -26,7 +26,10 @@ class ProfileStorage {
   static bool isOnboardingComplete(StoredProfile profile) {
     return profile.onboardingCompleted &&
         TrainingOccupationValues.all.contains(profile.occupation) &&
-        TrainingYearValues.all.contains(profile.trainingYear);
+        TrainingYearValues.isValidForOccupation(
+          profile.trainingYear,
+          profile.occupation,
+        );
   }
 
   static Future<void> save({
@@ -36,6 +39,13 @@ class ProfileStorage {
     required int trainingYear,
     bool completeOnboarding = false,
   }) async {
+    if (!TrainingYearValues.isValidForOccupation(trainingYear, occupation)) {
+      throw ArgumentError.value(
+        trainingYear,
+        'trainingYear',
+        'Ausbildungsjahr passt nicht zum Ausbildungsberuf.',
+      );
+    }
     final preferences = await SharedPreferences.getInstance();
 
     await _writeOptionalString(

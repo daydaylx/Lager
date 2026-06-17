@@ -9,15 +9,21 @@ import '../../core/models/activity_template.dart';
 import '../../core/models/daily_entry.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
-import '../../core/week_utils.dart';
 import '../../core/report/daily_report_generator.dart';
 import '../../shared/widgets/app_ui.dart';
+import 'widgets/activity_section.dart';
+import 'widgets/area_grid.dart';
+import 'widgets/day_status_card.dart';
+import 'widgets/day_type_selector.dart';
+import 'widgets/save_bar.dart';
+import 'widgets/special_flags_note_section.dart';
 
 class TodayScreen extends StatefulWidget {
   final DailyEntryStorage storage;
   final ActivityTemplateStorage templateStorage;
   final DateTime? date;
   final DateTime? currentDate;
+  final int? trainingYear;
   final int templateRefreshSignal;
   final bool protectBackNavigation;
 
@@ -27,6 +33,7 @@ class TodayScreen extends StatefulWidget {
     required this.templateStorage,
     this.date,
     this.currentDate,
+    this.trainingYear,
     this.templateRefreshSignal = 0,
     this.protectBackNavigation = true,
   });
@@ -37,12 +44,16 @@ class TodayScreen extends StatefulWidget {
 
 class _TodayScreenState extends State<TodayScreen> {
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _activitySearchController =
+      TextEditingController();
   final Set<String> _selectedActivityIds = {};
   final Set<SpecialFlag> _selectedSpecialFlags = {};
   List<ActivityTemplate> _customTemplates = [];
+  List<String> _frequentActivityIds = [];
+  String _activitySearchQuery = '';
 
   DayType _selectedDayType = DayType.betrieb;
-  TrainingArea? _selectedArea;
+  final Set<TrainingArea> _selectedAreas = {};
   DailyEntry? _savedEntry;
   bool _hasUnsavedChanges = false;
   bool _isLoading = true;
@@ -50,7 +61,6 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _isSaving = false;
   bool _isApplyingEntry = false;
   bool _templatesLoadFailed = false;
-  bool _specialFlagsExpanded = false;
   bool _optionalSectionExpanded = false;
   late DateTime _activeDate;
   DateTime? _pendingDate;
@@ -72,7 +82,7 @@ class _TodayScreenState extends State<TodayScreen> {
   bool get _canSave {
     return switch (_selectedDayType) {
       DayType.betrieb =>
-        _selectedArea != null && _selectedActivityIds.isNotEmpty,
+        _selectedAreas.isNotEmpty && _selectedActivityIds.isNotEmpty,
       DayType.berufsschule => _selectedActivityIds.isNotEmpty,
       DayType.frei ||
       DayType.urlaub ||
@@ -100,7 +110,7 @@ class _TodayScreenState extends State<TodayScreen> {
   List<String> get _missingItems {
     if (_isLoading || _loadFailed) return const [];
     final items = <String>[];
-    if (_selectedDayType == DayType.betrieb && _selectedArea == null) {
+    if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
       items.add('Bereich');
     }
     if (_selectedDayType.supportsActivities && _selectedActivityIds.isEmpty) {
@@ -116,6 +126,7 @@ class _TodayScreenState extends State<TodayScreen> {
     _noteController.addListener(_markChanged);
     _loadEntry();
     _loadTemplates();
+    _loadFrequentActivities();
   }
 
   @override
@@ -131,6 +142,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   void dispose() {
+    _activitySearchController.dispose();
     _noteController
       ..removeListener(_markChanged)
       ..dispose();
@@ -176,7 +188,7 @@ class _TodayScreenState extends State<TodayScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _DayStatusCard(
+                child: DayStatusCard(
                   date: _today,
                   statusLabel: _statusLabel,
                   isSaved: _savedEntry != null && !_hasUnsavedChanges,
@@ -188,156 +200,104 @@ class _TodayScreenState extends State<TodayScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   children: [
-              if (_pendingDate != null) ...[
-                const SizedBox(height: 16),
-                AppMessage(
-                  key: const ValueKey('new_day_pending'),
-                  icon: Icons.today_outlined,
-                  title: 'Ein neuer Tag hat begonnen.',
-                  message:
-                      'Deine offenen Änderungen bleiben beim bisherigen Tag.',
-                  tone: AppMessageTone.warning,
-                  action: IconButton(
-                    key: const ValueKey('switch_to_current_day'),
-                    onPressed: _switchToPendingDate,
-                    tooltip: 'Zum heutigen Tag wechseln',
-                    icon: const Icon(Icons.arrow_forward),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 24),
-              AppSectionHeader(
-                title: 'Tagestyp',
-                description: _isToday
-                    ? 'Was für ein Tag ist heute?'
-                    : 'Was für ein Tag war das?',
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: DayType.values.map((dayType) {
-                  return ChoiceChip(
-                    key: ValueKey('day_type_${dayType.name}'),
-                    label: Text(dayType.label),
-                    selected: _selectedDayType == dayType,
-                    onSelected: (_) => _confirmAndSelectDayType(dayType),
-                  );
-                }).toList(),
-              ),
-              if (_selectedDayType == DayType.betrieb) ...[
-                const SizedBox(height: 24),
-                AppSectionHeader(
-                  title: 'Bereich',
-                  badge: 'Pflicht',
-                  badgeRequired: true,
-                  description: _isToday
-                      ? 'Wo hast du heute gearbeitet?'
-                      : 'Wo hast du an diesem Tag gearbeitet?',
-                ),
-                const SizedBox(height: 12),
-                _AreaGrid(
-                  areas: TrainingArea.values,
-                  selected: _selectedArea,
-                  onSelect: _confirmAndSelectArea,
-                ),
-              ],
-              if (_selectedDayType.supportsActivities) ...[
-                const SizedBox(height: 24),
-                AppSectionHeader(
-                  title: 'Tätigkeiten',
-                  badge: 'Pflicht',
-                  badgeRequired: true,
-                  description: _isToday
-                      ? 'Wähle aus, was du heute gemacht hast.'
-                      : 'Wähle aus, was du an diesem Tag gemacht hast.',
-                  trailing: _SelectionCount(count: _selectedActivityIds.length),
-                ),
-                const SizedBox(height: 12),
-                _buildActivities(context),
-              ],
-              if (_selectedDayType == DayType.sonstiges) ...[
-                const SizedBox(height: 24),
-                const AppMessage(
-                  icon: Icons.edit_note_outlined,
-                  title:
-                      'Beschreibe den Tag kurz über Besonderheiten oder Notiz.',
-                ),
-              ],
-              if (_selectedDayType.isAbsence) ...[
-                const SizedBox(height: 24),
-                AppMessage(
-                  icon: Icons.event_available_outlined,
-                  title:
-                      '${_selectedDayType.label} kann direkt gespeichert werden.',
-                  tone: AppMessageTone.success,
-                ),
-              ],
-              if (!_selectedDayType.isAbsence) ...[
-                const SizedBox(height: 16),
-                ExpansionTile(
-                  key: ValueKey(
-                    'optional_${_selectedDayType.name}_${_savedEntry?.id}',
-                  ),
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: EdgeInsets.zero,
-                  maintainState: true,
-                  initiallyExpanded: _optionalSectionExpanded,
-                  onExpansionChanged: (expanded) =>
-                      setState(() => _optionalSectionExpanded = expanded),
-                  title: Text(
-                    'Besonderheiten & Notiz',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                    if (_pendingDate != null) ...[
+                      const SizedBox(height: 16),
+                      AppMessage(
+                        key: const ValueKey('new_day_pending'),
+                        icon: Icons.today_outlined,
+                        title: 'Ein neuer Tag hat begonnen.',
+                        message:
+                            'Deine offenen Änderungen bleiben beim bisherigen Tag.',
+                        tone: AppMessageTone.warning,
+                        action: IconButton(
+                          key: const ValueKey('switch_to_current_day'),
+                          onPressed: _switchToPendingDate,
+                          tooltip: 'Zum heutigen Tag wechseln',
+                          icon: const Icon(Icons.arrow_forward),
                         ),
-                  ),
-                  subtitle: Text(
-                    'Optional',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  children: [
-                    const SizedBox(height: 8),
-                    const AppSectionHeader(
-                      title: 'Besonderheiten',
-                      badge: 'Optional',
-                      badgeRequired: false,
-                      description: 'Was war heute besonders?',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSpecialFlags(),
-                    const SizedBox(height: 24),
-                    const AppSectionHeader(
-                      title: 'Notiz',
-                      badge: 'Optional',
-                      badgeRequired: false,
-                      description: 'Kurze Ergänzung, falls etwas Besonderes war.',
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      key: const ValueKey('daily_note_field'),
-                      controller: _noteController,
-                      minLines: 2,
-                      maxLines: 4,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Kurze Notiz, falls etwas Besonderes war ...',
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    AppSectionHeader(
+                      title: 'Tagestyp',
+                      description: _isToday
+                          ? 'Was für ein Tag ist heute?'
+                          : 'Was für ein Tag war das?',
                     ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ],
+                    const SizedBox(height: 12),
+                    DayTypeSelector(
+                      selectedDayType: _selectedDayType,
+                      onSelect: _confirmAndSelectDayType,
+                    ),
+                    if (_selectedDayType == DayType.betrieb) ...[
+                      const SizedBox(height: 24),
+                      AppSectionHeader(
+                        title: 'Bereich',
+                        badge: 'Pflicht',
+                        badgeRequired: true,
+                        description: _isToday
+                            ? 'Wo hast du heute gearbeitet?'
+                            : 'Wo hast du an diesem Tag gearbeitet?',
+                      ),
+                      const SizedBox(height: 12),
+                      AreaGrid(
+                        areas: TrainingArea.values,
+                        selected: _selectedAreas,
+                        onToggle: _toggleArea,
+                      ),
+                    ],
+                    if (_selectedDayType.supportsActivities) ...[
+                      const SizedBox(height: 24),
+                      AppSectionHeader(
+                        title: 'Tätigkeiten',
+                        badge: 'Pflicht',
+                        badgeRequired: true,
+                        description: _isToday
+                            ? 'Wähle aus, was du heute gemacht hast.'
+                            : 'Wähle aus, was du an diesem Tag gemacht hast.',
+                        trailing:
+                            SelectionCount(count: _selectedActivityIds.length),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildActivities(context),
+                    ],
+                    if (_selectedDayType == DayType.sonstiges) ...[
+                      const SizedBox(height: 24),
+                      const AppMessage(
+                        icon: Icons.edit_note_outlined,
+                        title:
+                            'Beschreibe den Tag kurz über Besonderheiten oder Notiz.',
+                      ),
+                    ],
+                    if (_selectedDayType.isAbsence) ...[
+                      const SizedBox(height: 24),
+                      AppMessage(
+                        icon: Icons.event_available_outlined,
+                        title:
+                            '${_selectedDayType.label} kann direkt gespeichert werden.',
+                        tone: AppMessageTone.success,
+                      ),
+                    ],
+                    if (!_selectedDayType.isAbsence) ...[
+                      const SizedBox(height: 16),
+                      SpecialFlagsAndNoteSection(
+                        selectedDayType: _selectedDayType,
+                        savedEntryId: _savedEntry?.id,
+                        isExpanded: _optionalSectionExpanded,
+                        onExpansionChanged: (expanded) =>
+                            setState(() => _optionalSectionExpanded = expanded),
+                        selectedSpecialFlags: _selectedSpecialFlags,
+                        onToggleSpecialFlag: _toggleSpecialFlag,
+                        noteController: _noteController,
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
         ),
-        bottomNavigationBar: _SaveBar(
+        bottomNavigationBar: SaveBar(
           missingItems: _missingItems,
           canSubmit: _canSubmit,
           isSaving: _isSaving,
@@ -353,7 +313,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Widget _buildActivities(BuildContext context) {
-    if (_selectedDayType == DayType.betrieb && _selectedArea == null) {
+    if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
       return const AppMessage(
         icon: Icons.touch_app_outlined,
         title: 'Bereich wählen, dann erscheinen passende Tätigkeiten.',
@@ -361,66 +321,156 @@ class _TodayScreenState extends State<TodayScreen> {
     }
 
     final categories = switch (_selectedDayType) {
-      DayType.betrieb => [
-          _selectedArea!.activityCategory,
+      DayType.betrieb => <ActivityCategory>{
+          ..._selectedAreas.map((a) => a.activityCategory),
           ActivityCategory.sicherheit,
-        ],
+        }.toList(growable: false),
       DayType.berufsschule => [ActivityCategory.berufsschule],
       _ => <ActivityCategory>[],
     };
 
-    final knownActivityIds = {
-      ...defaultActivities.map((activity) => activity.id),
-      ..._customTemplates.map((activity) => activity.id),
-    };
+    final activitiesById = _activitiesById();
+    final knownActivityIds = activitiesById.keys.toSet();
     final unavailableSelectedIds = _selectedActivityIds
         .where((id) => !knownActivityIds.contains(id))
         .toList(growable: false);
+    final selectedActivities = _selectedActivityIds
+        .map((id) => activitiesById[id])
+        .whereType<ActivityTemplate>()
+        .toList(growable: false);
+    final frequentActivities = _activitySearchQuery.trim().isEmpty
+        ? _frequentActivitiesFor(categories, activitiesById)
+        : const <ActivityTemplate>[];
+    final frequentIds = frequentActivities.map((a) => a.id).toSet();
+    final recommendedActivities = _activitySearchQuery.trim().isEmpty
+        ? _recommendedActivitiesFor(categories, activitiesById, frequentIds)
+        : const <ActivityTemplate>[];
+    final hiddenQuickAccessIds = {
+      ...frequentIds,
+      ...recommendedActivities.map((a) => a.id),
+    };
+
+    var visibleActivityCount =
+        frequentActivities.length + recommendedActivities.length;
+    final activityGroups = <Widget>[];
+    for (final category in categories) {
+      final defaults = _sortSelectedFirst(
+        defaultActivities
+            .where(
+              (activity) =>
+                  activity.category == category &&
+                  _showInCategoryGroup(activity, hiddenQuickAccessIds) &&
+                  _matchesActivitySearch(activity),
+            )
+            .toList(growable: false),
+      );
+      final custom = _sortSelectedFirst(
+        _customTemplates
+            .where(
+              (activity) =>
+                  activity.category == category &&
+                  (activity.isActive ||
+                      _selectedActivityIds.contains(activity.id)) &&
+                  _showInCategoryGroup(activity, hiddenQuickAccessIds) &&
+                  _matchesActivitySearch(activity),
+            )
+            .toList(growable: false),
+      );
+      visibleActivityCount += defaults.length + custom.length;
+      if (defaults.isNotEmpty) {
+        activityGroups.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: ActivityGroup(
+              title: category.label,
+              activities: defaults,
+              selectedActivityIds: _selectedActivityIds,
+              onToggle: _toggleActivity,
+            ),
+          ),
+        );
+      }
+      if (custom.isNotEmpty) {
+        activityGroups.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: ActivityGroup(
+              title: 'Eigene Tätigkeiten',
+              activities: custom,
+              selectedActivityIds: _selectedActivityIds,
+              onToggle: _toggleActivity,
+              markAsCustom: true,
+            ),
+          ),
+        );
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_templatesLoadFailed) ...[
-          _TemplateLoadWarning(onRetry: _loadTemplates),
+          TemplateLoadWarning(onRetry: _loadTemplates),
           const SizedBox(height: 16),
         ],
-        ...categories.expand((category) {
-          final defaults = defaultActivities
-              .where((activity) => activity.category == category)
-              .toList(growable: false);
-          final custom = _customTemplates
-              .where(
-                (activity) =>
-                    activity.category == category &&
-                    (activity.isActive ||
-                        _selectedActivityIds.contains(activity.id)),
-              )
-              .toList(growable: false);
-          return [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: _ActivityGroup(
-                title: category.label,
-                activities: defaults,
-                selectedActivityIds: _selectedActivityIds,
-                onToggle: _toggleActivity,
-              ),
+        if (selectedActivities.isNotEmpty) ...[
+          SelectedActivitiesBar(
+            activities: selectedActivities,
+            onRemove: _toggleActivity,
+          ),
+          const SizedBox(height: 16),
+        ],
+        TextField(
+          key: const ValueKey('activity_search'),
+          controller: _activitySearchController,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Tätigkeiten durchsuchen',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _activitySearchQuery.isEmpty
+                ? null
+                : IconButton(
+                    key: const ValueKey('clear_activity_search'),
+                    onPressed: () {
+                      _activitySearchController.clear();
+                      setState(() => _activitySearchQuery = '');
+                    },
+                    tooltip: 'Suche leeren',
+                    icon: const Icon(Icons.close),
+                  ),
+          ),
+          onChanged: (value) => setState(() => _activitySearchQuery = value),
+        ),
+        const SizedBox(height: 16),
+        if (frequentActivities.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: ActivityGroup(
+              title: 'Häufig genutzt',
+              activities: frequentActivities,
+              selectedActivityIds: _selectedActivityIds,
+              onToggle: _toggleActivity,
             ),
-            if (custom.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: _ActivityGroup(
-                  title: 'Eigene Tätigkeiten',
-                  activities: custom,
-                  selectedActivityIds: _selectedActivityIds,
-                  onToggle: _toggleActivity,
-                  markAsCustom: true,
-                ),
-              ),
-          ];
-        }),
+          ),
+        if (recommendedActivities.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: ActivityGroup(
+              title: 'Passend zum ${widget.trainingYear}. Ausbildungsjahr',
+              activities: recommendedActivities,
+              selectedActivityIds: _selectedActivityIds,
+              onToggle: _toggleActivity,
+            ),
+          ),
+        if (visibleActivityCount == 0)
+          const AppMessage(
+            icon: Icons.search_off_outlined,
+            title: 'Keine passenden Tätigkeiten gefunden',
+            message: 'Passe die Suche an oder wähle einen anderen Bereich.',
+          ),
+        ...activityGroups,
         if (unavailableSelectedIds.isNotEmpty)
-          _UnavailableActivities(
+          UnavailableActivities(
             ids: unavailableSelectedIds,
             onRemove: _toggleActivity,
           ),
@@ -428,57 +478,151 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
-  // #25: Compact collapsible special flags
-  Widget _buildSpecialFlags() {
-    const maxCollapsedUnselected = 3;
-    const allFlags = SpecialFlag.values;
-    final selectedFlags =
-        allFlags.where(_selectedSpecialFlags.contains).toList();
-    final unselectedFlags =
-        allFlags.where((f) => !_selectedSpecialFlags.contains(f)).toList();
+  Map<String, ActivityTemplate> _activitiesById() => {
+        for (final activity in defaultActivities) activity.id: activity,
+        for (final activity in _customTemplates) activity.id: activity,
+      };
 
-    final needsExpand = unselectedFlags.length > maxCollapsedUnselected;
-    final showAll = _specialFlagsExpanded || !needsExpand;
-    final visibleUnselected =
-        showAll ? unselectedFlags : unselectedFlags.take(maxCollapsedUnselected).toList();
-    final hiddenCount = unselectedFlags.length - maxCollapsedUnselected;
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        ...selectedFlags.map((flag) => FilterChip(
-              key: ValueKey('special_${flag.name}'),
-              label: Text(flag.label),
-              selected: true,
-              onSelected: (_) => _toggleSpecialFlag(flag),
-            )),
-        ...visibleUnselected.map((flag) => FilterChip(
-              key: ValueKey('special_${flag.name}'),
-              label: Text(flag.label),
-              selected: false,
-              onSelected: (_) => _toggleSpecialFlag(flag),
-            )),
-        if (!showAll && hiddenCount > 0)
-          ActionChip(
-            label: Text('+$hiddenCount weitere'),
-            onPressed: () => setState(() => _specialFlagsExpanded = true),
-          ),
-        if (showAll && needsExpand)
-          ActionChip(
-            label: const Text('Weniger'),
-            onPressed: () => setState(() => _specialFlagsExpanded = false),
-          ),
-      ],
-    );
+  bool _matchesActivitySearch(ActivityTemplate activity) {
+    final query = _activitySearchQuery.trim().toLowerCase();
+    return query.isEmpty ||
+        activity.title.toLowerCase().contains(query) ||
+        activity.category.label.toLowerCase().contains(query);
   }
+
+  List<ActivityTemplate> _sortSelectedFirst(List<ActivityTemplate> activities) {
+    final selected = activities
+        .where((activity) => _selectedActivityIds.contains(activity.id))
+        .toList(growable: false);
+    final unselected = activities
+        .where((activity) => !_selectedActivityIds.contains(activity.id))
+        .toList(growable: false);
+    return [...selected, ...unselected];
+  }
+
+  bool _showInCategoryGroup(
+    ActivityTemplate activity,
+    Set<String> frequentIds,
+  ) {
+    if (_activitySearchQuery.trim().isNotEmpty) return true;
+    return !frequentIds.contains(activity.id) ||
+        _selectedActivityIds.contains(activity.id);
+  }
+
+  List<ActivityTemplate> _frequentActivitiesFor(
+    List<ActivityCategory> categories,
+    Map<String, ActivityTemplate> activitiesById,
+  ) {
+    final categorySet = categories.toSet();
+    final frequent = <ActivityTemplate>[];
+    for (final id in _frequentActivityIds) {
+      final activity = activitiesById[id];
+      if (activity == null || !categorySet.contains(activity.category)) {
+        continue;
+      }
+      if (_selectedActivityIds.contains(activity.id)) {
+        continue;
+      }
+      if (!activity.isActive && !_selectedActivityIds.contains(activity.id)) {
+        continue;
+      }
+      if (frequent.any((item) => item.id == activity.id)) {
+        continue;
+      }
+      frequent.add(activity);
+      if (frequent.length == 6) break;
+    }
+    return frequent;
+  }
+
+  List<ActivityTemplate> _recommendedActivitiesFor(
+    List<ActivityCategory> categories,
+    Map<String, ActivityTemplate> activitiesById,
+    Set<String> excludedIds,
+  ) {
+    final trainingYear = widget.trainingYear;
+    if (trainingYear == null) return const [];
+
+    final categorySet = categories.toSet();
+    final candidates = activitiesById.values.indexed.where((entry) {
+      final activity = entry.$2;
+      return categorySet.contains(activity.category) &&
+          activity.isActive &&
+          !_selectedActivityIds.contains(activity.id) &&
+          !excludedIds.contains(activity.id) &&
+          _trainingYearPriority(activity, trainingYear) == 0;
+    }).toList(growable: false);
+
+    candidates.sort((a, b) {
+      final priorityA = _trainingYearPriority(a.$2, trainingYear);
+      final priorityB = _trainingYearPriority(b.$2, trainingYear);
+      if (priorityA != priorityB) return priorityA.compareTo(priorityB);
+      return a.$1.compareTo(b.$1);
+    });
+
+    return candidates.take(4).map((entry) => entry.$2).toList(growable: false);
+  }
+
+  int _trainingYearPriority(ActivityTemplate activity, int trainingYear) {
+    final title = activity.title.toLowerCase();
+    final category = activity.category;
+
+    return switch (trainingYear) {
+      1 => _matchesAny(title, const [
+          'angenommen',
+          'geprüft',
+          'beachtet',
+          'vorbereitet',
+          'aufgeräumt',
+          'unter anleitung',
+          'arbeitsanweisung',
+          'grundlagen',
+          'sicherheits',
+        ])
+            ? 0
+            : category == ActivityCategory.sicherheit
+                ? 0
+                : 1,
+      2 => _matchesAny(title, const [
+          'scanner',
+          'system',
+          'bestand',
+          'kommissionier',
+          'versand',
+          'lagerplatz',
+          'pick',
+          'retoure',
+        ])
+            ? 0
+            : 1,
+      _ => _matchesAny(title, const [
+          'kennzahl',
+          'inventur',
+          'differenz',
+          'system',
+          'qualität',
+          'abweichung',
+          'prozess',
+          'kontrolle',
+        ])
+            ? 0
+            : category == ActivityCategory.inventur
+                ? 0
+                : 1,
+    };
+  }
+
+  bool _matchesAny(String value, List<String> needles) {
+    return needles.any(value.contains);
+  }
+
 
   Future<void> _confirmAndSelectDayType(DayType dayType) async {
     if (_selectedDayType == dayType) {
       return;
     }
 
-    final discardsDetails = _selectedArea != null ||
+    final discardsDetails = _selectedAreas.isNotEmpty ||
         _selectedActivityIds.isNotEmpty ||
         (dayType.isAbsence &&
             (_selectedSpecialFlags.isNotEmpty ||
@@ -493,38 +637,63 @@ class _TodayScreenState extends State<TodayScreen> {
 
     setState(() {
       _selectedDayType = dayType;
-      _selectedArea = null;
+      _selectedAreas.clear();
       _selectedActivityIds.clear();
+      _activitySearchQuery = '';
       if (dayType.isAbsence) {
         _selectedSpecialFlags.clear();
       }
       _optionalSectionExpanded = dayType == DayType.sonstiges;
       _setChanged();
     });
+    _activitySearchController.clear();
 
     if (dayType.isAbsence) {
       _noteController.clear();
     }
   }
 
-  Future<void> _confirmAndSelectArea(TrainingArea area) async {
-    if (_selectedArea == area) {
-      return;
-    }
+  bool _hasSelectedActivitiesIn(ActivityCategory category) {
+    final ids = {
+      ...defaultActivities
+          .where((a) => a.category == category)
+          .map((a) => a.id),
+      ..._customTemplates.where((a) => a.category == category).map((a) => a.id),
+    };
+    return _selectedActivityIds.any(ids.contains);
+  }
 
-    if (_selectedActivityIds.isNotEmpty &&
-        !await _confirmDiscard(
-          'Bereich ändern?',
-          'Bereits ausgewählte Tätigkeiten werden entfernt.',
-        )) {
-      return;
-    }
+  void _removeSelectedActivitiesIn(ActivityCategory category) {
+    final ids = {
+      ...defaultActivities
+          .where((a) => a.category == category)
+          .map((a) => a.id),
+      ..._customTemplates.where((a) => a.category == category).map((a) => a.id),
+    };
+    _selectedActivityIds.removeAll(ids);
+  }
 
-    setState(() {
-      _selectedArea = area;
-      _selectedActivityIds.clear();
-      _setChanged();
-    });
+  Future<void> _toggleArea(TrainingArea area) async {
+    if (_selectedAreas.contains(area)) {
+      final category = area.activityCategory;
+      if (_hasSelectedActivitiesIn(category) &&
+          !await _confirmDiscard(
+            'Bereich entfernen?',
+            'Ausgewählte Tätigkeiten in diesem Bereich werden entfernt.',
+          )) {
+        return;
+      }
+      setState(() {
+        _selectedAreas.remove(area);
+        _removeSelectedActivitiesIn(category);
+        _setChanged();
+      });
+    } else {
+      setState(() {
+        _selectedAreas.add(area);
+        _setChanged();
+      });
+    }
   }
 
   void _toggleActivity(String activityId) {
@@ -614,6 +783,39 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
+  Future<void> _loadFrequentActivities() async {
+    try {
+      final entries = await widget.storage.loadAll();
+      final counts = <String, int>{};
+      final lastUsed = <String, DateTime>{};
+      for (final entry in entries) {
+        if (!entry.dayType.supportsActivities) continue;
+        for (final id in entry.selectedActivities) {
+          counts[id] = (counts[id] ?? 0) + 1;
+          final previous = lastUsed[id];
+          if (previous == null || entry.date.isAfter(previous)) {
+            lastUsed[id] = entry.date;
+          }
+        }
+      }
+      final ids = counts.keys.toList(growable: false)
+        ..sort((a, b) {
+          final countCompare = counts[b]!.compareTo(counts[a]!);
+          if (countCompare != 0) return countCompare;
+          final dateCompare = lastUsed[b]!.compareTo(lastUsed[a]!);
+          if (dateCompare != 0) return dateCompare;
+          return a.compareTo(b);
+        });
+      if (mounted) {
+        setState(() => _frequentActivityIds = ids);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _frequentActivityIds = const []);
+      }
+    }
+  }
+
   Future<void> _loadEntry() async {
     setState(() {
       _isLoading = true;
@@ -677,7 +879,9 @@ class _TodayScreenState extends State<TodayScreen> {
     setState(() {
       _savedEntry = entry;
       _selectedDayType = entry?.dayType ?? DayType.betrieb;
-      _selectedArea = entry?.area;
+      _selectedAreas
+        ..clear()
+        ..addAll(entry?.areas ?? const []);
       _selectedActivityIds
         ..clear()
         ..addAll(entry?.selectedActivities ?? const []);
@@ -707,7 +911,9 @@ class _TodayScreenState extends State<TodayScreen> {
       id: DailyEntry.idForDate(_today),
       date: _today,
       dayType: _selectedDayType,
-      area: _selectedDayType == DayType.betrieb ? _selectedArea : null,
+      areas: _selectedDayType == DayType.betrieb
+          ? _selectedAreas.toList()
+          : const [],
       selectedActivities: selectedActivities,
       specialFlags: selectedSpecialFlags,
       note: note.isEmpty ? null : note,
@@ -725,6 +931,7 @@ class _TodayScreenState extends State<TodayScreen> {
           _hasUnsavedChanges = false;
           _isSaving = false;
         });
+        _loadFrequentActivities();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -759,7 +966,9 @@ class _TodayScreenState extends State<TodayScreen> {
       id: DailyEntry.idForDate(_today),
       date: _today,
       dayType: _selectedDayType,
-      area: _selectedDayType == DayType.betrieb ? _selectedArea : null,
+      areas: _selectedDayType == DayType.betrieb
+          ? _selectedAreas.toList()
+          : const [],
       selectedActivities: _selectedActivityIds.toList(growable: false),
       specialFlags: _selectedSpecialFlags.toList(growable: false),
       note: note.isEmpty ? null : note,
@@ -832,428 +1041,6 @@ class _TodayScreenState extends State<TodayScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-// #21: Stronger status card with colored badge and missing-items hint
-class _DayStatusCard extends StatelessWidget {
-  final DateTime date;
-  final String statusLabel;
-  final bool isSaved;
-  final bool hasUnsavedChanges;
-  final List<String> missingItems;
-
-  const _DayStatusCard({
-    required this.date,
-    required this.statusLabel,
-    required this.isSaved,
-    required this.hasUnsavedChanges,
-    required this.missingItems,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
-    final ({Color bg, Color fg}) badge;
-    if (isSaved && !hasUnsavedChanges) {
-      badge = (bg: cs.primaryContainer, fg: cs.onPrimaryContainer);
-    } else if (hasUnsavedChanges) {
-      badge = (bg: cs.tertiaryContainer, fg: cs.onTertiaryContainer);
-    } else {
-      badge = (bg: cs.surfaceContainer, fg: cs.onSurfaceVariant);
-    }
-
-    return Material(
-      color: cs.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              formatDayDate(date),
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badge.bg,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    key: const ValueKey('daily_entry_status'),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: badge.fg,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (missingItems.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                'Noch ${missingItems.join(' und ')} auswählen',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// #26: Lighter save bar with compact missing-items hint
-class _SaveBar extends StatelessWidget {
-  final List<String> missingItems;
-  final bool canSubmit;
-  final bool isSaving;
-  final bool isNewEntry;
-  final bool isToday;
-  final VoidCallback onSave;
-  final int selectedActivityCount;
-  final bool supportsActivities;
-  final VoidCallback? onPreview;
-
-  const _SaveBar({
-    required this.missingItems,
-    required this.canSubmit,
-    required this.isSaving,
-    required this.isNewEntry,
-    required this.isToday,
-    required this.onSave,
-    required this.selectedActivityCount,
-    required this.supportsActivities,
-    this.onPreview,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainer,
-      child: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (missingItems.isNotEmpty) ...[
-              Text(
-                'Fehlt: ${missingItems.join(' · ')}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-            ] else if (supportsActivities && selectedActivityCount > 0) ...[
-              Text(
-                '$selectedActivityCount '
-                '${selectedActivityCount == 1 ? 'Tätigkeit' : 'Tätigkeiten'} gewählt',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-            ],
-            Row(
-              children: [
-                if (onPreview != null) ...[
-                  OutlinedButton.icon(
-                    key: const ValueKey('preview_daily_report'),
-                    onPressed: onPreview,
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Vorschau'),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: FilledButton.icon(
-                    key: const ValueKey('save_daily_entry'),
-                    onPressed: canSubmit ? onSave : null,
-                    icon: isSaving
-                        ? const SizedBox.square(
-                            dimension: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(isNewEntry ? Icons.save_outlined : Icons.update),
-                    label: Text(
-                      isNewEntry
-                          ? isToday
-                              ? 'Heute speichern'
-                              : 'Tag speichern'
-                          : 'Änderungen speichern',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActivityGroup extends StatelessWidget {
-  final String title;
-  final List<ActivityTemplate> activities;
-  final Set<String> selectedActivityIds;
-  final ValueChanged<String> onToggle;
-  final bool markAsCustom;
-
-  const _ActivityGroup({
-    required this.title,
-    required this.activities,
-    required this.selectedActivityIds,
-    required this.onToggle,
-    this.markAsCustom = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppSectionHeader(title: title),
-        const SizedBox(height: 8),
-        Material(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: activities.indexed.map((entry) {
-              final index = entry.$1;
-              final activity = entry.$2;
-              final isSelected = selectedActivityIds.contains(activity.id);
-              final enabled = activity.isActive || isSelected;
-              return Column(
-                children: [
-                  InkWell(
-                    key: ValueKey('activity_${activity.id}'),
-                    onTap: enabled ? () => onToggle(activity.id) : null,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 56),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: isSelected,
-                              onChanged:
-                                  enabled ? (_) => onToggle(activity.id) : null,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    activity.title,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: !activity.isActive && !isSelected
-                                          ? theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.45)
-                                          : null,
-                                    ),
-                                  ),
-                                  if (!activity.isActive) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      markAsCustom
-                                          ? 'Eigene Tätigkeit · Deaktiviert'
-                                          : 'Deaktiviert',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ] else if (markAsCustom) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Eigene Tätigkeit',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (index < activities.length - 1) const Divider(indent: 56),
-                ],
-              );
-            }).toList(growable: false),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TemplateLoadWarning extends StatelessWidget {
-  final VoidCallback onRetry;
-
-  const _TemplateLoadWarning({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppMessage(
-      icon: Icons.warning_amber_outlined,
-      title: 'Eigene Tätigkeiten konnten nicht geladen werden.',
-      message: 'Vordefinierte Tätigkeiten bleiben verfügbar.',
-      tone: AppMessageTone.error,
-      action: IconButton(
-        onPressed: onRetry,
-        tooltip: 'Erneut versuchen',
-        icon: const Icon(Icons.refresh),
-      ),
-    );
-  }
-}
-
-class _SelectionCount extends StatelessWidget {
-  final int count;
-
-  const _SelectionCount({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: count == 0
-            ? theme.colorScheme.surfaceContainer
-            : theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$count gewählt',
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: count == 0
-              ? theme.colorScheme.onSurfaceVariant
-              : theme.colorScheme.onPrimaryContainer,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-// #23: 2-column area card grid using ChoiceChips with icons
-class _AreaGrid extends StatelessWidget {
-  final List<TrainingArea> areas;
-  final TrainingArea? selected;
-  final ValueChanged<TrainingArea> onSelect;
-
-  const _AreaGrid({
-    required this.areas,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <Widget>[];
-    for (var i = 0; i < areas.length; i += 2) {
-      if (i > 0) rows.add(const SizedBox(height: 8));
-      rows.add(Row(
-        children: [
-          Expanded(child: _areaChip(areas[i])),
-          const SizedBox(width: 8),
-          if (i + 1 < areas.length)
-            Expanded(child: _areaChip(areas[i + 1]))
-          else
-            const Expanded(child: SizedBox.shrink()),
-        ],
-      ));
-    }
-    return Column(children: rows);
-  }
-
-  Widget _areaChip(TrainingArea area) {
-    return ChoiceChip(
-      key: ValueKey('area_${area.name}'),
-      label: Text(area.label),
-      avatar: Icon(area.icon, size: 16),
-      showCheckmark: false,
-      selected: selected == area,
-      onSelected: (_) => onSelect(area),
-    );
-  }
-}
-
-class _UnavailableActivities extends StatelessWidget {
-  final List<String> ids;
-  final ValueChanged<String> onRemove;
-
-  const _UnavailableActivities({
-    required this.ids,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Nicht mehr verfügbare Tätigkeiten',
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.error,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Diese Auswahl stammt aus einem älteren Eintrag. '
-          'Du kannst sie entfernen oder unverändert speichern.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: ids.indexed
-              .map(
-                (e) => InputChip(
-                  label: Text('Nicht verfügbar (${e.$1 + 1})'),
-                  onDeleted: () => onRemove(e.$2),
-                ),
-              )
-              .toList(growable: false),
-        ),
-      ],
     );
   }
 }

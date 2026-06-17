@@ -12,6 +12,8 @@ import '../../shared/widgets/profile_form.dart';
 class ProfileScreen extends StatefulWidget {
   final Future<void> Function() onDataCleared;
   final NotificationScheduler? notificationScheduler;
+  final String? notificationInitializationError;
+  final ProfileSubmitCallback? onProfileChanged;
   final ThemePreset themePreset;
   final Future<void> Function(ThemePreset)? onThemeChanged;
 
@@ -19,6 +21,8 @@ class ProfileScreen extends StatefulWidget {
     super.key,
     required this.onDataCleared,
     this.notificationScheduler,
+    this.notificationInitializationError,
+    this.onProfileChanged,
     this.themePreset = ThemePreset.lagerTeal,
     this.onThemeChanged,
   });
@@ -104,6 +108,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     required int trainingYear,
   }) async {
     await ProfileStorage.save(
+      name: name,
+      company: company,
+      occupation: occupation,
+      trainingYear: trainingYear,
+    );
+    await widget.onProfileChanged?.call(
       name: name,
       company: company,
       occupation: occupation,
@@ -353,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         const SizedBox(height: 24),
         _ReminderSection(
           settings: _reminderSettings,
-          error: _reminderError,
+          error: _reminderError ?? widget.notificationInitializationError,
           isSaving: _isReminderSaving,
           isPermissionBlocked: _notificationsBlockedBySystem,
           onOpenSettings: _openNotificationSettings,
@@ -621,9 +631,7 @@ class _ThemeSection extends StatelessWidget {
           title: const Text('Farbtheme'),
           subtitle: Text(current.label),
           trailing: const Icon(Icons.expand_more),
-          onTap: onChanged == null
-              ? null
-              : () => _openSelector(context),
+          onTap: onChanged == null ? null : () => _openSelector(context),
         ),
       ],
     );

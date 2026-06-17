@@ -20,7 +20,7 @@ DateTime normalizedToday() {
 DailyEntry entryFor(
   DateTime date, {
   DayType dayType = DayType.betrieb,
-  TrainingArea? area = TrainingArea.wareneingang,
+  List<TrainingArea> areas = const [TrainingArea.wareneingang],
   List<String> activities = const ['wareneingang_01'],
   List<SpecialFlag> specialFlags = const [],
   String? note,
@@ -29,7 +29,7 @@ DailyEntry entryFor(
     id: DailyEntry.idForDate(date),
     date: date,
     dayType: dayType,
-    area: dayType == DayType.betrieb ? area : null,
+    areas: dayType == DayType.betrieb ? areas : const [],
     selectedActivities: dayType.supportsActivities ? activities : const [],
     specialFlags: specialFlags,
     note: note,
@@ -70,6 +70,14 @@ class ControlledWeekStorage implements DailyEntryStorage {
       throw error;
     }
     return entries[DailyEntry.idForDate(date)];
+  }
+
+  @override
+  Future<List<DailyEntry>> loadAll() async {
+    if (loadError case final error?) {
+      throw error;
+    }
+    return entries.values.toList(growable: false);
   }
 
   @override

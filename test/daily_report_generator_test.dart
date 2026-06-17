@@ -7,7 +7,7 @@ import 'package:berichtsheft_merker/core/report/daily_report_generator.dart';
 
 DailyEntry _entry({
   DayType dayType = DayType.betrieb,
-  TrainingArea? area = TrainingArea.wareneingang,
+  List<TrainingArea> areas = const [TrainingArea.wareneingang],
   List<String> activities = const [],
   List<SpecialFlag> flags = const [],
   String? note,
@@ -17,7 +17,7 @@ DailyEntry _entry({
     id: DailyEntry.idForDate(date),
     date: date,
     dayType: dayType,
-    area: dayType == DayType.betrieb ? area : null,
+    areas: dayType == DayType.betrieb ? areas : const [],
     selectedActivities: activities,
     specialFlags: flags,
     note: note,
@@ -62,6 +62,18 @@ void main() {
       expect(result, isNot(matches(RegExp(r'wareneingang_\d+'))));
     });
 
+    test('mehrere Bereiche werden ohne erfundene Inhalte formuliert', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          areas: const [TrainingArea.wareneingang, TrainingArea.verpackung],
+          activities: ['wareneingang_01', 'wareneingang_02'],
+        ),
+        _titles,
+      );
+      expect(result, contains('Bereichen Wareneingang und Verpackung'));
+      expect(result, contains('Ware angenommen und Lieferschein geprüft'));
+    });
+
     test('2 Tätigkeiten — "X und Y"', () {
       final result = DailyReportGenerator.generate(
         _entry(activities: ['wareneingang_01', 'wareneingang_02']),
@@ -92,7 +104,7 @@ void main() {
 
     test('ohne area + bekannte Tätigkeiten — Fallback auf Betrieb', () {
       final result = DailyReportGenerator.generate(
-        _entry(area: null, activities: ['wareneingang_01']),
+        _entry(areas: const [], activities: ['wareneingang_01']),
         _titles,
       );
       expect(result, contains('Im Betrieb'));
@@ -102,7 +114,7 @@ void main() {
     test('ohne area + ohne bekannte Tätigkeiten — generischer Betriebstext',
         () {
       final result = DailyReportGenerator.generate(
-        _entry(area: null, activities: []),
+        _entry(areas: const [], activities: []),
         _titles,
       );
       expect(result, contains('Betriebstag'));
@@ -130,6 +142,18 @@ void main() {
       expect(result, contains('Berufsschule'));
       expect(result, contains('Lagerwirtschaft Grundlagen'));
       expect(result, contains('Sicherheitsunterweisung'));
+    });
+
+    test('ein Thema nutzt ein kurzes Berufsschulmuster', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+        ),
+        _titles,
+      );
+      expect(result, contains('In der Berufsschule'));
+      expect(result, contains('Lagerwirtschaft Grundlagen'));
     });
 
     test('ohne Themen', () {
@@ -239,7 +263,7 @@ void main() {
       expect(result, contains('zur Übung wiederholt'));
     });
 
-    test('problemAufgetreten ohne Notiz — kein Problem-Satz', () {
+    test('problemAufgetreten ohne Notiz — kurzer Problem-Satz', () {
       final result = DailyReportGenerator.generate(
         _entry(
           activities: ['wareneingang_01'],
@@ -247,10 +271,10 @@ void main() {
         ),
         _titles,
       );
-      expect(result, isNot(contains('Problem')));
+      expect(result, contains('Problem wurde festgehalten'));
     });
 
-    test('problemAufgetreten mit Notiz — Hinweis erscheint', () {
+    test('problemAufgetreten mit Notiz — Notiz wird eingebunden', () {
       final result = DailyReportGenerator.generate(
         _entry(
           activities: ['wareneingang_01'],
@@ -259,10 +283,11 @@ void main() {
         ),
         _titles,
       );
-      expect(result, contains('Zusatznotiz'));
+      expect(result, contains('Ein Problem wurde notiert'));
+      expect(result, contains('Lieferung fehlerhaft'));
     });
 
-    test('fehlerKorrigiert und kontrolle — nicht im Bericht', () {
+    test('fehlerKorrigiert und kontrolle — erscheinen im Bericht', () {
       final result = DailyReportGenerator.generate(
         _entry(
           activities: ['wareneingang_01'],
@@ -270,8 +295,20 @@ void main() {
         ),
         _titles,
       );
-      expect(result, isNot(contains('Fehler')));
-      expect(result, isNot(contains('Kontrolle')));
+      expect(result, contains('Fehler wurde besprochen und korrigiert'));
+      expect(result, contains('Kontrolle wurde durchgeführt'));
+    });
+
+    test('Notiz ohne Problem-Flag wird kurz ergänzt', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          activities: ['wareneingang_01'],
+          note: 'Lieferung kam später an',
+        ),
+        _titles,
+      );
+      expect(result, contains('Zusätzlich wurde notiert'));
+      expect(result, contains('Lieferung kam später an'));
     });
   });
 }

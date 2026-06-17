@@ -54,7 +54,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 - [x] Tageseintrag erstellen (Datum, Tagtyp, Bereich, Tätigkeiten, Besonderheiten, Notiz)
 - [x] Tagtypen: Betrieb, Berufsschule, Frei, Urlaub, Krank, Feiertag, Sonstiges
-- [x] Tätigkeitsliste aus 87 vordefinierten Vorlagen wählen
+- [x] Tätigkeitsliste aus 132 vordefinierten Vorlagen wählen
 - [x] Freie Notiz hinzufügen
 - [x] Eintrag speichern und bearbeiten (zunächst im Arbeitsspeicher)
 - [x] Bestehenden Eintrag für heute anzeigen wenn vorhanden
@@ -206,6 +206,35 @@ Issues #14–#20 aus GitHub abgearbeitet.
 - [x] Zusätzliche mobile UI-Verbesserungen und Kontrastkorrekturen
 - [ ] Theme-Auswahl und Theme-Persistenz auf echtem Android-Gerät prüfen
 
+### Tätigkeiten-Erfassung #29–#36
+
+- [x] #29 Tätigkeitskatalog fachlich erweitert: 132 vordefinierte Tätigkeiten
+- [x] #30 Heute-Screen: Suche, häufig genutzt und ausgewählte Tätigkeiten als Chips
+- [x] #31 Untergruppen / Arbeitsschritte: optionales `subcategory`-Feld, UI-Untergruppen
+- [x] #32 EDV-, Scanner- und Warenwirtschafts-Tätigkeiten ergänzt
+- [x] #33 Unterweisung punktuell über Tätigkeiten/Besonderheiten abbildbar
+- [x] #34 Qualität, Ordnung und 5S praxisnäher ergänzt
+- [x] #35 Tagesbericht-Generator mit mehreren festen Satzmustern erweitert
+- [x] #36 Ausbildungsjahr-Priorisierung als weiche Empfehlung, ohne Tätigkeiten zu verstecken
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 168/168 bestanden
+
+### Robustheits- und Doku-Issues #38–#48
+
+- [x] #38 Ausbildungsjahr abhängig vom Ausbildungsberuf validieren
+- [ ] #39 Lokalen Datenexport/-import prüfen; separate Produktentscheidung offen
+- [x] #40 Tagesbericht-Generator bindet Notizen, Kontrolle, Probleme und Fehlerkorrektur ein
+- [x] #41 Eigene Tätigkeiten gegen normalisierte Duplikate prüfen
+- [x] #42 App-Version per Test gegen `pubspec.yaml` absichern
+- [x] #43 `DATA_MODEL.md`: `TrainingOccupation`-Widerspruch korrigiert
+- [x] #44 `UI_UX_SPEC.md`: Bereichsauswahl an aktuelle zweispaltige Multi-Select-UI angepasst
+- [x] #45 Notification-Initialisierungsfehler im Profil sichtbar machen
+- [x] #46 SnackBar „Eintrag fehlt“ mit direkter Aktion zur Heute-Ansicht
+- [x] #47 TodayScreen weiter in kleinere Widgets für Aktivitätsgruppen zerlegt
+- [x] #48 Enum-/Hive-Persistenz über zentrale Parser und Tests abgesichert
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 168/168 bestanden
+
 ---
 
 ## Phase 13: Robustheit und Release-Härtung 🔨
@@ -241,21 +270,23 @@ Detaillierter Umsetzungsplan mit Größenklasse, Risiko, Mindestumfang und „ni
 
 Ziel: Erst die Grundlagen korrigieren, damit Agenten und spätere Änderungen nicht gegen falsche Dokumentation oder fragile Persistenz arbeiten.
 
-- [ ] #43 `DATA_MODEL.md`: `TrainingOccupation`-Widerspruch korrigieren.
-- [ ] #44 `UI_UX_SPEC.md`: aktuelle zweispaltige Bereichsauswahl dokumentieren oder begründet anpassen.
-- [ ] #42 App-Version aus einer Quelle pflegen oder Drift technisch verhindern.
-- [ ] #48 Enum-/Hive-Persistenz robuster gegen spätere Änderungen absichern.
-- [ ] #38 Ausbildungsjahr abhängig vom Ausbildungsberuf validieren.
-- [ ] Nach Phase 14: `flutter analyze` und `flutter test` ausführen.
+- [x] #43 `DATA_MODEL.md`: `TrainingOccupation`-Widerspruch korrigiert.
+- [x] #44 `UI_UX_SPEC.md`: zweispaltige Bereichsauswahl dokumentiert.
+- [x] #42 App-Version: Konstante + Test gegen `pubspec.yaml`; Strategie dokumentiert.
+- [x] #48 Enum-/Hive-Persistenz: `LazyBox` + per-Entry-Fehlerhandling + Integrationstest.
+- [x] #38 Ausbildungsjahr: Validierung zentral + Widget-Test für Profilbearbeitung mit Berufsänderung.
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 170/170 bestanden
 
 ### Phase 15: Heute-Screen entlasten, bevor neue UI-Features dazukommen
 
 Ziel: Struktur schaffen, bevor weitere Tätigkeiten-, Such- und Berichtsfunktionen eingebaut werden. Ohne diese Phase wird jede spätere Änderung unnötig riskant.
 
-- [ ] #47 `TodayScreen` in kleinere wartbare Widgets/Dateien zerlegen.
-- [ ] Extraktion ohne Verhaltensänderung durchführen: Bereichsauswahl, Tätigkeitsauswahl, SaveBar, Statuskarte, Berichtsvorschau/Berichtskarte.
-- [ ] Bestehende Widget-Tests nach Extraktion unverändert grün halten.
-- [ ] Nach Phase 15: `flutter analyze`, `flutter test` und bei UI-Änderungen Golden-Checks ausführen.
+- [x] #47 `TodayScreen` in kleinere wartbare Widgets/Dateien zerlegt.
+- [x] Extraktion ohne Verhaltensänderung: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection`-Widgets in `widgets/`-Unterordner.
+- [x] Bestehende Widget-Tests unverändert grün (170/170).
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 170/170 bestanden
 
 ### Phase 16: Tagesbericht fachlich und sichtbar verbessern
 

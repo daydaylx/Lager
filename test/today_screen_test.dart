@@ -76,6 +76,14 @@ class ControlledDailyEntryStorage implements DailyEntryStorage {
   }
 
   @override
+  Future<List<DailyEntry>> loadAll() async {
+    if (loadError case final error?) {
+      throw error;
+    }
+    return entry == null ? const [] : [entry!];
+  }
+
+  @override
   Future<void> save(DailyEntry entry) async {
     if (saveError case final error?) {
       throw error;
@@ -125,6 +133,7 @@ Future<void> pumpToday(
   DailyEntryStorage? storage,
   ActivityTemplateStorage? templateStorage,
   DateTime? date,
+  int? trainingYear,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -132,6 +141,7 @@ Future<void> pumpToday(
         storage: storage ?? InMemoryDailyEntryStorage(),
         templateStorage: templateStorage ?? InMemoryActivityTemplateStorage(),
         date: date,
+        trainingYear: trainingYear,
       ),
     ),
   );
@@ -175,6 +185,118 @@ void main() {
     await expectStatus(tester, 'Gespeichert');
   });
 
+  testWidgets('Tätigkeitssuche filtert die sichtbare Auswahlliste', (
+    WidgetTester tester,
+  ) async {
+    await pumpToday(tester);
+
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('activity_search')),
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('activity_search')),
+      'Scanner',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wareneingang mit Scanner erfasst'), findsOneWidget);
+    expect(find.text('Ware angenommen'), findsNothing);
+  });
+
+  testWidgets('Tätigkeiten werden in Untergruppen angezeigt', (
+    WidgetTester tester,
+  ) async {
+    await pumpToday(tester);
+
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+
+    expect(find.text('Annahme'), findsOneWidget);
+    expect(find.text('Prüfung'), findsOneWidget);
+  });
+
+  testWidgets('Ausbildungsjahr zeigt passende Empfehlungen ohne Filter', (
+    WidgetTester tester,
+  ) async {
+    await pumpToday(tester, trainingYear: 2);
+
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+
+    expect(find.text('Passend zum 2. Ausbildungsjahr'), findsOneWidget);
+    expect(find.text('Wareneingang mit Scanner erfasst'), findsWidgets);
+    expect(find.text('Ware angenommen'), findsOneWidget);
+  });
+
+  testWidgets('ausgewählte Tätigkeit bleibt bei Suche als Chip sichtbar', (
+    WidgetTester tester,
+  ) async {
+    await pumpToday(tester);
+
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('activity_wareneingang_11')),
+    );
+
+    expect(
+      find.byKey(const ValueKey('selected_activity_wareneingang_11')),
+      findsOneWidget,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('activity_search')),
+      'nicht vorhanden',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('selected_activity_wareneingang_11')),
+      findsOneWidget,
+    );
+    expect(find.text('Keine passenden Tätigkeiten gefunden'), findsOneWidget);
+  });
+
+  testWidgets(
+      'häufig genutzte Tätigkeiten werden aus gespeicherten Tagen gezeigt',
+      (WidgetTester tester) async {
+    final dayOne = DateTime(2026, 6, 8);
+    final dayTwo = DateTime(2026, 6, 9);
+    final storage = InMemoryDailyEntryStorage(
+      initialEntries: [
+        DailyEntry(
+          id: DailyEntry.idForDate(dayOne),
+          date: dayOne,
+          dayType: DayType.betrieb,
+          areas: const [TrainingArea.wareneingang],
+          selectedActivities: const ['wareneingang_11'],
+          specialFlags: const [],
+          note: null,
+          createdAt: dayOne,
+          updatedAt: dayOne,
+        ),
+        DailyEntry(
+          id: DailyEntry.idForDate(dayTwo),
+          date: dayTwo,
+          dayType: DayType.betrieb,
+          areas: const [TrainingArea.wareneingang],
+          selectedActivities: const ['wareneingang_11', 'wareneingang_01'],
+          specialFlags: const [],
+          note: null,
+          createdAt: dayTwo,
+          updatedAt: dayTwo,
+        ),
+      ],
+    );
+
+    await pumpToday(tester, storage: storage);
+    await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+
+    expect(find.text('Häufig genutzt'), findsOneWidget);
+    expect(find.text('Wareneingang mit Scanner erfasst'), findsWidgets);
+  });
+
   testWidgets('Gespeicherter Eintrag kann bearbeitet werden', (
     WidgetTester tester,
   ) async {
@@ -202,7 +324,7 @@ void main() {
     await expectStatus(tester, 'Gespeichert');
   });
 
-  testWidgets('Bereichswechsel entfernt unpassende Tätigkeitsauswahl', (
+  testWidgets('Bereich abwählen entfernt Tätigkeitsauswahl nach Bestätigung', (
     WidgetTester tester,
   ) async {
     await pumpToday(tester);
@@ -217,17 +339,17 @@ void main() {
     );
     expect(saveButton(tester).onPressed, isNotNull);
 
+    // Bereich abwählen — löst Confirm-Dialog aus
     await tapVisible(
       tester,
-      find.byKey(const ValueKey('area_verpackung')),
+      find.byKey(const ValueKey('area_wareneingang')),
       scrollDelta: -300,
     );
-    expect(find.text('Bereich ändern?'), findsOneWidget);
+    expect(find.text('Bereich entfernen?'), findsOneWidget);
     await tester.tap(find.text('Änderungen verwerfen'));
     await tester.pumpAndSettle();
 
     expect(find.text('Ware angenommen'), findsNothing);
-    expect(find.text('Ware verpackt'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
   });
 
@@ -334,7 +456,7 @@ void main() {
     await expectStatus(tester, 'Gespeichert');
   });
 
-  testWidgets('Bereichswechsel kann ohne Datenverlust abgebrochen werden', (
+  testWidgets('Bereich abwählen kann ohne Datenverlust abgebrochen werden', (
     WidgetTester tester,
   ) async {
     await pumpToday(tester);
@@ -344,20 +466,21 @@ void main() {
       tester,
       find.byKey(const ValueKey('activity_wareneingang_01')),
     );
+    // Bereich wieder abwählen — löst Confirm-Dialog aus, da Tätigkeiten gewählt sind
     await tapVisible(
       tester,
-      find.byKey(const ValueKey('area_verpackung')),
+      find.byKey(const ValueKey('area_wareneingang')),
       scrollDelta: -300,
     );
 
     await tester.tap(find.text('Weiter bearbeiten'));
     await tester.pumpAndSettle();
 
-    final selectedArea = tester.widget<ChoiceChip>(
+    final selectedArea = tester.widget<FilterChip>(
       find.byKey(const ValueKey('area_wareneingang')),
     );
     expect(selectedArea.selected, isTrue);
-    expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Ware angenommen'), findsWidgets);
   });
 
   testWidgets('eigene Tätigkeit kann ausgewählt und gespeichert werden', (
@@ -400,7 +523,7 @@ void main() {
         id: DailyEntry.idForDate(date),
         date: date,
         dayType: DayType.betrieb,
-        area: TrainingArea.wareneingang,
+        areas: const [TrainingArea.wareneingang],
         selectedActivities: const ['custom_1'],
         specialFlags: const [],
         note: null,
@@ -432,7 +555,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
 
-    expect(find.text('Alte eigene Tätigkeit'), findsOneWidget);
+    expect(find.text('Alte eigene Tätigkeit'), findsWidgets);
     expect(find.text('Eigene Tätigkeit · Deaktiviert'), findsOneWidget);
     final checkbox = tester.widget<Checkbox>(
       find.descendant(
@@ -564,7 +687,7 @@ void main() {
         id: DailyEntry.idForDate(date),
         date: date,
         dayType: DayType.betrieb,
-        area: TrainingArea.wareneingang,
+        areas: const [TrainingArea.wareneingang],
         selectedActivities: const ['wareneingang_01'],
         specialFlags: const [SpecialFlag.selbststaendig],
         note: 'Gespeicherte Notiz',
@@ -578,7 +701,7 @@ void main() {
     expect(find.text('Gespeichert'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
-    final areaChip = tester.widget<ChoiceChip>(
+    final areaChip = tester.widget<FilterChip>(
       find.byKey(const ValueKey('area_wareneingang')),
     );
     expect(areaChip.selected, isTrue);
@@ -632,7 +755,7 @@ void main() {
         id: DailyEntry.idForDate(date),
         date: date,
         dayType: DayType.sonstiges,
-        area: null,
+        areas: const [],
         selectedActivities: const [],
         specialFlags: const [],
         note: 'Vorher',

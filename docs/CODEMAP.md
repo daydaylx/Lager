@@ -18,13 +18,14 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 
 ## Features (lib/features/)
 
-| Datei                               | Status    | Beschreibung                                                  |
-| ----------------------------------- | --------- | ------------------------------------------------------------- |
-| `onboarding/onboarding_screen.dart` | ✅ fertig | Zweistufiger Erststart                                        |
-| `today/today_screen.dart`           | ✅ fertig | Tageseintrag, Berichtsvorschau und Eingabeverlustschutz       |
-| `week/week_screen.dart`             | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte     |
-| `templates/templates_screen.dart`   | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren         |
-| `profile/profile_screen.dart`       | ✅ fertig | Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung       |
+| Datei                               | Status    | Beschreibung                                                                                                                         |
+| ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `onboarding/onboarding_screen.dart` | ✅ fertig | Zweistufiger Erststart                                                                                                               |
+| `today/today_screen.dart`           | ✅ fertig | Tageseintrag, Suche, Untergruppen, Empfehlungen und Berichtsvorschau                                                                 |
+| `today/widgets/`                    | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection` |
+| `week/week_screen.dart`             | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                            |
+| `templates/templates_screen.dart`   | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                |
+| `profile/profile_screen.dart`       | ✅ fertig | Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung                                                                              |
 
 ---
 
@@ -43,49 +44,51 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 
 | Datei                           | Inhalt                                                                                       |
 | ------------------------------- | -------------------------------------------------------------------------------------------- |
-| `models/daily_entry.dart`       | `DailyEntry` — id, date, dayType, area?, selectedActivities, specialFlags, note?, timestamps |
-| `models/activity_template.dart` | `ActivityTemplate` — id (stabil!), title, category, isCustom, isActive                       |
+| `models/daily_entry.dart`       | `DailyEntry` — id, date, dayType, areas, selectedActivities, specialFlags, note?, timestamps |
+| `models/activity_template.dart` | `ActivityTemplate` — id (stabil!), title, category, isCustom, isActive, subcategory?         |
 | `models/reminder_settings.dart` | `ReminderTime` + `ReminderSettings` (enabled, times, weekdays, defaults, copyWith)           |
 
 ### Storage
 
-| Datei                                        | Inhalt                                       |
-| -------------------------------------------- | -------------------------------------------- |
-| `storage/daily_entry_storage.dart`           | Abstraktes Interface                         |
-| `storage/daily_entry_adapter.dart`           | Hive-CE-Adapter, handgeschrieben (typeId: 0) |
-| `storage/hive_daily_entry_storage.dart`      | Produktiv-Impl., Box `entries`               |
-| `storage/in_memory_daily_entry_storage.dart` | Test-Mock                                    |
-| `storage/activity_template_storage.dart`      | Interface für eigene Tätigkeiten             |
-| `storage/activity_template_adapter.dart`      | Hive-CE-Adapter, handgeschrieben (typeId: 1) |
-| `storage/hive_activity_template_storage.dart` | Produktiv-Impl., Box `custom_templates`      |
-| `storage/reminder_storage.dart`              | Reminder-Einstellungen in SharedPreferences  |
-| `storage/theme_preset_storage.dart`          | Gewähltes ThemePreset in SharedPreferences   |
-| `storage/preferences_write.dart`             | Prüft SharedPreferences-Schreibergebnisse    |
+| Datei                                         | Inhalt                                                 |
+| --------------------------------------------- | ------------------------------------------------------ |
+| `storage/daily_entry_storage.dart`            | Abstraktes Interface (`loadByDate`, `loadAll`, `save`) |
+| `storage/daily_entry_adapter.dart`            | Hive-CE-Adapter, handgeschrieben (typeId: 0)           |
+| `storage/hive_daily_entry_storage.dart`       | Produktiv-Impl., Box `entries`                         |
+| `storage/in_memory_daily_entry_storage.dart`  | Test-Mock                                              |
+| `storage/activity_template_storage.dart`      | Interface für eigene Tätigkeiten                       |
+| `storage/activity_template_adapter.dart`      | Hive-CE-Adapter, handgeschrieben (typeId: 1)           |
+| `storage/hive_activity_template_storage.dart` | Produktiv-Impl., Box `custom_templates`                |
+| `storage/persisted_enum.dart`                 | Kontrollierte Parser für gespeicherte Enum-Namen       |
+| `storage/reminder_storage.dart`               | Reminder-Einstellungen in SharedPreferences            |
+| `storage/theme_preset_storage.dart`           | Gewähltes ThemePreset in SharedPreferences             |
+| `storage/preferences_write.dart`              | Prüft SharedPreferences-Schreibergebnisse              |
 
 ### Services
 
-| Datei                              | Inhalt                                                                              |
-| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| Datei                                | Inhalt                                                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
 | `services/notification_service.dart` | Scheduler-Interface, Reminder-Plan, Tap-Routing und Produktiv-/Testimplementierung |
-| `report/daily_report_generator.dart` | Deterministische lokale Tagesberichtstexte ohne KI |
+| `report/daily_report_generator.dart` | Deterministische lokale Tagesberichtstexte ohne KI                                 |
 
 ### Sonstiges Core
 
-| Datei                               | Inhalt                                        |
-| ----------------------------------- | --------------------------------------------- |
-| `core/constants.dart`               | `AppStrings` + SharedPreferences-Schlüssel    |
-| `core/profile_storage.dart`         | `StoredProfile` in SharedPreferences           |
-| `core/week_utils.dart`              | ISO-Kalenderwochen-Helfer                     |
-| `core/data/default_activities.dart` | 87 vordefinierte Tätigkeiten mit stabilen IDs |
+| Datei                                   | Inhalt                                         |
+| --------------------------------------- | ---------------------------------------------- |
+| `core/constants.dart`                   | `AppStrings` + SharedPreferences-Schlüssel     |
+| `core/profile_storage.dart`             | `StoredProfile` in SharedPreferences           |
+| `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                      |
+| `core/data/default_activities.dart`     | 132 vordefinierte Tätigkeiten mit stabilen IDs |
+| `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten    |
 
 ---
 
 ## Shared Widgets (lib/shared/widgets/)
 
-| Datei                     | Inhalt                                                     |
-| ------------------------- | ---------------------------------------------------------- |
-| `profile_form.dart`       | Profilmaske (Onboarding + Profil-Screen teilen sich diese) |
-| `app_ui.dart`             | Abschnittsköpfe, Statusmeldungen, Empty States, Gruppen    |
+| Datei               | Inhalt                                                     |
+| ------------------- | ---------------------------------------------------------- |
+| `profile_form.dart` | Profilmaske (Onboarding + Profil-Screen teilen sich diese) |
+| `app_ui.dart`       | Abschnittsköpfe, Statusmeldungen, Empty States, Gruppen    |
 
 ---
 
@@ -116,10 +119,20 @@ Theme:
     → SharedPreferences ("theme_preset")
     → app.dart / theme.dart
 
+Häufig genutzte Tätigkeiten:
+  today_screen.dart
+    → DailyEntryStorage.loadAll()
+    → aus gespeicherten selectedActivities abgeleitete Sortierung
+
+Ausbildungsjahr-Empfehlungen:
+  app.dart / profile_screen.dart
+    → Profiländerung aktualisiert App-State
+    → today_screen.dart priorisiert passende Tätigkeiten weich
+
 Berichtsvorschlag:
   today_screen.dart / week_screen.dart
     → report/daily_report_generator.dart
-    → deterministischer lokaler Text + Clipboard
+    → deterministische lokale Satzmuster + Clipboard
 
 App-Start:
   main.dart
@@ -132,23 +145,25 @@ App-Start:
 
 ## Tests (test/)
 
-| Datei                                | Getestet                           |
-| ------------------------------------ | ---------------------------------- |
-| `widget_test.dart`                      | Onboarding, Navigation, Profil                    |
-| `today_screen_test.dart`                | Formular, Speicherung, Bearbeitung                |
-| `week_screen_test.dart`                 | Wochenstatus, Navigation                          |
-| `week_utils_test.dart`                  | ISO-Kalenderwochen, Jahreswechsel                 |
-| `default_activities_test.dart`          | 87 Einträge, eindeutige IDs                       |
-| `hive_daily_entry_storage_test.dart`    | Persistenz über Box-Neuöffnung                    |
-| `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität          |
-| `reminder_settings_test.dart`           | Modell-Defaults, Gleichheit, Serialisierung       |
-| `reminder_storage_test.dart`            | SharedPreferences-Roundtrip, mehrere Zeiten/Tage  |
-| `profile_reminder_screen_test.dart`     | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage) |
-| `notification_service_test.dart`        | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload |
-| `daily_report_generator_test.dart`      | Deterministische Berichtstexte je Tagtyp und Flag        |
-| `bootstrap_test.dart`                   | sichtbarer Startfehler und Retry                          |
-| `preferences_write_test.dart`           | fehlgeschlagene SharedPreferences-Schreibvorgänge        |
-| `ui_layout_test.dart`                    | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens |
+| Datei                                      | Getestet                                                        |
+| ------------------------------------------ | --------------------------------------------------------------- |
+| `widget_test.dart`                         | Onboarding, Navigation, Profil, Reminder-SnackBar               |
+| `today_screen_test.dart`                   | Formular, Speicherung, Suche, Untergruppen, Empfehlungen        |
+| `week_screen_test.dart`                    | Wochenstatus, Navigation                                        |
+| `week_utils_test.dart`                     | ISO-Kalenderwochen, Jahreswechsel                               |
+| `default_activities_test.dart`             | 132 Einträge, eindeutige IDs                                    |
+| `hive_daily_entry_storage_test.dart`       | Persistenz über Box-Neuöffnung                                  |
+| `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität                           |
+| `reminder_settings_test.dart`              | Modell-Defaults, Gleichheit, Serialisierung                     |
+| `reminder_storage_test.dart`               | SharedPreferences-Roundtrip, mehrere Zeiten/Tage                |
+| `profile_reminder_screen_test.dart`        | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage)             |
+| `notification_service_test.dart`           | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload        |
+| `daily_report_generator_test.dart`         | Deterministische Berichtstexte je Tagtyp und Flag               |
+| `bootstrap_test.dart`                      | sichtbarer Startfehler und Retry                                |
+| `preferences_write_test.dart`              | fehlgeschlagene SharedPreferences-Schreibvorgänge               |
+| `persistence_stability_test.dart`          | stabile Enum-Namen, Parser und Tätigkeits-IDs                   |
+| `version_consistency_test.dart`            | `pubspec.yaml`-Version gegen `kAppVersion`                      |
+| `ui_layout_test.dart`                      | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens |
 
 Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 

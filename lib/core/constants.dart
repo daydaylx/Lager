@@ -1,3 +1,5 @@
+// Versionskonstante statt PackageInfo: kein zusätzliches Plugin, deterministisch
+// in Tests, CI-Fehler bei Drift (test/version_consistency_test.dart).
 const String kAppVersion = '1.0.0';
 
 class AppStrings {
@@ -31,4 +33,16 @@ class TrainingOccupationValues {
 
 class TrainingYearValues {
   static const List<int> all = [1, 2, 3];
+
+  static List<int> forOccupation(String? occupation) {
+    return switch (occupation) {
+      TrainingOccupationValues.fachlagerist => const [1, 2],
+      TrainingOccupationValues.fachkraftLagerlogistik => all,
+      _ => all,
+    };
+  }
+
+  static bool isValidForOccupation(int? year, String? occupation) {
+    return year != null && forOccupation(occupation).contains(year);
+  }
 }

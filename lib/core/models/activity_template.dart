@@ -6,6 +6,7 @@ class ActivityTemplate {
   final ActivityCategory category;
   final bool isCustom;
   final bool isActive;
+  final String? subcategory;
 
   const ActivityTemplate({
     required this.id,
@@ -13,12 +14,14 @@ class ActivityTemplate {
     required this.category,
     this.isCustom = false,
     this.isActive = true,
+    this.subcategory,
   });
 
   ActivityTemplate copyWith({
     String? title,
     ActivityCategory? category,
     bool? isActive,
+    String? subcategory,
   }) {
     return ActivityTemplate(
       id: id,
@@ -26,6 +29,7 @@ class ActivityTemplate {
       category: category ?? this.category,
       isCustom: isCustom,
       isActive: isActive ?? this.isActive,
+      subcategory: subcategory ?? this.subcategory,
     );
   }
 }

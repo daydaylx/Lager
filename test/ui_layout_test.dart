@@ -51,7 +51,7 @@ DailyEntry _entry(
     id: DailyEntry.idForDate(date),
     date: date,
     dayType: dayType,
-    area: dayType == DayType.betrieb ? TrainingArea.wareneingang : null,
+    areas: dayType == DayType.betrieb ? const [TrainingArea.wareneingang] : const [],
     selectedActivities:
         dayType == DayType.betrieb ? const ['wareneingang_01'] : const [],
     specialFlags: const [],

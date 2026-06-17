@@ -12,6 +12,7 @@ import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
 import '../features/templates/templates_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../shared/widgets/profile_form.dart';
 
 typedef AppClock = DateTime Function();
 
@@ -92,6 +93,21 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     }
   }
 
+  Future<void> _profileChanged({
+    String? name,
+    String? company,
+    required String occupation,
+    required int trainingYear,
+  }) async {
+    if (!mounted) return;
+    setState(() {
+      _name = name;
+      _company = company;
+      _occupation = occupation;
+      _trainingYear = trainingYear;
+    });
+  }
+
   Future<void> _resetAll() async {
     await _notificationScheduler.cancelAll();
     await widget.dailyEntryStorage.clearAll();
@@ -127,6 +143,8 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               templateStorage: widget.templateStorage,
               onDataCleared: _resetAll,
               notificationScheduler: _notificationScheduler,
+              trainingYear: _trainingYear,
+              onProfileChanged: _profileChanged,
               themePreset: _themePreset,
               onThemeChanged: _onThemeChanged,
               clock: widget.clock,
@@ -148,6 +166,8 @@ class MainShell extends StatefulWidget {
   final ActivityTemplateStorage templateStorage;
   final Future<void> Function() onDataCleared;
   final NotificationScheduler notificationScheduler;
+  final int? trainingYear;
+  final ProfileSubmitCallback? onProfileChanged;
   final ThemePreset themePreset;
   final Future<void> Function(ThemePreset) onThemeChanged;
   final AppClock clock;
@@ -158,6 +178,8 @@ class MainShell extends StatefulWidget {
     required this.templateStorage,
     required this.onDataCleared,
     required this.notificationScheduler,
+    this.trainingYear,
+    this.onProfileChanged,
     required this.themePreset,
     required this.onThemeChanged,
     this.clock = DateTime.now,
@@ -171,6 +193,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
   int _weekRefreshSignal = 0;
   int _templateRefreshSignal = 0;
+  String? _notificationInitializationError;
   late DateTime _currentDate;
 
   @override
@@ -203,7 +226,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           await widget.notificationScheduler.initialize(_handleNotificationTap);
       _handleNotificationTap(initialPayload);
     } catch (_) {
-      // Reminder errors remain manageable from the profile screen.
+      if (mounted) {
+        setState(() {
+          _notificationInitializationError =
+              'Reminder konnten nicht initialisiert werden. Prüfe App-Berechtigungen oder starte die App neu.';
+        });
+      }
     }
   }
 
@@ -224,14 +252,25 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       final settings = await ReminderStorage.load();
       if (!mounted || !settings.enabled) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Heutiger Eintrag fehlt noch – jetzt kurz eintragen?'),
-          duration: Duration(seconds: 5),
+        SnackBar(
+          content: const Text(
+            'Heutiger Eintrag fehlt noch – jetzt kurz eintragen?',
+          ),
+          action: SnackBarAction(
+            label: 'Eintragen',
+            onPressed: _openTodayFromMissingEntrySnackBar,
+          ),
+          duration: const Duration(seconds: 5),
         ),
       );
     } catch (_) {
       // The relevant screen provides retry actions for local storage failures.
     }
+  }
+
+  void _openTodayFromMissingEntrySnackBar() {
+    if (!mounted || _currentIndex == 0) return;
+    setState(() => _currentIndex = 0);
   }
 
   void _refreshCurrentDate() {
@@ -255,6 +294,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             templateRefreshSignal: _templateRefreshSignal,
             protectBackNavigation: _currentIndex == 0,
             currentDate: _currentDate,
+            trainingYear: widget.trainingYear,
           ),
           WeekScreen(
             storage: widget.dailyEntryStorage,
@@ -273,6 +313,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           ProfileScreen(
             onDataCleared: widget.onDataCleared,
             notificationScheduler: widget.notificationScheduler,
+            notificationInitializationError: _notificationInitializationError,
+            onProfileChanged: widget.onProfileChanged,
             themePreset: widget.themePreset,
             onThemeChanged: widget.onThemeChanged,
           ),

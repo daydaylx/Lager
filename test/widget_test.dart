@@ -148,6 +148,61 @@ void main() {
     expect(find.byType(MainShell), findsNothing);
   });
 
+  testWidgets('Fachlagerist-Profil erlaubt nur erstes und zweites Jahr', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: false,
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('onboarding_continue')));
+    await tester.pumpAndSettle();
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey(TrainingOccupationValues.fachlagerist)),
+    );
+
+    expect(find.byKey(const ValueKey('training_year_1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_3')), findsNothing);
+  });
+
+  testWidgets('ungültiges altes Ausbildungsjahr muss korrigiert werden', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: false,
+        initialOccupation: TrainingOccupationValues.fachlagerist,
+        initialTrainingYear: 3,
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('onboarding_continue')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('passt nicht zu diesem Beruf'),
+      findsOneWidget,
+    );
+    var submitButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('profile_submit_button')),
+    );
+    expect(submitButton.onPressed, isNull);
+
+    await tapVisible(tester, find.byKey(const ValueKey('training_year_2')));
+    submitButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('profile_submit_button')),
+    );
+    expect(submitButton.onPressed, isNotNull);
+  });
+
   testWidgets('Abgeschlossenes Onboarding wird übersprungen', (
     WidgetTester tester,
   ) async {
@@ -227,6 +282,55 @@ void main() {
     expect(find.text('Profil gespeichert.'), findsOneWidget);
   });
 
+  testWidgets(
+      'Profilbearbeitung: Berufsänderung begrenzt Ausbildungsjahr-Auswahl', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      PreferenceKeys.onboardingCompleted: true,
+      PreferenceKeys.trainingOccupation:
+          TrainingOccupationValues.fachkraftLagerlogistik,
+      PreferenceKeys.trainingYear: 3,
+    });
+
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+      ),
+    );
+    await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('edit_profile')));
+    await tester.pumpAndSettle();
+
+    // Zu Fachlagerist wechseln — Jahr 3 war gültig für Fachkraft, nicht für Fachlagerist.
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey(TrainingOccupationValues.fachlagerist)),
+    );
+
+    expect(find.byKey(const ValueKey('training_year_1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_3')), findsNothing);
+    expect(
+      find.textContaining('passt nicht zu diesem Beruf'),
+      findsOneWidget,
+    );
+
+    final submitButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('profile_submit_button')),
+    );
+    expect(submitButton.onPressed, isNull);
+
+    await tapVisible(tester, find.byKey(const ValueKey('training_year_2')));
+    final submitButtonAfter = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('profile_submit_button')),
+    );
+    expect(submitButtonAfter.onPressed, isNotNull);
+  });
+
   testWidgets('Alle vier Tabs sind erreichbar', (WidgetTester tester) async {
     await tester.pumpWidget(
       BerichtsheftApp(
@@ -289,6 +393,67 @@ void main() {
     await tester.pumpAndSettle();
 
     scheduler.initialPayload.complete('today');
+    await tester.pumpAndSettle();
+
+    final navigation = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(navigation.selectedIndex, 0);
+  });
+
+  testWidgets('Notification-Initialisierungsfehler erscheint im Profil', (
+    tester,
+  ) async {
+    final scheduler = NoOpNotificationScheduler(
+      initializeError: StateError('Plugin nicht verfügbar'),
+    );
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: scheduler,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.textContaining('Reminder konnten nicht initialisiert werden'),
+      200,
+      scrollable: find.byWidgetPredicate(
+        (widget) =>
+            widget is Scrollable && widget.axisDirection == AxisDirection.down,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Reminder konnten nicht initialisiert werden'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Eintrag-fehlt-SnackBar führt zur Heute-Ansicht', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      PreferenceKeys.reminderEnabled: true,
+    });
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: NoOpNotificationScheduler(),
+        clock: () => DateTime(2026, 6, 17),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Eintragen'), findsOneWidget);
+    await tester.tap(find.text(AppStrings.tabProfile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eintragen'));
     await tester.pumpAndSettle();
 
     final navigation = tester.widget<NavigationBar>(find.byType(NavigationBar));

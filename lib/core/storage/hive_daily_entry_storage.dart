@@ -6,7 +6,10 @@ import 'daily_entry_storage.dart';
 class HiveDailyEntryStorage implements DailyEntryStorage {
   static const String entriesBoxName = 'entries';
 
-  final Box<DailyEntry> _box;
+  // LazyBox deserialisiert Einträge erst bei get() — nicht beim Öffnen.
+  // Dadurch kann loadAll() korrupte Einzeleinträge (FormatException) überspringen,
+  // ohne die gesamte Box unlesbar zu machen.
+  final LazyBox<DailyEntry> _box;
 
   const HiveDailyEntryStorage._(this._box);
 
@@ -25,13 +28,31 @@ class HiveDailyEntryStorage implements DailyEntryStorage {
       Hive.registerAdapter<DailyEntry>(const DailyEntryAdapter());
     }
 
-    final box = await Hive.openBox<DailyEntry>(entriesBoxName);
+    final box = await Hive.openLazyBox<DailyEntry>(entriesBoxName);
     return HiveDailyEntryStorage._(box);
   }
 
   @override
   Future<DailyEntry?> loadByDate(DateTime date) async {
-    return _box.get(DailyEntry.idForDate(date));
+    try {
+      return await _box.get(DailyEntry.idForDate(date));
+    } on FormatException {
+      return null;
+    }
+  }
+
+  @override
+  Future<List<DailyEntry>> loadAll() async {
+    final result = <DailyEntry>[];
+    for (final key in _box.keys) {
+      try {
+        final entry = await _box.get(key);
+        if (entry != null) result.add(entry);
+      } on FormatException {
+        // Korrupten Eintrag überspringen — andere Einträge bleiben lesbar.
+      }
+    }
+    return result;
   }
 
   @override

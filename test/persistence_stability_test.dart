@@ -8,6 +8,7 @@ import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
+import 'package:berichtsheft_merker/core/storage/persisted_enum.dart';
 
 void main() {
   group('DayType-Namen sind stabil (Hive speichert den .name-String)', () {
@@ -80,9 +81,31 @@ void main() {
     });
   });
 
-  group('Activity-IDs sind stabil (werden in DailyEntry.selectedActivities gespeichert)', () {
-    test('mindestens 87 Standardtätigkeiten vorhanden', () {
-      expect(defaultActivities.length, greaterThanOrEqualTo(87));
+  group('Persistierte Enum-Werte werden kontrolliert gelesen', () {
+    test('bekannter Wert wird gelesen', () {
+      expect(
+        readPersistedEnum(DayType.values, 'betrieb', 'DailyEntry.dayType'),
+        DayType.betrieb,
+      );
+    });
+
+    test('unbekannter Wert wirft lesbare FormatException', () {
+      expect(
+        () => readPersistedEnum(
+          DayType.values,
+          'alter_name',
+          'DailyEntry.dayType',
+        ),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
+
+  group(
+      'Activity-IDs sind stabil (werden in DailyEntry.selectedActivities gespeichert)',
+      () {
+    test('mindestens 132 Standardtätigkeiten vorhanden', () {
+      expect(defaultActivities.length, greaterThanOrEqualTo(132));
     });
 
     test('alle IDs sind einzigartig', () {

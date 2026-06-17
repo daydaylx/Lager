@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-06-15
+Zuletzt aktualisiert: 2026-06-17
 
 ## Aktueller Stand
 
@@ -24,16 +24,17 @@ Zuletzt aktualisiert: 2026-06-15
   - `lib/app/bootstrap.dart` — öffnet lokale Speicher und bietet bei Fehlern Retry ohne Datenlöschung
   - `lib/app/app.dart` — MaterialApp + persistiertes ThemePreset + Onboarding-Gate + NavigationBar Shell
   - `lib/app/theme.dart` — fünf Theme-Presets und explizites Material-3-Komponententheme
-  - `lib/core/constants.dart` — Text-, SharedPreferences-, Berufs- und Ausbildungsjahr-Konstanten
+  - `lib/core/constants.dart` — Text-, SharedPreferences-, Berufs-, Versions- und Ausbildungsjahr-Konstanten
   - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für das Ausbildungsprofil
   - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien und Besonderheiten mit UI-Labels
   - `lib/core/models/` — `DailyEntry` und `ActivityTemplate`
-  - `lib/core/data/default_activities.dart` — 87 vordefinierte Tätigkeiten mit stabilen IDs
+  - `lib/core/data/default_activities.dart` — 132 vordefinierte Tätigkeiten mit stabilen IDs
+  - `lib/core/data/activity_subcategories.dart` — fachliche Untergruppen für Tätigkeiten
   - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
   - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge ohne KI
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
-  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Checkliste und Berichtsvorschau
+  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und Berichtsvorschau
   - `lib/features/week/week_screen.dart` — Wochenliste, Tagesstatus, Zusammenfassung und kopierbare Berichte
   - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung mit Suche und Bottom Sheet
   - `lib/features/profile/profile_screen.dart` — Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung
@@ -47,13 +48,14 @@ Zuletzt aktualisiert: 2026-06-15
 - Android-Cloud-Backup und Gerätetransfer für lokale Daten deaktiviert
 - Release-Signierung über lokale, ignorierte `android/key.properties` und `android/app/upload-keystore.jks`
 - `test/widget_test.dart` — Onboarding-, Profil- und Navigationstests
-- `test/today_screen_test.dart` — Validierungs-, Speicher-, Bearbeitungs- und Tagtyp-Tests
+- `test/today_screen_test.dart` — Validierung, Suche, häufig genutzt, Untergruppen, Empfehlungen, Speicherung, Bearbeitung und Tagtypen
 - `test/default_activities_test.dart` — Katalogumfang und eindeutige IDs
 - `test/hive_daily_entry_storage_test.dart` — echter Persistenztest über Box-Neuöffnung
 - `test/week_utils_test.dart` — ISO-Kalenderwochen inklusive Jahreswechsel
 - `test/week_screen_test.dart` — Wochenstatus, Navigation, Zusammenfassung und Fehlerbehandlung
 - `test/daily_report_generator_test.dart` — Berichtstexte je Tagtyp und Besonderheit
-- `test/persistence_stability_test.dart` — stabile Enum-Namen und Tätigkeits-IDs
+- `test/persistence_stability_test.dart` — stabile Enum-Namen, kontrollierte Parser und Tätigkeits-IDs
+- `test/version_consistency_test.dart` — verhindert Drift zwischen `pubspec.yaml` und `kAppVersion`
 - `test/notification_service_test.dart` — Reminder-Plan, IDs und Tap-Payload
 - `test/bootstrap_test.dart` — sichtbarer Bootstrap-Fehler und Retry
 - `test/ui_layout_test.dart` — kleine Displays, große Schrift, Tastatur, Touchflächen und Goldens
@@ -66,7 +68,7 @@ Zuletzt aktualisiert: 2026-06-15
 | `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
 | `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
 | `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 150/150 Tests bestanden               |
+| `flutter test`                         | 168/168 Tests bestanden               |
 | `flutter build apk --debug`            | Erfolgreich, Debug-APK 91 MB           |
 | `flutter build apk --release`          | Erfolgreich signiert erzeugt, 24.1 MB  |
 | Release-Signatur                       | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |
@@ -81,9 +83,10 @@ Release-Build wurden damit erfolgreich erzeugt.
 
 ## Bewusst noch nicht gebaut
 
-- Favoriten und zuletzt verwendete Tätigkeiten
+- Favoriten
 - Bearbeiten eigener Tätigkeitstitel
-- Favoriten und Tätigkeiten nach Ausbildungsjahr filtern
+- Tätigkeiten vom Vortag übernehmen
+- Lokaler Datenexport/-import
 - Direkte „nur heute“-Tätigkeit ohne Vorlage
 - PDF-Export (nicht geplant)
 - Cloud/Backend (nicht geplant)

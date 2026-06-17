@@ -229,9 +229,10 @@ Bereiche:
 
 Darstellung:
 
-- horizontale Chips
-- maximal zwei Zeilen
-- ausgewählter Bereich deutlich markiert
+- zweispaltige, mobile FilterChip-Karten mit Icon
+- mehrere Bereiche auswählbar
+- ausgewählte Bereiche deutlich markiert
+- große Touchflächen ohne horizontales Gewische
 
 ---
 
@@ -255,13 +256,18 @@ Anforderungen:
 - ausgewählt/nicht ausgewählt klar erkennbar
 - gesamte Zeile antippbar, mindestens 48 dp hoch
 - Kategorie sichtbar
+- Arbeitsschritt-Untergruppen innerhalb großer Kategorien sichtbar machen
+- lokale Suche innerhalb der aktuell passenden Tätigkeiten
+- ausgewählte Tätigkeiten als kompakte Chip-Leiste sichtbar halten
+- häufig genutzte Tätigkeiten aus gespeicherten Einträgen oben anbieten
+- passende Tätigkeiten zum Ausbildungsjahr als weiche Empfehlung oben anbieten
 - aktive eigene Tätigkeiten passend zur Kategorie anzeigen
 - deaktivierte eigene Tätigkeiten nur in historischen Einträgen lesbar halten
 
 Nicht implementiert und nicht ohne neue Entscheidung ergänzen:
 
 - Favoritenbereich
-- zuletzt benutzt
+- Tätigkeiten vom Vortag übernehmen
 
 ---
 
@@ -270,6 +276,9 @@ Nicht implementiert und nicht ohne neue Entscheidung ergänzen:
 Eigene Tätigkeiten werden im Vorlagen-Screen über ein keyboard-sicheres Modal
 Bottom Sheet mit Titel und Kategorie angelegt. Danach erscheinen aktive eigene
 Tätigkeiten passend zur Kategorie im Heute-Screen.
+
+Offensichtliche Duplikate werden beim Speichern verhindert. Die Prüfung trimmt
+den Titel, normalisiert Mehrfachspaces und ignoriert Groß-/Kleinschreibung.
 
 Es gibt bewusst keine direkte „nur heute“-Eingabe im Heute-Screen.
 
@@ -652,9 +661,11 @@ Implementiert:
 
 - einfache Wochenzusammenfassung
 - lokaler kopierbarer Tagesberichtsvorschlag
+- Tätigkeitssuche und häufig genutzte Tätigkeiten im Heute-Screen
+- Tätigkeits-Untergruppen und Ausbildungsjahr-Empfehlungen im Heute-Screen
 
 Bewusst nicht ohne neue Entscheidung:
 
-- Favoriten, zuletzt genutzte Tätigkeiten oder Vortag übernehmen
+- Favoriten oder Tätigkeiten vom Vortag übernehmen
 - Backup oder Export
 - KI-Formulierungshilfe

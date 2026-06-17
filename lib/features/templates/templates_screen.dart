@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/data/activity_subcategories.dart';
 import '../../core/data/default_activities.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/models/activity_template.dart';
@@ -89,6 +90,21 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     return query.isEmpty ||
         template.title.toLowerCase().contains(query) ||
         template.category.label.toLowerCase().contains(query);
+  }
+
+  bool _hasDuplicateTitle(String title) {
+    final normalizedTitle = _normalizeActivityTitle(title);
+    return [...defaultActivities, ..._customTemplates].any(
+      (template) => _normalizeActivityTitle(template.title) == normalizedTitle,
+    );
+  }
+
+  String _displayTitle(String value) {
+    return value.trim().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  String _normalizeActivityTitle(String value) {
+    return _displayTitle(value).toLowerCase();
   }
 
   Future<void> _toggleCustom(ActivityTemplate template) async {
@@ -194,10 +210,17 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                 const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: () async {
-                    final title = _addController.text.trim();
+                    final title = _displayTitle(_addController.text);
                     if (title.isEmpty) {
                       setSheetState(
                         () => titleError = 'Gib eine Bezeichnung ein.',
+                      );
+                      return;
+                    }
+                    if (_hasDuplicateTitle(title)) {
+                      setSheetState(
+                        () => titleError =
+                            'Diese Tätigkeit ist bereits vorhanden.',
                       );
                       return;
                     }
@@ -357,9 +380,7 @@ class _TemplateList extends StatelessWidget {
                 child: ListTile(
                   title: Text(template.title),
                   subtitle: Text(
-                    template.isActive
-                        ? template.category.label
-                        : '${template.category.label} · Deaktiviert',
+                    _templateSubtitle(template),
                   ),
                   leading: Icon(
                     template.isActive
@@ -390,12 +411,20 @@ class _TemplateList extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: ListTile(
             title: Text(template.title),
-            subtitle: Text(template.category.label),
+            subtitle: Text(_templateSubtitle(template)),
             leading: const Icon(Icons.checklist_outlined, size: 20),
           ),
         );
       },
     );
+  }
+
+  String _templateSubtitle(ActivityTemplate template) {
+    final subcategory = activitySubcategory(template);
+    final base = subcategory == null
+        ? template.category.label
+        : '${template.category.label} · $subcategory';
+    return template.isActive ? base : '$base · Deaktiviert';
   }
 }
 

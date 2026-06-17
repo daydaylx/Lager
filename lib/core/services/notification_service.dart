@@ -100,6 +100,7 @@ class NoOpNotificationScheduler implements NotificationScheduler {
   int cancelAllCalls = 0;
   ReminderSettings? lastScheduled;
   NotificationScheduleResult scheduleResult;
+  Object? initializeError;
   Object? scheduleError;
   String? initialPayload;
   bool notificationsEnabled;
@@ -107,6 +108,7 @@ class NoOpNotificationScheduler implements NotificationScheduler {
 
   NoOpNotificationScheduler({
     this.scheduleResult = NotificationScheduleResult.scheduled,
+    this.initializeError,
     this.scheduleError,
     this.initialPayload,
     this.notificationsEnabled = true,
@@ -115,6 +117,9 @@ class NoOpNotificationScheduler implements NotificationScheduler {
   @override
   Future<String?> initialize(void Function(String?) onTap) async {
     initializeCalls++;
+    if (initializeError case final error?) {
+      throw error;
+    }
     _onTap = onTap;
     final payload = initialPayload;
     initialPayload = null;

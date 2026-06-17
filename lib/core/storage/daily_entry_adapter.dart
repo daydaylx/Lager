@@ -3,6 +3,7 @@ import '../enums/day_type.dart';
 import '../enums/special_flag.dart';
 import '../enums/training_area.dart';
 import '../models/daily_entry.dart';
+import 'persisted_enum.dart';
 
 class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
   static const int adapterTypeId = 0;
@@ -23,16 +24,32 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
     return DailyEntry(
       id: fields[0] as String,
       date: fields[1] as DateTime,
-      dayType: DayType.values.byName(fields[2] as String),
-      area: switch (fields[3]) {
-        final String areaName => TrainingArea.values.byName(areaName),
-        _ => null,
+      dayType: readPersistedEnum(
+        DayType.values,
+        fields[2] as String,
+        'DailyEntry.dayType',
+      ),
+      areas: switch (fields[3]) {
+        final List list => readPersistedEnumList(
+            TrainingArea.values,
+            list.cast<String>(),
+            'DailyEntry.areas',
+          ),
+        final String s => [
+            readPersistedEnum(
+              TrainingArea.values,
+              s,
+              'DailyEntry.areas',
+            )
+          ],
+        _ => const [],
       },
       selectedActivities: (fields[4] as List).cast<String>(),
-      specialFlags: (fields[5] as List)
-          .cast<String>()
-          .map(SpecialFlag.values.byName)
-          .toList(growable: false),
+      specialFlags: readPersistedEnumList(
+        SpecialFlag.values,
+        (fields[5] as List).cast<String>(),
+        'DailyEntry.specialFlags',
+      ),
       note: fields[6] as String?,
       createdAt: fields[7] as DateTime,
       updatedAt: fields[8] as DateTime,
@@ -50,7 +67,7 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
       ..writeByte(2)
       ..write(entry.dayType.name)
       ..writeByte(3)
-      ..write(entry.area?.name)
+      ..write(entry.areas.map((a) => a.name).toList(growable: false))
       ..writeByte(4)
       ..write(entry.selectedActivities)
       ..writeByte(5)

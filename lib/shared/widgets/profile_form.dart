@@ -99,6 +99,16 @@ class _ProfileFormState extends State<ProfileForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final allowedTrainingYears =
+        TrainingYearValues.forOccupation(_selectedOccupation);
+    final hasInvalidTrainingYear = _selectedTrainingYear != null &&
+        !allowedTrainingYears.contains(_selectedTrainingYear);
+    final canSubmit = _selectedOccupation != null &&
+        TrainingYearValues.isValidForOccupation(
+          _selectedTrainingYear,
+          _selectedOccupation,
+        ) &&
+        !_isSaving;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,7 +170,7 @@ class _ProfileFormState extends State<ProfileForm> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: TrainingYearValues.all.map((year) {
+          children: allowedTrainingYears.map((year) {
             return ChoiceChip(
               key: ValueKey('training_year_$year'),
               label: Text('$year. Jahr'),
@@ -169,6 +179,16 @@ class _ProfileFormState extends State<ProfileForm> {
             );
           }).toList(),
         ),
+        if (hasInvalidTrainingYear) ...[
+          const SizedBox(height: 12),
+          Text(
+            'Das gespeicherte Ausbildungsjahr passt nicht zu diesem Beruf. '
+            'Bitte wähle ein gültiges Jahr.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         TextField(
           key: const ValueKey('profile_company_field'),
@@ -184,11 +204,7 @@ class _ProfileFormState extends State<ProfileForm> {
         const SizedBox(height: 28),
         FilledButton.icon(
           key: const ValueKey('profile_submit_button'),
-          onPressed: _selectedOccupation == null ||
-                  _selectedTrainingYear == null ||
-                  _isSaving
-              ? null
-              : _submit,
+          onPressed: canSubmit ? _submit : null,
           icon: _isSaving
               ? const SizedBox.square(
                   dimension: 20,

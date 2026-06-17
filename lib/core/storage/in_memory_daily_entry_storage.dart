@@ -17,6 +17,11 @@ class InMemoryDailyEntryStorage implements DailyEntryStorage {
   }
 
   @override
+  Future<List<DailyEntry>> loadAll() async {
+    return _entries.values.toList(growable: false);
+  }
+
+  @override
   Future<void> save(DailyEntry entry) async {
     _entries[DailyEntry.idForDate(entry.date)] = entry;
   }
