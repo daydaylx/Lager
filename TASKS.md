@@ -235,6 +235,8 @@ Issues #14–#20 aus GitHub abgearbeitet.
 
 Diese Reihenfolge ist bewusst nicht nach Issue-Nummern sortiert. Einige Issues hängen technisch voneinander ab. Vor allem darf der Tätigkeitskatalog nicht stark erweitert werden, bevor die UI und der `TodayScreen` dafür vorbereitet sind. Sonst entsteht nur eine größere Button-Tapete mit mehr Wartungsrisiko.
 
+Detaillierter Umsetzungsplan mit Größenklasse, Risiko, Mindestumfang und „nicht akzeptabel“-Grenzen: [`docs/ISSUE_EXECUTION_PLAN.md`](docs/ISSUE_EXECUTION_PLAN.md)
+
 ### Phase 14: Dokumentations- und Datenmodell-Basis absichern
 
 Ziel: Erst die Grundlagen korrigieren, damit Agenten und spätere Änderungen nicht gegen falsche Dokumentation oder fragile Persistenz arbeiten.
