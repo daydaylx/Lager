@@ -311,6 +311,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             },
           ),
           ProfileScreen(
+            dailyEntryStorage: widget.dailyEntryStorage,
+            templateStorage: widget.templateStorage,
             onDataCleared: widget.onDataCleared,
             notificationScheduler: widget.notificationScheduler,
             notificationInitializationError: _notificationInitializationError,

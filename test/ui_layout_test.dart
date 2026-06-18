@@ -198,7 +198,11 @@ void main() {
       await _setSize(tester, const Size(360, 640));
       await tester.pumpWidget(
         _themed(
-          ProfileScreen(onDataCleared: () async {}),
+          ProfileScreen(
+            dailyEntryStorage: InMemoryDailyEntryStorage(),
+            templateStorage: InMemoryActivityTemplateStorage(),
+            onDataCleared: () async {},
+          ),
           textScale: 1.5,
         ),
       );
@@ -291,7 +295,11 @@ void main() {
       });
       await _setSize(tester, _phoneSize);
       await tester.pumpWidget(
-        _themed(ProfileScreen(onDataCleared: () async {})),
+        _themed(ProfileScreen(
+          dailyEntryStorage: InMemoryDailyEntryStorage(),
+          templateStorage: InMemoryActivityTemplateStorage(),
+          onDataCleared: () async {},
+        )),
       );
       await tester.pumpAndSettle();
 
@@ -342,7 +350,11 @@ void main() {
       final handle = tester.ensureSemantics();
       await _setSize(tester, _phoneSize);
       await tester.pumpWidget(
-        _themed(ProfileScreen(onDataCleared: () async {})),
+        _themed(ProfileScreen(
+          dailyEntryStorage: InMemoryDailyEntryStorage(),
+          templateStorage: InMemoryActivityTemplateStorage(),
+          onDataCleared: () async {},
+        )),
       );
       await tester.pumpAndSettle();
       await expectLater(tester, meetsGuideline(textContrastGuideline));

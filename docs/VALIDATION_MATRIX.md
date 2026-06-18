@@ -6,24 +6,25 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 
 ## Prüfmatrix
 
-| Änderungstyp                     | Minimale Prüfung                          | Erweiterte Prüfung                                             |
-| -------------------------------- | ----------------------------------------- | -------------------------------------------------------------- |
-| Dart-Datei ändern (UI, Logik)    | `flutter analyze`                         | `flutter test`                                                 |
-| Neue Dart-Datei hinzufügen       | `flutter analyze`                         | `flutter test`                                                 |
-| `pubspec.yaml` ändern            | `flutter pub get` → `flutter analyze`     | `flutter test`                                                 |
-| Enum-Wert hinzufügen             | `flutter analyze`                         | `flutter test` (alle)                                          |
-| Enum-Wert umbenennen             | ⛔ **Nicht tun** — bricht Hive-Persistenz | Erst `DECISIONS.md` lesen                                      |
-| Model-Feld hinzufügen            | `flutter analyze`                         | `flutter test` (besonders Hive-Tests)                          |
-| Hive-Adapter ändern              | `flutter analyze`                         | `flutter test` (passender Hive-Storage-Test)                    |
-| `default_activities.dart` ändern | `flutter analyze`                         | `flutter test` (default_activities_test.dart)                  |
-| Reminder / Android-Manifest ändern | `flutter analyze` + `flutter test`      | `flutter build apk --debug` + manueller Gerätetest             |
-| Application ID / Signing / Backup ändern | `flutter analyze` + `flutter test` | `flutter build apk --debug` + Manifest prüfen + signierten Release-Build lokal prüfen |
-| Layout / Theme / kritischer Screen ändern | `flutter analyze` + `flutter test test/ui_layout_test.dart` | `flutter test` + manueller Gerätetest |
-| ThemePreset / Theme-Persistenz ändern | `flutter analyze` + `flutter test` | App-Neustart und Datenlöschung manuell prüfen |
-| Berichtsgenerator ändern | `flutter analyze` + `flutter test test/daily_report_generator_test.dart` | `flutter test` |
-| Golden bewusst aktualisieren       | Änderung visuell prüfen                  | `flutter test test/ui_layout_test.dart --update-goldens`       |
-| Nur Dokumentation ändern           | Links, Pfade und Aussagen gegen ausführbare Quellen prüfen | bei Befehlsänderungen betroffene Befehle ausführen |
-| Phase abschließen                | `flutter analyze` + `flutter test`        | `PROJECT_STATUS.md` + `TASKS.md` + `docs/CURRENT_STATUS.md` updaten |
+| Änderungstyp                              | Minimale Prüfung                                                         | Erweiterte Prüfung                                                                                                                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dart-Datei ändern (UI, Logik)             | `flutter analyze`                                                        | `flutter test`                                                                                                                                                                                    |
+| Neue Dart-Datei hinzufügen                | `flutter analyze`                                                        | `flutter test`                                                                                                                                                                                    |
+| `pubspec.yaml` ändern                     | `flutter pub get` → `flutter analyze`                                    | `flutter test`                                                                                                                                                                                    |
+| Enum-Wert hinzufügen                      | `flutter analyze`                                                        | `flutter test` (alle)                                                                                                                                                                             |
+| Enum-Wert umbenennen                      | ⛔ **Nicht tun** — bricht Hive-Persistenz                                | Erst `DECISIONS.md` lesen                                                                                                                                                                         |
+| Model-Feld hinzufügen                     | `flutter analyze`                                                        | `flutter test` (besonders Hive-Tests)                                                                                                                                                             |
+| Hive-Adapter ändern                       | `flutter analyze`                                                        | `flutter test` (passender Hive-Storage-Test)                                                                                                                                                      |
+| `default_activities.dart` ändern          | `flutter analyze`                                                        | `flutter test` (default_activities_test.dart)                                                                                                                                                     |
+| Reminder / Android-Manifest ändern        | `flutter analyze` + `flutter test`                                       | `flutter build apk --debug` + manueller Gerätetest                                                                                                                                                |
+| Application ID / Signing / Backup ändern  | `flutter analyze` + `flutter test`                                       | `flutter build apk --debug` + Manifest prüfen + signierten Release-Build lokal prüfen                                                                                                             |
+| Layout / Theme / kritischer Screen ändern | `flutter analyze` + `flutter test test/ui_layout_test.dart`              | `flutter test` + manueller Gerätetest                                                                                                                                                             |
+| ThemePreset / Theme-Persistenz ändern     | `flutter analyze` + `flutter test`                                       | App-Neustart und Datenlöschung manuell prüfen                                                                                                                                                     |
+| Berichtsgenerator ändern                  | `flutter analyze` + `flutter test test/daily_report_generator_test.dart` | `flutter test`                                                                                                                                                                                    |
+| Export-Funktion (manuell)                 | `flutter analyze` + manueller Gerätetest                                 | Eintrag erstellen → Profil-Tab → „Daten exportieren" tippen → Share-Sheet erscheint → „In Downloads speichern" wählen → Datei-App öffnen → `berichtsheft_export_*.json` vorhanden → Inhalt lesbar |
+| Golden bewusst aktualisieren              | Änderung visuell prüfen                                                  | `flutter test test/ui_layout_test.dart --update-goldens`                                                                                                                                          |
+| Nur Dokumentation ändern                  | Links, Pfade und Aussagen gegen ausführbare Quellen prüfen               | bei Befehlsänderungen betroffene Befehle ausführen                                                                                                                                                |
+| Phase abschließen                         | `flutter analyze` + `flutter test`                                       | `PROJECT_STATUS.md` + `TASKS.md` + `docs/CURRENT_STATUS.md` updaten                                                                                                                               |
 
 ---
 

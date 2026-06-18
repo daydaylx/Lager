@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/profile/profile_screen.dart';
 
 /// Scrolls the ProfileScreen's body ListView until [key] is built into the
@@ -28,6 +30,8 @@ Future<NoOpNotificationScheduler> pumpScreen(
   await tester.pumpWidget(
     MaterialApp(
       home: ProfileScreen(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
         onDataCleared: () async {},
         notificationScheduler: spy,
       ),

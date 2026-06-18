@@ -4,12 +4,17 @@ import '../../app/theme.dart';
 import '../../core/constants.dart';
 import '../../core/models/reminder_settings.dart';
 import '../../core/profile_storage.dart';
+import '../../core/services/export_service.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/storage/activity_template_storage.dart';
+import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/reminder_storage.dart';
 import '../../shared/widgets/app_ui.dart';
 import '../../shared/widgets/profile_form.dart';
 
 class ProfileScreen extends StatefulWidget {
+  final DailyEntryStorage dailyEntryStorage;
+  final ActivityTemplateStorage templateStorage;
   final Future<void> Function() onDataCleared;
   final NotificationScheduler? notificationScheduler;
   final String? notificationInitializationError;
@@ -19,6 +24,8 @@ class ProfileScreen extends StatefulWidget {
 
   const ProfileScreen({
     super.key,
+    required this.dailyEntryStorage,
+    required this.templateStorage,
     required this.onDataCleared,
     this.notificationScheduler,
     this.notificationInitializationError,
@@ -42,6 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late final NotificationScheduler _scheduler;
   bool _isReminderSaving = false;
   bool _isDeleting = false;
+  bool _isExporting = false;
   String? _reminderError;
   bool _notificationsBlockedBySystem = false;
 
@@ -266,6 +274,29 @@ class _ProfileScreenState extends State<ProfileScreen>
     await _saveAndReschedule(_reminderSettings.copyWith(weekdays: current));
   }
 
+  Future<void> _exportData() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      await ExportService.share(
+        widget.dailyEntryStorage,
+        widget.templateStorage,
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Export fehlgeschlagen. Bitte versuche es erneut.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
   Future<void> _confirmAndDeleteAll() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -382,6 +413,26 @@ class _ProfileScreenState extends State<ProfileScreen>
           title: 'Daten & Datenschutz',
           description: 'Alle Inhalte bleiben lokal auf diesem Gerät.',
           children: [
+            ListTile(
+              key: const ValueKey('export_data'),
+              leading: _isExporting
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.download_outlined),
+              title: Text(
+                _isExporting
+                    ? 'Export wird vorbereitet …'
+                    : 'Daten exportieren',
+              ),
+              subtitle: const Text(
+                'Erstellt eine JSON-Datei mit allen Einträgen.',
+              ),
+              enabled: !_isExporting,
+              onTap: _isExporting ? null : _exportData,
+            ),
+            const Divider(),
             ListTile(
               key: const ValueKey('delete_all_data'),
               leading: _isDeleting

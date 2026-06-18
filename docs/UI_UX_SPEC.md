@@ -1,4 +1,5 @@
-# UI_UX_SPEC.md  
+# UI_UX_SPEC.md
+
 # UI/UX-Spezifikation für Berichtsheft-Merker Lagerlogistik
 
 ## 1. Ziel der Oberfläche
@@ -494,6 +495,11 @@ Erinnerungen sowie Daten & Datenschutz sind klar getrennte Einstellungsgruppen.
 
 Datenverwaltung:
 
+- **Daten exportieren** — öffnet das Android-Share-Sheet mit einer
+  JSON-Datei (`berichtsheft_export_YYYY-MM-DD_HHmmss.json`). Enthält
+  alle Tageseinträge, eigene Tätigkeiten und Profildaten. Kein
+  Cloud-Upload, keine Berechtigungen erforderlich. Der Nutzer wählt
+  selbst, wo die Datei gespeichert wird (z. B. Downloads, Google Drive).
 - lokale Daten löschen
 - Hinweis, dass alle Inhalte lokal bleiben
 

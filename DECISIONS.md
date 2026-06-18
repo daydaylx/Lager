@@ -89,3 +89,12 @@ Auswahlen und bleiben für historische Einträge lesbar.
 Der lokale `DailyReportGenerator` erzeugt aus Tagestyp, Bereich, Tätigkeiten und
 ausgewählten Besonderheiten einen kopierbaren Berichtsvorschlag. Er verwendet
 keine externe API, kein Sprachmodell und verändert keine gespeicherten Daten.
+
+**Manueller JSON-Export via System-Share-Sheet**
+Der Nutzer kann alle lokalen Daten (Tageseinträge, eigene Tätigkeiten, Profil)
+als JSON-Datei exportieren und über das Android-Share-Sheet selbst sichern.
+Direktes Schreiben in den öffentlichen Download-Ordner wurde verworfen: Auf
+Android 10+ (Scoped Storage) erfordert das MediaStore-API oder
+`MANAGE_EXTERNAL_STORAGE` — beides unverhältnismäßig für einen MVP-Export.
+Das Share-Sheet ist erlaubnisfrei, funktioniert auf allen Android-Versionen und
+lässt den Nutzer den Zielort selbst wählen.
