@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
 import '../../core/data/default_activities.dart';
+import 'activity_recommender.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
@@ -358,9 +359,16 @@ class _TodayScreenState extends State<TodayScreen> {
         ? _frequentActivitiesFor(categories, activitiesById)
         : const <ActivityTemplate>[];
     final frequentIds = frequentActivities.map((a) => a.id).toSet();
-    final recommendedActivities = _activitySearchQuery.trim().isEmpty
-        ? _recommendedActivitiesFor(categories, activitiesById, frequentIds)
-        : const <ActivityTemplate>[];
+    final recommendedActivities =
+        _activitySearchQuery.trim().isEmpty && widget.trainingYear != null
+            ? computeRecommendedActivities(
+                categories,
+                activitiesById,
+                _selectedActivityIds,
+                frequentIds,
+                widget.trainingYear!,
+              )
+            : const <ActivityTemplate>[];
     final hiddenQuickAccessIds = {
       ...frequentIds,
       ...recommendedActivities.map((a) => a.id),
@@ -551,86 +559,6 @@ class _TodayScreenState extends State<TodayScreen> {
     return frequent;
   }
 
-  List<ActivityTemplate> _recommendedActivitiesFor(
-    List<ActivityCategory> categories,
-    Map<String, ActivityTemplate> activitiesById,
-    Set<String> excludedIds,
-  ) {
-    final trainingYear = widget.trainingYear;
-    if (trainingYear == null) return const [];
-
-    final categorySet = categories.toSet();
-    final candidates = activitiesById.values.indexed.where((entry) {
-      final activity = entry.$2;
-      return categorySet.contains(activity.category) &&
-          activity.isActive &&
-          !_selectedActivityIds.contains(activity.id) &&
-          !excludedIds.contains(activity.id) &&
-          _trainingYearPriority(activity, trainingYear) == 0;
-    }).toList(growable: false);
-
-    candidates.sort((a, b) {
-      final priorityA = _trainingYearPriority(a.$2, trainingYear);
-      final priorityB = _trainingYearPriority(b.$2, trainingYear);
-      if (priorityA != priorityB) return priorityA.compareTo(priorityB);
-      return a.$1.compareTo(b.$1);
-    });
-
-    return candidates.take(4).map((entry) => entry.$2).toList(growable: false);
-  }
-
-  int _trainingYearPriority(ActivityTemplate activity, int trainingYear) {
-    final title = activity.title.toLowerCase();
-    final category = activity.category;
-
-    return switch (trainingYear) {
-      1 => _matchesAny(title, const [
-          'angenommen',
-          'geprüft',
-          'beachtet',
-          'vorbereitet',
-          'aufgeräumt',
-          'unter anleitung',
-          'arbeitsanweisung',
-          'grundlagen',
-          'sicherheits',
-        ])
-            ? 0
-            : category == ActivityCategory.sicherheit
-                ? 0
-                : 1,
-      2 => _matchesAny(title, const [
-          'scanner',
-          'system',
-          'bestand',
-          'kommissionier',
-          'versand',
-          'lagerplatz',
-          'pick',
-          'retoure',
-        ])
-            ? 0
-            : 1,
-      _ => _matchesAny(title, const [
-          'kennzahl',
-          'inventur',
-          'differenz',
-          'system',
-          'qualität',
-          'abweichung',
-          'prozess',
-          'kontrolle',
-        ])
-            ? 0
-            : category == ActivityCategory.inventur
-                ? 0
-                : 1,
-    };
-  }
-
-  bool _matchesAny(String value, List<String> needles) {
-    return needles.any(value.contains);
-  }
 
 
   Future<void> _confirmAndSelectDayType(DayType dayType) async {
