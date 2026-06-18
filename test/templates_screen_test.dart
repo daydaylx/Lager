@@ -124,7 +124,10 @@ void main() {
     await tester.tap(find.text('Hinzufügen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Diese Tätigkeit ist bereits vorhanden.'), findsOneWidget);
+    expect(
+      find.text('Diese Tätigkeit existiert bereits: „Ware angenommen".'),
+      findsOneWidget,
+    );
     expect(find.text('Hinzufügen'), findsOneWidget);
     expect(await storage.loadCustom(), isEmpty);
   });
@@ -153,7 +156,10 @@ void main() {
     await tester.tap(find.text('Hinzufügen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Diese Tätigkeit ist bereits vorhanden.'), findsOneWidget);
+    expect(
+      find.text('Diese Tätigkeit existiert bereits: „Ware verräumt".'),
+      findsOneWidget,
+    );
     expect(await storage.loadCustom(), hasLength(1));
   });
 

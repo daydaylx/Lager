@@ -849,7 +849,7 @@ void main() {
     expect(saveButton(tester).onPressed, isNotNull);
   });
 
-  group('Berichtsvorschau', () {
+  group('Berichtskarte', () {
     testWidgets('erscheint nach Auswahl von Bereich und Tätigkeit', (
       WidgetTester tester,
     ) async {
@@ -864,14 +864,15 @@ void main() {
         find.byKey(const ValueKey('activity_wareneingang_01')),
       );
 
-      await tester.tap(find.byKey(const ValueKey('preview_daily_report')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Vorschlag fürs Berichtsheft'), findsOneWidget);
-      expect(find.byKey(const Key('copy_daily_report')), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('report_card')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const ValueKey('report_card')), findsOneWidget);
     });
 
-    testWidgets('Kopieren-Button zeigt Snackbar', (
+    testWidgets('zeigt Nicht-gespeichert-Status vor dem Speichern', (
       WidgetTester tester,
     ) async {
       await pumpToday(tester);
@@ -885,12 +886,44 @@ void main() {
         find.byKey(const ValueKey('activity_wareneingang_01')),
       );
 
-      await tester.tap(find.byKey(const ValueKey('preview_daily_report')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('copy_daily_report')));
-      await tester.pump();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('report_card')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Nicht gespeichert'), findsOneWidget);
+    });
+
+    testWidgets('Kopieren-Button zeigt SnackBar', (
+      WidgetTester tester,
+    ) async {
+      await pumpToday(tester);
+
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('area_wareneingang')),
+      );
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('activity_wareneingang_01')),
+      );
+
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('copy_report_card')),
+      );
 
       expect(find.text('Tagesbericht kopiert.'), findsOneWidget);
+    });
+
+    testWidgets('Vorschau-Button ist nicht mehr vorhanden', (
+      WidgetTester tester,
+    ) async {
+      await pumpToday(tester);
+      expect(
+        find.byKey(const ValueKey('preview_daily_report')),
+        findsNothing,
+      );
     });
   });
 }

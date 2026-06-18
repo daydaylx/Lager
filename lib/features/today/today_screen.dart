@@ -15,6 +15,7 @@ import 'widgets/activity_section.dart';
 import 'widgets/area_grid.dart';
 import 'widgets/day_status_card.dart';
 import 'widgets/day_type_selector.dart';
+import 'widgets/report_card.dart';
 import 'widgets/save_bar.dart';
 import 'widgets/special_flags_note_section.dart';
 
@@ -177,6 +178,12 @@ class _TodayScreenState extends State<TodayScreen> {
       );
     }
 
+    final report = _canSave &&
+            (_selectedDayType == DayType.betrieb ||
+                _selectedDayType == DayType.berufsschule)
+        ? _currentReport()
+        : null;
+
     return PopScope<void>(
       canPop: !widget.protectBackNavigation || !_hasUnsavedChanges,
       onPopInvokedWithResult: _handlePop,
@@ -291,6 +298,15 @@ class _TodayScreenState extends State<TodayScreen> {
                         noteController: _noteController,
                       ),
                     ],
+                    if (report != null) ...[
+                      const SizedBox(height: 16),
+                      ReportCard(
+                        key: const ValueKey('report_card'),
+                        report: report,
+                        isSaved: _savedEntry != null && !_hasUnsavedChanges,
+                        onCopy: _copyReport,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -306,7 +322,6 @@ class _TodayScreenState extends State<TodayScreen> {
           onSave: _saveEntry,
           selectedActivityCount: _selectedActivityIds.length,
           supportsActivities: _selectedDayType.supportsActivities,
-          onPreview: _canSave ? _showReportPreview : null,
         ),
       ),
     );
@@ -978,69 +993,12 @@ class _TodayScreenState extends State<TodayScreen> {
     return DailyReportGenerator.generate(entry, _buildActivityTitlesMap());
   }
 
-  void _showReportPreview() {
+  void _copyReport() {
     final report = _currentReport();
     if (report == null) return;
-    final note = (_selectedDayType == DayType.betrieb ||
-            _selectedDayType == DayType.berufsschule)
-        ? (_noteController.text.trim().isEmpty
-            ? null
-            : _noteController.text.trim())
-        : null;
-    final unsaved = _hasUnsavedChanges;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final theme = Theme.of(sheetContext);
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Vorschlag fürs Berichtsheft',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (unsaved) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Vorschau aus aktueller Auswahl – noch nicht gespeichert',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              SelectableText(report),
-              if (note != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Zusatznotiz – bei Bedarf übernehmen: $note',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                key: const Key('copy_daily_report'),
-                icon: const Icon(Icons.copy_outlined),
-                label: const Text('Kopieren'),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: report));
-                  ScaffoldMessenger.of(sheetContext).showSnackBar(
-                    const SnackBar(content: Text('Tagesbericht kopiert.')),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
+    Clipboard.setData(ClipboardData(text: report));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Tagesbericht kopiert.')),
     );
   }
 }

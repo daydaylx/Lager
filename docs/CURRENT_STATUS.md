@@ -1,18 +1,29 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-06-17 (nach Phase 15 abgeschlossen; Phase 16 offen)
+Stand: 2026-06-18 (Phase 17+18 aufgeräumt; #41-Fehlermeldung verbessert; Phase 19 QA-Vorbereitung läuft)
 
 ---
 
 ## Aktive Phase
 
-**Phase 16: Tagesbericht fachlich und sichtbar verbessern** — offen
+**Phase 19: Release-QA auf echtem Android-Gerät** — APK gebaut (18.06.2026), Checkliste bereit
 
 ---
 
 ## Was fertig ist
 
-Phasen 0–14 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+Phasen 0–16 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+
+Neu in Phase 16 (#40, #35, #49):
+
+- `lib/core/report/daily_report_generator.dart`: `_detailText` kennt jetzt den Tagtyp — Betrieb und Berufsschule erhalten eigene Formulierungen für selbstständig, unterAnleitung, neuesGelernt, wiederholt, kontrolle
+- Notiz-Präfix ohne `problemAufgetreten`: "Zusätzlich wurde notiert:" → "Notiz:" (kürzer, weniger bürokratisch)
+- `_activityPattern` nutzt jetzt `(known.length - 1 + date.day) % 3` — gleiche Auswahl klingt an verschiedenen Tagen anders
+- Berufsschule mit ≥ 3 Themen: drei datumsbasierte Varianten statt immer derselbe Satz
+- Neues Widget `lib/features/today/widgets/report_card.dart`: zeigt generierten Bericht als Card mit Gespeichert-/Nicht-gespeichert-Chip und Kopier-Button
+- `TodayScreen` zeigt die Berichtskarte, sobald `_canSave == true` und Tagtyp Betrieb oder Berufsschule
+- `SaveBar`: `onPreview`-Parameter und Vorschau-Button entfernt; Bottom-Sheet-Preview durch Karte ersetzt
+- 12 neue Generator-Tests (7 Berufsschule-Flags, 5 Datumsvarianten); 4 neue Widget-Tests (Berichtskarte); 2 alte Preview-Tests ersetzt
 
 Neu in Phase 15 (#47):
 
@@ -75,19 +86,17 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Phase 14:
+Aktuell nach Phase 19 QA-Vorbereitung (18.06.2026):
 
 ```
-flutter analyze  →  0 Issues
-flutter test     →  170/170 bestanden
+flutter analyze          →  0 Issues
+flutter test             →  184/184 bestanden
+flutter build apk --release  →  erfolgreich (18.06.2026)
 ```
 
-Vorherige Android-Verifikation aus Phase 13; nach den Änderungen in Phase 14
-nicht erneut gebaut:
+Vorherige Geräteverifikation (Phase 13):
 
 ```
-flutter build apk --debug    →  erfolgreich mit NDK 27
-flutter build apk --release  →  erfolgreich signiert erzeugt (24.1 MB)
 adb install -r app-release.apk auf Samsung SM-S931B  →  erfolgreich
 ```
 
@@ -100,6 +109,12 @@ Release-Zertifikat; der installierte Build meldet `apkSigningVersion=2`.
 
 ## Nächster Schritt
 
-1. **Phase 16: #40, #35, #49** — Tagesbericht fachlich verbessern (Besonderheiten und Notizen im Generator einbinden, mehrere Satzmuster) und als prominente Berichtskarte im Heute-Screen anzeigen.
-2. Lokalen Datenexport/-import (#39) separat entscheiden, bevor dafür Code entsteht.
-3. Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.
+**Phase 19 Release-QA:** APK auf echtem Gerät installieren und `docs/QA_RELEASE_CHECKLIST.md` Punkt für Punkt durcharbeiten.
+
+```bash
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+Issue #39 (Export/Import) ist bewusst offen — eigene Produktentscheidung erforderlich, bevor Code dafür entsteht.
+
+Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.

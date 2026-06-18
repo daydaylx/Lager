@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 13: Robustheit und Release-Härtung** — Code, automatisierte Prüfungen und lokale Release-Signierung abgeschlossen; manueller Android-Gerätetest offen. Danach folgt die priorisierte Abarbeitung der offenen Issues #29–#49.
+**Phase 16: Tagesbericht fachlich und sichtbar verbessern** ✅ — Code abgeschlossen; visuelle Prüfung auf Gerät noch offen.
 
 ---
 
@@ -292,37 +292,34 @@ Ziel: Struktur schaffen, bevor weitere Tätigkeiten-, Such- und Berichtsfunktion
 
 Ziel: Erst Textqualität verbessern, dann die prominente UI-Karte einbauen. Eine schöne Karte mit schwachem Text wäre nur hübsch verpackter Mittelmaß-Kram.
 
-- [ ] #40 Tagesbericht-Generator: ignorierte Besonderheiten und Notizen sauber einbinden.
-- [ ] #35 Tagesbericht-Generator mit mehreren festen Satzmustern verbessern.
-- [ ] #49 Tagesbericht als prominente Berichtskarte im Heute-Screen anzeigen.
-- [ ] Bestehenden Bottom-Sheet-Preview-Flow prüfen: entfernen, sekundär machen oder durch Berichtskarte ersetzen.
-- [ ] Unit-Tests für Generator-Kombinationen erweitern.
-- [ ] Widget-Tests für sichtbare Berichtskarte und Kopieren aus der Karte ergänzen.
-- [ ] Nach Phase 16: `flutter analyze`, `flutter test`, visuelle Prüfung Heute-Screen.
+- [x] #40 Tagesbericht-Generator: Besonderheiten und Notizen nach Tagtyp differenziert (Betrieb vs. Berufsschule).
+- [x] #35 Tagesbericht-Generator: datumsbasierte Satzmuster-Variation; Berufsschule 3+ mit 3 Alternativen.
+- [x] #49 Tagesbericht als prominente Berichtskarte im Heute-Screen; Bottom-Sheet-Preview entfernt.
+- [x] Bestehenden Bottom-Sheet-Preview-Flow entfernt; durch Berichtskarte ersetzt.
+- [x] Unit-Tests für Generator-Kombinationen erweitert (7 neue Berufsschule-Flag-Tests + 5 Datumsvarianten-Tests).
+- [x] Widget-Tests für Berichtskarte (erscheint, Status, Kopieren) ergänzt.
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — 184/184 bestanden
 
-### Phase 17: Tätigkeitskatalog und Tätigkeiten-UI skalierbar machen
+### Phase 17: Tätigkeitskatalog und Tätigkeiten-UI skalierbar machen ✅
 
-Ziel: Erst Bedienbarkeit schaffen, dann Inhalte erweitern. Mehr Tätigkeiten ohne bessere UI ist keine Verbesserung, sondern nur mehr Scroll-Arbeit.
+Bereits in früheren Phasen implementiert; Phase-17-Einträge waren stale.
 
-- [ ] #30 Tätigkeiten-UI um „Häufig genutzt“, Suche und kompakte Anzeige erweitern.
-- [ ] #31 Tätigkeiten nach Arbeitsschritten / Untergruppen strukturieren.
-- [ ] #41 Eigene Tätigkeiten gegen Duplikate prüfen.
-- [ ] #29 Tätigkeitskatalog fachlich für Lagerlogistik erweitern.
-- [ ] #32 EDV-, Scanner- und Warenwirtschafts-Tätigkeiten ergänzen.
-- [ ] #34 Qualität, Ordnung und 5S praxisnäher erfassen.
-- [ ] #33 Ausbildungsfortschritt und Unterweisung als Tätigkeiten/Besonderheiten abbilden.
-- [ ] #36 Tätigkeiten optional nach Ausbildungsjahr priorisieren.
-- [ ] Nach Phase 17: kleine Displaygrößen, große Systemschrift, Scroll-Verhalten und Einhandbedienung prüfen.
+- [x] #30 Tätigkeiten-UI: Häufig genutzt, Suche, Auswahlchips (in `today_screen.dart` / `activity_section.dart`)
+- [x] #31 Untergruppen via `activitySubcategories.dart` und `ActivityGroup`-Widget
+- [x] #41 Eigene Tätigkeiten gegen normalisierte Duplikate prüfen (Fehlermeldung mit Konfliktnamen: s. Robustheitskorrekturen)
+- [x] #29 Tätigkeitskatalog: 132 vordefinierte Lagerlogistik-Tätigkeiten
+- [x] #32 EDV-, Scanner- und Warenwirtschafts-Tätigkeiten
+- [x] #34 Qualität, Ordnung und 5S
+- [x] #33 Unterweisung punktuell über Tätigkeiten/Besonderheiten
+- [x] #36 Ausbildungsjahr-Priorisierung als weiche Empfehlung
 
-### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung
+### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung 🔨
 
-Ziel: Die App robuster für echte tägliche Nutzung machen. Das ist weniger sichtbar als UI, aber praktisch wichtig.
-
-- [ ] #45 Notification-Initialisierungsfehler sichtbar diagnostizierbar machen.
-- [ ] #46 SnackBar „Eintrag fehlt“ mit direkter Aktion erweitern.
-- [ ] #39 Lokalen Datenexport und Import als einfache Sicherung prüfen.
+- [x] #45 Notification-Initialisierungsfehler sichtbar — in `profile_screen.dart`
+- [x] #46 SnackBar „Eintrag fehlt” mit direkter Aktion — in `today_screen.dart`
+- [ ] #39 Lokalen Datenexport und Import — bewusst offen (Produktentscheidung)
 - [ ] Export/Import nur lokal und einfach halten; keine Cloud, kein Account, kein PDF-Overhead.
-- [ ] Nach Phase 18: Reminder-Flows und Datenlöschung erneut testen.
 
 ### Phase 19: Release-QA auf echtem Android-Gerät
 

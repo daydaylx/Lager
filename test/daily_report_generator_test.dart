@@ -307,8 +307,204 @@ void main() {
         ),
         _titles,
       );
-      expect(result, contains('Zusätzlich wurde notiert'));
+      expect(result, contains('Notiz:'));
       expect(result, contains('Lieferung kam später an'));
+    });
+  });
+
+  group('DailyReportGenerator — SpecialFlags Berufsschule', () {
+    test('selbststaendig in Berufsschule — schulspezifische Formulierung', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.selbststaendig],
+        ),
+        _titles,
+      );
+      expect(result, contains('selbstständig erarbeitet'));
+      expect(result, isNot(contains('selbstständig gearbeitet')));
+    });
+
+    test('unterAnleitung in Berufsschule — schulspezifische Formulierung', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.unterAnleitung],
+        ),
+        _titles,
+      );
+      expect(result, contains('Themen wurden unter Anleitung behandelt'));
+      expect(result, isNot(contains('Tätigkeiten erfolgten')));
+    });
+
+    test('neuesGelernt in Berufsschule — Thema statt Aufgabe', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.neuesGelernt],
+        ),
+        _titles,
+      );
+      expect(result, contains('neues Thema kennengelernt'));
+      expect(result, isNot(contains('neue Aufgabe')));
+    });
+
+    test('wiederholt in Berufsschule — Inhalte statt Tätigkeiten', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.wiederholt],
+        ),
+        _titles,
+      );
+      expect(result, contains('Inhalte wurden zur Übung wiederholt'));
+      expect(result, isNot(contains('Tätigkeiten wurden')));
+    });
+
+    test('kontrolle in Berufsschule — Lernkontrolle', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.kontrolle],
+        ),
+        _titles,
+      );
+      expect(result, contains('Lernkontrolle wurde durchgeführt'));
+    });
+
+    test('kombination: selbststaendig + kontrolle in Berufsschule', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.selbststaendig, SpecialFlag.kontrolle],
+        ),
+        _titles,
+      );
+      expect(result, contains('selbstständig erarbeitet'));
+      expect(result, contains('Lernkontrolle'));
+    });
+
+    test('problemAufgetreten in Berufsschule — universell', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.berufsschule,
+          activities: ['berufsschule_01'],
+          flags: [SpecialFlag.problemAufgetreten],
+        ),
+        _titles,
+      );
+      expect(result, contains('Problem wurde festgehalten'));
+    });
+  });
+
+  group('DailyReportGenerator — datumsbasierte Satzmuster', () {
+    DailyEntry entryOnDay(int day, {int activityCount = 1}) {
+      final date = DateTime(2026, 6, day);
+      final activities = List.generate(activityCount, (i) => 'wareneingang_0${i + 1}');
+      return DailyEntry(
+        id: DailyEntry.idForDate(date),
+        date: date,
+        dayType: DayType.betrieb,
+        areas: const [TrainingArea.wareneingang],
+        selectedActivities: activities,
+        specialFlags: const [],
+        note: null,
+        createdAt: date,
+        updatedAt: date,
+      );
+    }
+
+    test('gleiche Auswahl an zwei aufeinanderfolgenden Tagen erzeugt verschiedene Satzmuster', () {
+      final result17 = DailyReportGenerator.generate(entryOnDay(17), _titles);
+      final result18 = DailyReportGenerator.generate(entryOnDay(18), _titles);
+      expect(result17, isNot(equals(result18)));
+    });
+
+    test('determinismus: gleicher Tag erzeugt immer denselben Text', () {
+      final r1 = DailyReportGenerator.generate(entryOnDay(17), _titles);
+      final r2 = DailyReportGenerator.generate(entryOnDay(17), _titles);
+      expect(r1, equals(r2));
+    });
+
+    test('Berufsschule 3 Themen: Tag 18 erzeugt Variante 0', () {
+      final date = DateTime(2026, 6, 18); // 18 % 3 == 0
+      final entry = DailyEntry(
+        id: DailyEntry.idForDate(date),
+        date: date,
+        dayType: DayType.berufsschule,
+        areas: const [],
+        selectedActivities: const [
+          'berufsschule_01',
+          'berufsschule_02',
+          'wareneingang_01',
+        ],
+        specialFlags: const [],
+        note: null,
+        createdAt: date,
+        updatedAt: date,
+      );
+      final titles = {
+        ..._titles,
+        'wareneingang_01': 'Lagerwirtschaft Praxis',
+      };
+      final result = DailyReportGenerator.generate(entry, titles);
+      expect(result, contains('Heute war Berufsschule. Themen waren:'));
+    });
+
+    test('Berufsschule 3 Themen: Tag 19 erzeugt Variante 1', () {
+      final date = DateTime(2026, 6, 19); // 19 % 3 == 1
+      final entry = DailyEntry(
+        id: DailyEntry.idForDate(date),
+        date: date,
+        dayType: DayType.berufsschule,
+        areas: const [],
+        selectedActivities: const [
+          'berufsschule_01',
+          'berufsschule_02',
+          'wareneingang_01',
+        ],
+        specialFlags: const [],
+        note: null,
+        createdAt: date,
+        updatedAt: date,
+      );
+      final titles = {
+        ..._titles,
+        'wareneingang_01': 'Lagerwirtschaft Praxis',
+      };
+      final result = DailyReportGenerator.generate(entry, titles);
+      expect(result, contains('In der Berufsschule habe ich folgende Themen bearbeitet:'));
+    });
+
+    test('Berufsschule 3 Themen: Tag 20 erzeugt Variante 2', () {
+      final date = DateTime(2026, 6, 20); // 20 % 3 == 2
+      final entry = DailyEntry(
+        id: DailyEntry.idForDate(date),
+        date: date,
+        dayType: DayType.berufsschule,
+        areas: const [],
+        selectedActivities: const [
+          'berufsschule_01',
+          'berufsschule_02',
+          'wareneingang_01',
+        ],
+        specialFlags: const [],
+        note: null,
+        createdAt: date,
+        updatedAt: date,
+      );
+      final titles = {
+        ..._titles,
+        'wareneingang_01': 'Lagerwirtschaft Praxis',
+      };
+      final result = DailyReportGenerator.generate(entry, titles);
+      expect(result, contains('Die heutigen Themen in der Berufsschule waren:'));
     });
   });
 }

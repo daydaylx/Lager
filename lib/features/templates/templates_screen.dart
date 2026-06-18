@@ -92,11 +92,13 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         template.category.label.toLowerCase().contains(query);
   }
 
-  bool _hasDuplicateTitle(String title) {
+  ActivityTemplate? _findDuplicate(String title) {
     final normalizedTitle = _normalizeActivityTitle(title);
-    return [...defaultActivities, ..._customTemplates].any(
+    final all = [...defaultActivities, ..._customTemplates];
+    final index = all.indexWhere(
       (template) => _normalizeActivityTitle(template.title) == normalizedTitle,
     );
+    return index >= 0 ? all[index] : null;
   }
 
   String _displayTitle(String value) {
@@ -217,10 +219,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                       );
                       return;
                     }
-                    if (_hasDuplicateTitle(title)) {
+                    final duplicate = _findDuplicate(title);
+                    if (duplicate != null) {
                       setSheetState(
                         () => titleError =
-                            'Diese Tätigkeit ist bereits vorhanden.',
+                            'Diese Tätigkeit existiert bereits: „${duplicate.title}".',
                       );
                       return;
                     }

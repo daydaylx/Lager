@@ -10,7 +10,6 @@ class SaveBar extends StatelessWidget {
   final VoidCallback onSave;
   final int selectedActivityCount;
   final bool supportsActivities;
-  final VoidCallback? onPreview;
 
   const SaveBar({
     super.key,
@@ -22,7 +21,6 @@ class SaveBar extends StatelessWidget {
     required this.onSave,
     required this.selectedActivityCount,
     required this.supportsActivities,
-    this.onPreview,
   });
 
   @override
@@ -57,15 +55,6 @@ class SaveBar extends StatelessWidget {
             ],
             Row(
               children: [
-                if (onPreview != null) ...[
-                  OutlinedButton.icon(
-                    key: const ValueKey('preview_daily_report'),
-                    onPressed: onPreview,
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Vorschau'),
-                  ),
-                  const SizedBox(width: 8),
-                ],
                 Expanded(
                   child: FilledButton.icon(
                     key: const ValueKey('save_daily_entry'),

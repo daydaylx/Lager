@@ -44,7 +44,7 @@ class DailyReportGenerator {
       return _betriebWithAreasText(entry, known);
     }
     if (known.isNotEmpty) {
-      return _betriebWithoutAreaText(known);
+      return _betriebWithoutAreaText(known, entry.date);
     }
     if (entry.areas.isNotEmpty) {
       final areaLabel = entry.areas.length == 1
@@ -68,7 +68,12 @@ class DailyReportGenerator {
       if (known.length == 2) {
         return 'In der Berufsschule wurden ${_formatList(known)} behandelt.';
       }
-      return 'Heute war Berufsschule. Themen waren: ${_formatList(known)}.';
+      final topics = _formatList(known);
+      return switch (entry.date.day % 3) {
+        0 => 'Heute war Berufsschule. Themen waren: $topics.',
+        1 => 'In der Berufsschule habe ich folgende Themen bearbeitet: $topics.',
+        _ => 'Die heutigen Themen in der Berufsschule waren: $topics.',
+      };
     }
     return 'Heute war Berufsschule.';
   }
@@ -80,7 +85,7 @@ class DailyReportGenerator {
     final activityList = _formatList(known);
     if (entry.areas.length == 1) {
       final area = entry.areas.first.label;
-      return switch (_activityPattern(known)) {
+      return switch (_activityPattern(known, entry.date)) {
         0 => 'Im Bereich $area habe ich gearbeitet. '
             'Dabei habe ich folgende Tätigkeiten erledigt: $activityList.',
         1 => 'Im Bereich $area habe ich $activityList erledigt.',
@@ -89,7 +94,7 @@ class DailyReportGenerator {
     }
 
     final areas = _formatList(_areaLabels(entry));
-    return switch (_activityPattern(known)) {
+    return switch (_activityPattern(known, entry.date)) {
       0 => 'In den Bereichen $areas habe ich gearbeitet. '
           'Dabei habe ich folgende Tätigkeiten erledigt: $activityList.',
       1 =>
@@ -99,9 +104,9 @@ class DailyReportGenerator {
     };
   }
 
-  static String _betriebWithoutAreaText(List<String> known) {
+  static String _betriebWithoutAreaText(List<String> known, DateTime date) {
     final activityList = _formatList(known);
-    return switch (_activityPattern(known)) {
+    return switch (_activityPattern(known, date)) {
       0 => 'Im Betrieb habe ich folgende Tätigkeiten erledigt: $activityList.',
       1 => 'Im Betrieb habe ich $activityList erledigt.',
       _ => 'Zu meinen Tätigkeiten im Betrieb gehörten: $activityList.',
@@ -122,23 +127,40 @@ class DailyReportGenerator {
     return entry.areas.map((area) => area.label).toList(growable: false);
   }
 
-  static int _activityPattern(List<String> known) {
-    return (known.length - 1) % 3;
+  static int _activityPattern(List<String> known, DateTime date) {
+    return (known.length - 1 + date.day) % 3;
   }
 
   static String _detailText(DailyEntry entry) {
+    final isSchule = entry.dayType == DayType.berufsschule;
     final sentences = <String>[];
     final note = _normalizedNote(entry.note);
     for (final flag in entry.specialFlags) {
       switch (flag) {
         case SpecialFlag.selbststaendig:
-          sentences.add('Dabei habe ich selbstständig gearbeitet.');
+          sentences.add(
+            isSchule
+                ? 'Ich habe das Thema selbstständig erarbeitet.'
+                : 'Dabei habe ich selbstständig gearbeitet.',
+          );
         case SpecialFlag.unterAnleitung:
-          sentences.add('Die Tätigkeiten erfolgten unter Anleitung.');
+          sentences.add(
+            isSchule
+                ? 'Die Themen wurden unter Anleitung behandelt.'
+                : 'Die Tätigkeiten erfolgten unter Anleitung.',
+          );
         case SpecialFlag.neuesGelernt:
-          sentences.add('Dabei habe ich eine neue Aufgabe kennengelernt.');
+          sentences.add(
+            isSchule
+                ? 'Dabei habe ich ein neues Thema kennengelernt.'
+                : 'Dabei habe ich eine neue Aufgabe kennengelernt.',
+          );
         case SpecialFlag.wiederholt:
-          sentences.add('Die Tätigkeiten wurden zur Übung wiederholt.');
+          sentences.add(
+            isSchule
+                ? 'Die Inhalte wurden zur Übung wiederholt.'
+                : 'Die Tätigkeiten wurden zur Übung wiederholt.',
+          );
         case SpecialFlag.problemAufgetreten:
           if (note != null) {
             sentences
@@ -149,12 +171,16 @@ class DailyReportGenerator {
         case SpecialFlag.fehlerKorrigiert:
           sentences.add('Ein Fehler wurde besprochen und korrigiert.');
         case SpecialFlag.kontrolle:
-          sentences.add('Eine Kontrolle wurde durchgeführt.');
+          sentences.add(
+            isSchule
+                ? 'Eine Lernkontrolle wurde durchgeführt.'
+                : 'Eine Kontrolle wurde durchgeführt.',
+          );
       }
     }
     if (note != null &&
         !entry.specialFlags.contains(SpecialFlag.problemAufgetreten)) {
-      sentences.add(_sentenceWithNote('Zusätzlich wurde notiert:', note));
+      sentences.add(_sentenceWithNote('Notiz:', note));
     }
     return sentences.join(' ');
   }
