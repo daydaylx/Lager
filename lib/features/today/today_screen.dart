@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
-import '../../core/data/default_activities.dart';
-import 'activity_recommender.dart';
-import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
 import '../../core/enums/training_area.dart';
@@ -13,7 +10,11 @@ import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/report/daily_report_generator.dart';
 import '../../shared/widgets/app_ui.dart';
+import 'activity_picker_model.dart';
+import 'activity_recommender.dart';
+import 'today_entry_draft.dart';
 import 'widgets/activity_section.dart';
+import 'widgets/activity_picker_section.dart';
 import 'widgets/area_grid.dart';
 import 'widgets/day_status_card.dart';
 import 'widgets/day_type_selector.dart';
@@ -82,19 +83,16 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String get _screenTitle => _isToday ? 'Heute' : 'Tageseintrag';
 
-  bool get _canSave {
-    return switch (_selectedDayType) {
-      DayType.betrieb =>
-        _selectedAreas.isNotEmpty && _selectedActivityIds.isNotEmpty,
-      DayType.berufsschule => _selectedActivityIds.isNotEmpty,
-      DayType.frei ||
-      DayType.urlaub ||
-      DayType.krank ||
-      DayType.feiertag ||
-      DayType.sonstiges =>
-        true,
-    };
-  }
+  TodayEntryDraft get _draft => TodayEntryDraft(
+        date: _today,
+        dayType: _selectedDayType,
+        selectedAreas: _selectedAreas,
+        selectedActivityIds: _selectedActivityIds,
+        selectedSpecialFlags: _selectedSpecialFlags,
+        note: _noteController.text,
+      );
+
+  bool get _canSave => _draft.canSave;
 
   bool get _canSubmit {
     return !_isLoading &&
@@ -112,14 +110,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   List<String> get _missingItems {
     if (_isLoading || _loadFailed) return const [];
-    final items = <String>[];
-    if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
-      items.add('Bereich');
-    }
-    if (_selectedDayType.supportsActivities && _selectedActivityIds.isEmpty) {
-      items.add('Tätigkeit');
-    }
-    return items;
+    return _draft.missingItems;
   }
 
   @override
@@ -337,209 +328,33 @@ class _TodayScreenState extends State<TodayScreen> {
       );
     }
 
-    final categories = switch (_selectedDayType) {
-      DayType.betrieb => <ActivityCategory>{
-          ..._selectedAreas.map((a) => a.activityCategory),
-          ActivityCategory.sicherheit,
-        }.toList(growable: false),
-      DayType.berufsschule => [ActivityCategory.berufsschule],
-      _ => <ActivityCategory>[],
-    };
+    final model = ActivityPickerModel.build(
+      dayType: _selectedDayType,
+      selectedAreas: _selectedAreas,
+      selectedActivityIds: _selectedActivityIds,
+      customTemplates: _customTemplates,
+      frequentActivityIds: _frequentActivityIds,
+      searchQuery: _activitySearchQuery,
+      trainingYear: widget.trainingYear,
+    );
 
-    final activitiesById = _activitiesById();
-    final knownActivityIds = activitiesById.keys.toSet();
-    final unavailableSelectedIds = _selectedActivityIds
-        .where((id) => !knownActivityIds.contains(id))
-        .toList(growable: false);
-    final selectedActivities = _selectedActivityIds
-        .map((id) => activitiesById[id])
-        .whereType<ActivityTemplate>()
-        .toList(growable: false);
-    final frequentActivities = _activitySearchQuery.trim().isEmpty
-        ? computeFrequentActivities(
-            categories,
-            activitiesById,
-            _frequentActivityIds,
-            _selectedActivityIds,
-          )
-        : const <ActivityTemplate>[];
-    final frequentIds = frequentActivities.map((a) => a.id).toSet();
-    final recommendedActivities =
-        _activitySearchQuery.trim().isEmpty && widget.trainingYear != null
-            ? computeRecommendedActivities(
-                categories,
-                activitiesById,
-                _selectedActivityIds,
-                frequentIds,
-                widget.trainingYear!,
-              )
-            : const <ActivityTemplate>[];
-    final hiddenQuickAccessIds = {
-      ...frequentIds,
-      ...recommendedActivities.map((a) => a.id),
-    };
-
-    var visibleActivityCount =
-        frequentActivities.length + recommendedActivities.length;
-    final activityGroups = <Widget>[];
-    for (final category in categories) {
-      final defaults = _sortSelectedFirst(
-        defaultActivities
-            .where(
-              (activity) =>
-                  activity.category == category &&
-                  _showInCategoryGroup(activity, hiddenQuickAccessIds) &&
-                  _matchesActivitySearch(activity),
-            )
-            .toList(growable: false),
-      );
-      final custom = _sortSelectedFirst(
-        _customTemplates
-            .where(
-              (activity) =>
-                  activity.category == category &&
-                  (activity.isActive ||
-                      _selectedActivityIds.contains(activity.id)) &&
-                  _showInCategoryGroup(activity, hiddenQuickAccessIds) &&
-                  _matchesActivitySearch(activity),
-            )
-            .toList(growable: false),
-      );
-      visibleActivityCount += defaults.length + custom.length;
-      if (defaults.isNotEmpty) {
-        activityGroups.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: ActivityGroup(
-              title: category.label,
-              activities: defaults,
-              selectedActivityIds: _selectedActivityIds,
-              onToggle: _toggleActivity,
-            ),
-          ),
-        );
-      }
-      if (custom.isNotEmpty) {
-        activityGroups.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: ActivityGroup(
-              title: 'Eigene Tätigkeiten',
-              activities: custom,
-              selectedActivityIds: _selectedActivityIds,
-              onToggle: _toggleActivity,
-              markAsCustom: true,
-            ),
-          ),
-        );
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_templatesLoadFailed) ...[
-          TemplateLoadWarning(onRetry: _loadTemplates),
-          const SizedBox(height: 16),
-        ],
-        if (selectedActivities.isNotEmpty) ...[
-          SelectedActivitiesBar(
-            activities: selectedActivities,
-            onRemove: _toggleActivity,
-          ),
-          const SizedBox(height: 16),
-        ],
-        TextField(
-          key: const ValueKey('activity_search'),
-          controller: _activitySearchController,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: 'Tätigkeiten durchsuchen',
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: _activitySearchQuery.isEmpty
-                ? null
-                : IconButton(
-                    key: const ValueKey('clear_activity_search'),
-                    onPressed: () {
-                      _activitySearchController.clear();
-                      setState(() => _activitySearchQuery = '');
-                    },
-                    tooltip: 'Suche leeren',
-                    icon: const Icon(Icons.close),
-                  ),
-          ),
-          onChanged: (value) => setState(() => _activitySearchQuery = value),
-        ),
-        const SizedBox(height: 16),
-        if (frequentActivities.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: ActivityGroup(
-              title: 'Häufig genutzt',
-              activities: frequentActivities,
-              selectedActivityIds: _selectedActivityIds,
-              onToggle: _toggleActivity,
-            ),
-          ),
-        if (recommendedActivities.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: ActivityGroup(
-              title: 'Passend zum ${widget.trainingYear}. Ausbildungsjahr',
-              activities: recommendedActivities,
-              selectedActivityIds: _selectedActivityIds,
-              onToggle: _toggleActivity,
-            ),
-          ),
-        if (visibleActivityCount == 0)
-          const AppMessage(
-            icon: Icons.search_off_outlined,
-            title: 'Keine passenden Tätigkeiten gefunden',
-            message: 'Passe die Suche an oder wähle einen anderen Bereich.',
-          ),
-        ...activityGroups,
-        if (unavailableSelectedIds.isNotEmpty)
-          UnavailableActivities(
-            ids: unavailableSelectedIds,
-            onRemove: _toggleActivity,
-          ),
-      ],
+    return ActivityPickerSection(
+      model: model,
+      templatesLoadFailed: _templatesLoadFailed,
+      onRetryTemplates: _loadTemplates,
+      searchController: _activitySearchController,
+      searchQuery: _activitySearchQuery,
+      onSearchChanged: (value) => setState(() => _activitySearchQuery = value),
+      onClearSearch: _clearActivitySearch,
+      onToggleActivity: _toggleActivity,
+      trainingYear: widget.trainingYear,
     );
   }
 
-  Map<String, ActivityTemplate> _activitiesById() => {
-        for (final activity in defaultActivities) activity.id: activity,
-        for (final activity in _customTemplates) activity.id: activity,
-      };
-
-  bool _matchesActivitySearch(ActivityTemplate activity) {
-    final query = _activitySearchQuery.trim().toLowerCase();
-    return query.isEmpty ||
-        activity.title.toLowerCase().contains(query) ||
-        activity.category.label.toLowerCase().contains(query);
+  void _clearActivitySearch() {
+    _activitySearchController.clear();
+    setState(() => _activitySearchQuery = '');
   }
-
-  List<ActivityTemplate> _sortSelectedFirst(List<ActivityTemplate> activities) {
-    final selected = activities
-        .where((activity) => _selectedActivityIds.contains(activity.id))
-        .toList(growable: false);
-    final unselected = activities
-        .where((activity) => !_selectedActivityIds.contains(activity.id))
-        .toList(growable: false);
-    return [...selected, ...unselected];
-  }
-
-  bool _showInCategoryGroup(
-    ActivityTemplate activity,
-    Set<String> frequentIds,
-  ) {
-    if (_activitySearchQuery.trim().isNotEmpty) return true;
-    return !frequentIds.contains(activity.id) ||
-        _selectedActivityIds.contains(activity.id);
-  }
-
-
-
 
   Future<void> _confirmAndSelectDayType(DayType dayType) async {
     if (_selectedDayType == dayType) {
@@ -577,30 +392,19 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
-  bool _hasSelectedActivitiesIn(ActivityCategory category) {
-    final ids = {
-      ...defaultActivities
-          .where((a) => a.category == category)
-          .map((a) => a.id),
-      ..._customTemplates.where((a) => a.category == category).map((a) => a.id),
-    };
+  bool _hasSelectedActivitiesIn(TrainingArea area) {
+    final ids = activityIdsForCategory(area.activityCategory, _customTemplates);
     return _selectedActivityIds.any(ids.contains);
   }
 
-  void _removeSelectedActivitiesIn(ActivityCategory category) {
-    final ids = {
-      ...defaultActivities
-          .where((a) => a.category == category)
-          .map((a) => a.id),
-      ..._customTemplates.where((a) => a.category == category).map((a) => a.id),
-    };
+  void _removeSelectedActivitiesIn(TrainingArea area) {
+    final ids = activityIdsForCategory(area.activityCategory, _customTemplates);
     _selectedActivityIds.removeAll(ids);
   }
 
   Future<void> _toggleArea(TrainingArea area) async {
     if (_selectedAreas.contains(area)) {
-      final category = area.activityCategory;
-      if (_hasSelectedActivitiesIn(category) &&
+      if (_hasSelectedActivitiesIn(area) &&
           !await _confirmDiscard(
             'Bereich entfernen?',
             'Ausgewählte Tätigkeiten in diesem Bereich werden entfernt.',
@@ -609,7 +413,7 @@ class _TodayScreenState extends State<TodayScreen> {
       }
       setState(() {
         _selectedAreas.remove(area);
-        _removeSelectedActivitiesIn(category);
+        _removeSelectedActivitiesIn(area);
         _setChanged();
       });
     } else {
@@ -710,26 +514,7 @@ class _TodayScreenState extends State<TodayScreen> {
   Future<void> _loadFrequentActivities() async {
     try {
       final entries = await widget.storage.loadAll();
-      final counts = <String, int>{};
-      final lastUsed = <String, DateTime>{};
-      for (final entry in entries) {
-        if (!entry.dayType.supportsActivities) continue;
-        for (final id in entry.selectedActivities) {
-          counts[id] = (counts[id] ?? 0) + 1;
-          final previous = lastUsed[id];
-          if (previous == null || entry.date.isAfter(previous)) {
-            lastUsed[id] = entry.date;
-          }
-        }
-      }
-      final ids = counts.keys.toList(growable: false)
-        ..sort((a, b) {
-          final countCompare = counts[b]!.compareTo(counts[a]!);
-          if (countCompare != 0) return countCompare;
-          final dateCompare = lastUsed[b]!.compareTo(lastUsed[a]!);
-          if (dateCompare != 0) return dateCompare;
-          return a.compareTo(b);
-        });
+      final ids = computeFrequentActivityIds(entries);
       if (mounted) {
         setState(() => _frequentActivityIds = ids);
       }
@@ -824,26 +609,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Future<void> _saveEntry() async {
     final now = DateTime.now();
-    final existingEntry = _savedEntry;
-    final note = _noteController.text.trim();
-    final selectedActivities = _selectedActivityIds.toList(growable: false);
-    final selectedSpecialFlags = SpecialFlag.values
-        .where(_selectedSpecialFlags.contains)
-        .toList(growable: false);
-
-    final entry = DailyEntry(
-      id: DailyEntry.idForDate(_today),
-      date: _today,
-      dayType: _selectedDayType,
-      areas: _selectedDayType == DayType.betrieb
-          ? _selectedAreas.toList()
-          : const [],
-      selectedActivities: selectedActivities,
-      specialFlags: selectedSpecialFlags,
-      note: note.isEmpty ? null : note,
-      createdAt: existingEntry?.createdAt ?? now,
-      updatedAt: now,
-    );
+    final entry = _draft.toEntry(timestamp: now, existingEntry: _savedEntry);
 
     setState(() => _isSaving = true);
 
@@ -880,20 +646,8 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String? _currentReport() {
     if (!_canSave) return null;
-    final note = _noteController.text.trim();
-    final entry = DailyEntry(
-      id: DailyEntry.idForDate(_today),
-      date: _today,
-      dayType: _selectedDayType,
-      areas: _selectedDayType == DayType.betrieb
-          ? _selectedAreas.toList()
-          : const [],
-      selectedActivities: _selectedActivityIds.toList(growable: false),
-      specialFlags: _selectedSpecialFlags.toList(growable: false),
-      note: note.isEmpty ? null : note,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+    final now = DateTime.now();
+    final entry = _draft.toEntry(timestamp: now, existingEntry: _savedEntry);
     return DailyReportGenerator.generate(
       entry,
       buildActivityTitlesMap(_customTemplates),

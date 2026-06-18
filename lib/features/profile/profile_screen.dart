@@ -8,9 +8,13 @@ import '../../core/services/export_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
-import '../../core/storage/reminder_storage.dart';
 import '../../shared/widgets/app_ui.dart';
 import '../../shared/widgets/profile_form.dart';
+import 'profile_reminder_controller.dart';
+import 'widgets/profile_edit_screen.dart';
+import 'widgets/profile_header.dart';
+import 'widgets/profile_theme_section.dart';
+import 'widgets/reminder_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
@@ -40,13 +44,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen>
     with WidgetsBindingObserver {
-  static const _permissionError =
-      'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.';
-
   StoredProfile? _profile;
   bool _loadFailed = false;
   ReminderSettings _reminderSettings = ReminderSettings.defaults;
   late final NotificationScheduler _scheduler;
+  late final ProfileReminderController _reminderController;
   bool _isReminderSaving = false;
   bool _isDeleting = false;
   bool _isExporting = false;
@@ -59,6 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     WidgetsBinding.instance.addObserver(this);
     _scheduler = widget.notificationScheduler ??
         const FlutterLocalNotificationScheduler();
+    _reminderController = ProfileReminderController(scheduler: _scheduler);
     _loadProfile();
     _loadReminderSettings();
     _checkNotificationPermission();
@@ -78,21 +81,15 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _checkNotificationPermission() async {
-    try {
-      final enabled = await _scheduler.areNotificationsEnabled();
-      if (mounted) {
-        setState(() {
-          _notificationsBlockedBySystem = !enabled;
-          if (enabled && _reminderError == _permissionError) {
-            _reminderError = null;
-          } else if (!enabled && _reminderSettings.enabled) {
-            _reminderError = _permissionError;
-          }
-        });
-      }
-    } catch (_) {
-      // Silently skip if the plugin is not available (e.g. in tests).
-    }
+    final result = await _reminderController.checkPermission(
+      settings: _reminderSettings,
+      currentError: _reminderError,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _notificationsBlockedBySystem = result.notificationsBlockedBySystem;
+      _reminderError = result.error;
+    });
   }
 
   Future<void> _openNotificationSettings() async {
@@ -134,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (profile == null) return;
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => _ProfileEditScreen(
+        builder: (context) => ProfileEditScreen(
           profile: profile,
           onSave: _saveProfile,
         ),
@@ -151,127 +148,80 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadReminderSettings() async {
-    try {
-      final settings = await ReminderStorage.load();
-      if (mounted) {
-        setState(() {
-          _reminderSettings = settings;
-          if (settings.enabled && _notificationsBlockedBySystem) {
-            _reminderError = _permissionError;
-          }
-        });
+    final result = await _reminderController.load(
+      notificationsBlockedBySystem: _notificationsBlockedBySystem,
+    );
+    if (!mounted) return;
+    final loadedSettings = result.settings;
+    setState(() {
+      if (loadedSettings case final settings?) {
+        _reminderSettings = settings;
       }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _reminderError =
-              'Erinnerungseinstellungen konnten nicht geladen werden.';
-        });
-      }
+      _reminderError = result.error;
+    });
+    if (loadedSettings?.enabled ?? false) {
+      await _checkNotificationPermission();
     }
   }
 
   Future<void> _saveAndReschedule(ReminderSettings settings) async {
     if (_isReminderSaving) return;
     final previous = _reminderSettings;
-    final normalized = settings.normalized();
     setState(() {
       _isReminderSaving = true;
       _reminderError = null;
     });
 
-    try {
-      final result = await _scheduler.schedule(normalized);
-      if (result == NotificationScheduleResult.permissionDenied) {
-        await _restoreSchedule(previous);
-        if (mounted) {
-          setState(() {
-            _isReminderSaving = false;
-            _notificationsBlockedBySystem = true;
-            _reminderError = _permissionError;
-          });
-        }
-        return;
+    final result = await _reminderController.saveAndReschedule(
+      previous: previous,
+      next: settings,
+    );
+    if (!mounted) return;
+    setState(() {
+      _reminderSettings = result.settings;
+      _isReminderSaving = false;
+      _reminderError = result.error;
+      if (result.notificationsBlockedBySystem case final blocked?) {
+        _notificationsBlockedBySystem = blocked;
       }
-      await ReminderStorage.save(normalized);
-      if (mounted) {
-        setState(() {
-          _reminderSettings = normalized;
-          _isReminderSaving = false;
-          _notificationsBlockedBySystem = false;
-        });
-      }
-    } catch (_) {
-      await _restoreReminderState(previous);
-      if (mounted) {
-        setState(() {
-          _isReminderSaving = false;
-          _reminderError =
-              'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.';
-        });
-      }
-    }
-  }
-
-  Future<void> _restoreSchedule(ReminderSettings previous) async {
-    try {
-      await _scheduler.schedule(previous);
-    } catch (_) {
-      // The visible save error covers both the initial and rollback failures.
-    }
-  }
-
-  Future<void> _restoreReminderState(ReminderSettings previous) async {
-    await _restoreSchedule(previous);
-    try {
-      await ReminderStorage.save(previous);
-    } catch (_) {
-      // The visible save error covers native and persisted rollback failures.
-    }
+    });
   }
 
   Future<void> _toggleReminder(bool value) async {
-    await _saveAndReschedule(_reminderSettings.copyWith(enabled: value));
+    await _applyReminderEdit(
+      _reminderController.toggleEnabled(_reminderSettings, value),
+    );
   }
 
   Future<void> _deleteTime(int index) async {
-    if (_reminderSettings.times.length <= 1) return;
-    final times = [..._reminderSettings.times]..removeAt(index);
-    await _saveAndReschedule(_reminderSettings.copyWith(times: times));
+    await _applyReminderEdit(
+      _reminderController.deleteTime(_reminderSettings, index),
+    );
   }
 
   Future<void> _addTime(TimeOfDay picked) async {
-    final newTime = ReminderTime(hour: picked.hour, minute: picked.minute);
-    if (_reminderSettings.times.contains(newTime)) {
-      setState(() => _reminderError = 'Diese Uhrzeit ist bereits eingetragen.');
-      return;
-    }
-    if (_reminderSettings.times.length >= ReminderSettings.maxTimes) {
-      setState(() {
-        _reminderError =
-            'Es können höchstens ${ReminderSettings.maxTimes} Uhrzeiten gespeichert werden.';
-      });
-      return;
-    }
-    final times = [
-      ..._reminderSettings.times,
-      newTime,
-    ]..sort((a, b) => a.hour == b.hour
-        ? a.minute.compareTo(b.minute)
-        : a.hour.compareTo(b.hour));
-    await _saveAndReschedule(_reminderSettings.copyWith(times: times));
+    await _applyReminderEdit(
+      _reminderController.addTime(
+        _reminderSettings,
+        ReminderTime(hour: picked.hour, minute: picked.minute),
+      ),
+    );
   }
 
   Future<void> _toggleWeekday(int weekday) async {
-    final current = List<int>.from(_reminderSettings.weekdays);
-    if (current.contains(weekday)) {
-      if (current.length <= 1) return;
-      current.remove(weekday);
-    } else {
-      current.add(weekday);
-      current.sort();
+    await _applyReminderEdit(
+      _reminderController.toggleWeekday(_reminderSettings, weekday),
+    );
+  }
+
+  Future<void> _applyReminderEdit(ReminderSettingsEdit edit) async {
+    if (edit.error case final error?) {
+      setState(() => _reminderError = error);
+      return;
     }
-    await _saveAndReschedule(_reminderSettings.copyWith(weekdays: current));
+    if (edit.settings case final settings?) {
+      await _saveAndReschedule(settings);
+    }
   }
 
   Future<void> _exportData() async {
@@ -372,7 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        _ProfileHeader(profile: profile),
+        ProfileHeader(profile: profile),
         const SizedBox(height: 24),
         AppSettingsSection(
           title: 'Ausbildungsprofil',
@@ -392,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ],
         ),
         const SizedBox(height: 24),
-        _ReminderSection(
+        ReminderSection(
           settings: _reminderSettings,
           error: _reminderError ?? widget.notificationInitializationError,
           isSaving: _isReminderSaving,
@@ -404,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           onToggleWeekday: _toggleWeekday,
         ),
         const SizedBox(height: 24),
-        _ThemeSection(
+        ProfileThemeSection(
           current: widget.themePreset,
           onChanged: widget.onThemeChanged,
         ),
@@ -474,490 +424,5 @@ class _ProfileScreenState extends State<ProfileScreen>
         'Fachkraft für Lagerlogistik',
       _ => 'Ausbildung noch nicht ausgewählt',
     };
-  }
-}
-
-class _ReminderSection extends StatelessWidget {
-  static const _weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-
-  final ReminderSettings settings;
-  final String? error;
-  final bool isSaving;
-  final bool isPermissionBlocked;
-  final VoidCallback? onOpenSettings;
-  final ValueChanged<bool> onToggle;
-  final ValueChanged<TimeOfDay> onAddTime;
-  final ValueChanged<int> onDeleteTime;
-  final ValueChanged<int> onToggleWeekday;
-
-  const _ReminderSection({
-    required this.settings,
-    required this.error,
-    required this.isSaving,
-    required this.isPermissionBlocked,
-    required this.onOpenSettings,
-    required this.onToggle,
-    required this.onAddTime,
-    required this.onDeleteTime,
-    required this.onToggleWeekday,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSettingsSection(
-      title: 'Erinnerungen',
-      description: 'Ein kurzer Hinweis an ausgewählten Tagen.',
-      children: [
-        SwitchListTile(
-          key: const ValueKey('reminder_toggle'),
-          title: const Text('An ausgewählten Tagen erinnern'),
-          subtitle: Text(settings.enabled ? 'Aktiv' : 'Aus'),
-          value: settings.enabled,
-          onChanged: isSaving ? null : onToggle,
-          secondary: isSaving
-              ? const SizedBox.square(
-                  dimension: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : null,
-        ),
-        if (error case final msg?) ...[
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppMessage(
-                  icon: Icons.error_outline,
-                  title: msg,
-                  tone: AppMessageTone.error,
-                ),
-                if (isPermissionBlocked && onOpenSettings != null) ...[
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: onOpenSettings,
-                    icon: const Icon(Icons.settings_outlined),
-                    label: const Text('Benachrichtigungseinstellungen öffnen'),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-        if (settings.enabled) ...[
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              'Uhrzeiten',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ),
-          ...settings.times.asMap().entries.map((entry) {
-            final index = entry.key;
-            final time = entry.value;
-            return ListTile(
-              key: ValueKey('reminder_time_$index'),
-              leading: const Icon(Icons.schedule_outlined),
-              title: Text(time.toDisplayString()),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: settings.times.length <= 1
-                    ? 'Mindestens eine Uhrzeit ist erforderlich'
-                    : 'Uhrzeit entfernen',
-                onPressed: isSaving || settings.times.length <= 1
-                    ? null
-                    : () => onDeleteTime(index),
-              ),
-            );
-          }),
-          TextButton.icon(
-            key: const ValueKey('reminder_add_time'),
-            onPressed: isSaving
-                ? null
-                : () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: const TimeOfDay(hour: 20, minute: 0),
-                    );
-                    if (picked != null) onAddTime(picked);
-                  },
-            icon: const Icon(Icons.add),
-            label: const Text('Zeit hinzufügen'),
-          ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              'Tage',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: List.generate(7, (i) {
-                final weekday = i + 1;
-                return FilterChip(
-                  key: ValueKey('reminder_weekday_$weekday'),
-                  label: Text(_weekdayLabels[i]),
-                  selected: settings.weekdays.contains(weekday),
-                  onSelected: isSaving ||
-                          (settings.weekdays.length <= 1 &&
-                              settings.weekdays.contains(weekday))
-                      ? null
-                      : (_) => onToggleWeekday(weekday),
-                );
-              }),
-            ),
-          ),
-        ],
-        const Divider(),
-        const ExpansionTile(
-          key: ValueKey('samsung_hint'),
-          leading: Icon(Icons.info_outline),
-          title: Text('Hinweis für Samsung-Geräte'),
-          tilePadding: EdgeInsets.symmetric(horizontal: 16),
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Auf Samsung-Geräten können Benachrichtigungen '
-                    'zusätzlich blockiert werden:',
-                  ),
-                  SizedBox(height: 12),
-                  _SamsungHintStep(
-                    icon: Icons.battery_saver_outlined,
-                    text: 'Einstellungen → Apps → Berichtsheft-Merker '
-                        '→ Akku → „Nicht eingeschränkt" wählen',
-                  ),
-                  SizedBox(height: 8),
-                  _SamsungHintStep(
-                    icon: Icons.do_not_disturb_on_outlined,
-                    text: 'Einstellungen → Benachrichtigungen → Nicht '
-                        'stören → prüfen, ob die App blockiert wird',
-                  ),
-                  SizedBox(height: 8),
-                  _SamsungHintStep(
-                    icon: Icons.notifications_active_outlined,
-                    text: 'Einstellungen → Apps → Berichtsheft-Merker '
-                        '→ Benachrichtigungen → Kategorie '
-                        '„Tägliche Berichtsheft-Erinnerungen" aktivieren',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ThemeSection extends StatefulWidget {
-  final ThemePreset current;
-  final Future<void> Function(ThemePreset)? onChanged;
-
-  const _ThemeSection({required this.current, required this.onChanged});
-
-  @override
-  State<_ThemeSection> createState() => _ThemeSectionState();
-}
-
-class _ThemeSectionState extends State<_ThemeSection> {
-  bool _applying = false;
-
-  Future<void> _select(ThemePreset preset) async {
-    if (_applying || preset == widget.current || widget.onChanged == null) {
-      return;
-    }
-    setState(() => _applying = true);
-    try {
-      await widget.onChanged!(preset);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Das Farbtheme konnte nicht gespeichert werden.'),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _applying = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSettingsSection(
-      title: 'Darstellung',
-      description: 'Farbtheme der App.',
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            const columns = 3;
-            const spacing = 12.0;
-            final tileWidth =
-                (constraints.maxWidth - spacing * (columns - 1)) / columns;
-            return Wrap(
-              key: const ValueKey('theme_selector'),
-              spacing: spacing,
-              runSpacing: spacing,
-              children: [
-                for (final preset in ThemePreset.values)
-                  SizedBox(
-                    key: ValueKey('theme_${preset.name}'),
-                    width: tileWidth,
-                    height: tileWidth / 0.82,
-                    child: _ThemePresetTile(
-                      preset: preset,
-                      selected: preset == widget.current,
-                      disabled: _applying,
-                      onTap: () => _select(preset),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-/// Tappable Farbvorschau-Kachel für ein [ThemePreset].
-///
-/// Die Miniatur zeigt Helligkeit (Hintergrund = [ThemePreset.surfaceColor])
-/// und Farbton (Akzentbalken + Punkt = [ThemePreset.seedColor]); das gewählte
-/// Preset wird mit einem primary-Ring und Häkchen markiert.
-class _ThemePresetTile extends StatelessWidget {
-  final ThemePreset preset;
-  final bool selected;
-  final bool disabled;
-  final VoidCallback? onTap;
-
-  const _ThemePresetTile({
-    required this.preset,
-    required this.selected,
-    required this.disabled,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final lightSeed =
-        Color.lerp(preset.seedColor, Colors.white, 0.25) ?? preset.seedColor;
-
-    return Opacity(
-      opacity: disabled ? 0.6 : 1,
-      child: Material(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        child: InkWell(
-          onTap: disabled ? null : onTap,
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
-              border: Border.all(
-                color:
-                    selected ? colorScheme.primary : colorScheme.outlineVariant,
-                width: selected ? 2 : 1,
-              ),
-            ),
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ColoredBox(color: preset.surfaceColor),
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Container(
-                            height: 10,
-                            width: double.infinity,
-                            color: preset.seedColor,
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: lightSeed,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (selected)
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: Icon(
-                                Icons.check_circle,
-                                size: 18,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  preset.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelSmall
-                      ?.copyWith(color: colorScheme.onSurface),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  final StoredProfile profile;
-
-  const _ProfileHeader({required this.profile});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final name = profile.name?.trim();
-    return Material(
-      color: theme.colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              foregroundColor: theme.colorScheme.onPrimaryContainer,
-              child: const Icon(Icons.person_outline, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name == null || name.isEmpty ? 'Dein Profil' : name,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Ausbildung und App-Einstellungen',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SamsungHintStep extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _SamsungHintStep({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(text, style: theme.textTheme.bodySmall),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileEditScreen extends StatelessWidget {
-  final StoredProfile profile;
-  final ProfileSubmitCallback onSave;
-
-  const _ProfileEditScreen({
-    required this.profile,
-    required this.onSave,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profil bearbeiten')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          ProfileForm(
-            initialName: profile.name,
-            initialCompany: profile.company,
-            initialOccupation: profile.occupation,
-            initialTrainingYear: profile.trainingYear,
-            submitLabel: 'Profil speichern',
-            submitIcon: Icons.save_outlined,
-            onSubmit: ({
-              name,
-              company,
-              required occupation,
-              required trainingYear,
-            }) async {
-              await onSave(
-                name: name,
-                company: company,
-                occupation: occupation,
-                trainingYear: trainingYear,
-              );
-              if (context.mounted) {
-                Navigator.of(context).pop(true);
-              }
-            },
-          ),
-        ],
-      ),
-    );
   }
 }

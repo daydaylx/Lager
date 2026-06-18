@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-06-18
+Zuletzt aktualisiert: 2026-06-19
 
 ## Aktueller Stand
 
@@ -23,11 +23,11 @@ Zuletzt aktualisiert: 2026-06-18
   - `lib/main.dart` — startet den fehlertoleranten App-Bootstrap
   - `lib/app/bootstrap.dart` — öffnet lokale Speicher und bietet bei Fehlern Retry ohne Datenlöschung
   - `lib/app/app.dart` — MaterialApp + persistiertes ThemePreset + Onboarding-Gate + NavigationBar Shell
-  - `lib/app/theme.dart` — fünf Theme-Presets und explizites Material-3-Komponententheme
+  - `lib/app/theme.dart` — neun Theme-Presets und explizites Material-3-Komponententheme
   - `lib/core/constants.dart` — Text-, SharedPreferences-, Berufs-, Versions- und Ausbildungsjahr-Konstanten
   - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für das Ausbildungsprofil
   - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien und Besonderheiten mit UI-Labels
-  - `lib/core/models/` — `DailyEntry` und `ActivityTemplate`
+  - `lib/core/models/` — `DailyEntry`, `ActivityTemplate` und `ReminderSettings`
   - `lib/core/data/default_activities.dart` — 132 vordefinierte Tätigkeiten mit stabilen IDs
   - `lib/core/data/activity_subcategories.dart` — fachliche Untergruppen für Tätigkeiten
   - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
@@ -35,11 +35,15 @@ Zuletzt aktualisiert: 2026-06-18
   - `lib/core/services/export_service.dart` — JSON-Export aller Daten via System-Share-Sheet
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
-  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und Berichtskarte
-  - `lib/features/today/widgets/` — extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection`, `ReportCard`
+  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag, Screen-State, Laden/Speichern, Tageswechsel und Berichtskarte
+  - `lib/features/today/activity_picker_model.dart` — Tätigkeitsauswahl-Logik für Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und historische IDs
+  - `lib/features/today/today_entry_draft.dart` — DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau
+  - `lib/features/today/widgets/` — extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection`, `ActivityPickerSection`, `ReportCard`
   - `lib/features/week/week_screen.dart` — Wochenliste, Tagesstatus, Zusammenfassung und kopierbare Berichte
   - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung mit Suche und Bottom Sheet
-  - `lib/features/profile/profile_screen.dart` — Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung
+  - `lib/features/profile/profile_screen.dart` — Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring
+  - `lib/features/profile/profile_reminder_controller.dart` — Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln
+  - `lib/features/profile/widgets/` — Profil-Header, Profil-Editor, Reminder-Section und Theme-Auswahl
   - `lib/shared/widgets/app_ui.dart` — gemeinsame Abschnitts-, Status- und Empty-State-Bausteine
 - `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
 - `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
@@ -51,6 +55,7 @@ Zuletzt aktualisiert: 2026-06-18
 - Release-Signierung über lokale, ignorierte `android/key.properties` und `android/app/upload-keystore.jks`
 - `test/widget_test.dart` — Onboarding-, Profil- und Navigationstests
 - `test/today_screen_test.dart` — Validierung, Suche, häufig genutzt, Untergruppen, Empfehlungen, Speicherung, Bearbeitung und Tagtypen
+- `test/today_entry_draft_test.dart`, `test/activity_picker_model_test.dart`, `test/activity_recommender_test.dart` — ausgelagerte Today-Logik
 - `test/default_activities_test.dart` — Katalogumfang und eindeutige IDs
 - `test/hive_daily_entry_storage_test.dart` — echter Persistenztest über Box-Neuöffnung
 - `test/week_utils_test.dart` — ISO-Kalenderwochen inklusive Jahreswechsel
@@ -59,6 +64,9 @@ Zuletzt aktualisiert: 2026-06-18
 - `test/persistence_stability_test.dart` — stabile Enum-Namen, kontrollierte Parser und Tätigkeits-IDs
 - `test/version_consistency_test.dart` — verhindert Drift zwischen `pubspec.yaml` und `kAppVersion`
 - `test/notification_service_test.dart` — Reminder-Plan, IDs und Tap-Payload
+- `test/profile_reminder_controller_test.dart` — Reminder-Controller mit Permission, Rollback und Edit-Regeln
+- `test/profile_reminder_screen_test.dart` — Profil-Screen Erinnerungs-UI
+- `test/profile_theme_grid_test.dart` — Farbkachel-Grid der Theme-Auswahl
 - `test/bootstrap_test.dart` — sichtbarer Bootstrap-Fehler und Retry
 - `test/templates_screen_test.dart` — Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)
 - `test/ui_layout_test.dart` — kleine Displays, große Schrift, Tastatur, Touchflächen und Goldens
@@ -71,7 +79,7 @@ Zuletzt aktualisiert: 2026-06-18
 | `flutter create --platforms=android .`   | Erfolgreich, android/ generiert                            |
 | `flutter pub get`                        | Erfolgreich, Abhängigkeiten aufgelöst                      |
 | `flutter analyze`                        | 0 Issues                                                   |
-| `flutter test`                           | 184/184 Tests bestanden                                    |
+| `flutter test`                           | 244/244 Tests bestanden                                    |
 | `flutter build apk --debug`              | Erfolgreich, Debug-APK 91 MB                               |
 | `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.1 MB                      |
 | Release-Signatur                         | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |

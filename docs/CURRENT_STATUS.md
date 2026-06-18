@@ -1,6 +1,6 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-06-18 (Phase 17+18 aufgeräumt; #41-Fehlermeldung verbessert; Phase 19 QA-Vorbereitung läuft)
+Stand: 2026-06-19 (Profil/Reminder-Refactor umgesetzt; Phase 19 QA-Vorbereitung läuft)
 
 ---
 
@@ -13,6 +13,25 @@ Stand: 2026-06-18 (Phase 17+18 aufgeräumt; #41-Fehlermeldung verbessert; Phase 
 ## Was fertig ist
 
 Phasen 0–16 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+
+Neu nach Profil/Reminder-Refactor (19.06.2026):
+
+- `profile_screen.dart` entlastet (963 → 428 Zeilen), ohne sichtbare UI-/Key-Änderung
+- Neue Reminder-Koordination: `lib/features/profile/profile_reminder_controller.dart`
+- Neue Profil-Widgets: `profile_header.dart`, `profile_edit_screen.dart`, `profile_theme_section.dart`, `reminder_section.dart`
+- Reminder-Controller kapselt Laden/Speichern, Permission-Status, Rollback und Edit-Regeln für Zeiten/Wochentage
+- Race-Fix: Nach geladenen aktivierten Reminder-Settings wird der aktuelle Notification-Permission-Status erneut geprüft
+- Neue Tests: `profile_reminder_controller_test.dart`
+- `flutter analyze` — 0 Issues; `flutter test` — 244/244 bestanden; `flutter build apk --debug` — erfolgreich
+
+Neu nach TodayScreen-Refactor (19.06.2026):
+
+- `today_screen.dart` weiter entlastet (911 → 665 Zeilen), ohne sichtbare UI-/Key-Änderung
+- Neue Logikdateien: `lib/features/today/today_entry_draft.dart`, `activity_picker_model.dart`
+- Neues Widget `lib/features/today/widgets/activity_picker_section.dart`
+- `activity_recommender.dart`: häufig-genutzt-Sortierung aus gespeicherten Einträgen als reine Funktion
+- Neue Tests: `today_entry_draft_test.dart`, `activity_picker_model_test.dart`, `activity_recommender_test.dart`
+- `flutter analyze` — 0 Issues; `flutter test` — 237/237 bestanden
 
 Neu in Phase 16 (#40, #35, #49):
 
@@ -27,8 +46,9 @@ Neu in Phase 16 (#40, #35, #49):
 
 Neu in Phase 15 (#47):
 
-- `today_screen.dart` (1 667 → 1 046 Zeilen) in `lib/features/today/widgets/` zerlegt
+- `today_screen.dart` (1 667 → 1 046 Zeilen; später 911 → 665 Zeilen) in kleinere Dateien zerlegt
 - Neue Dateien: `day_status_card.dart`, `save_bar.dart`, `area_grid.dart`, `activity_section.dart`, `day_type_selector.dart`, `special_flags_note_section.dart`
+- Weitere neue Dateien: `today_entry_draft.dart`, `activity_picker_model.dart`, `widgets/activity_picker_section.dart`
 - `_specialFlagsExpanded` als lokaler Widget-State in `SpecialFlagsAndNoteSection` (war in `_TodayScreenState`)
 - Alle 170 Tests unverändert grün; keine Verhaltens- oder Key-Änderung
 
@@ -86,11 +106,12 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Phase 19 QA-Vorbereitung (18.06.2026):
+Aktuell nach Profil/Reminder-Refactor (19.06.2026):
 
 ```
 flutter analyze          →  0 Issues
-flutter test             →  184/184 bestanden
+flutter test             →  244/244 bestanden
+flutter build apk --debug  →  erfolgreich
 flutter build apk --release  →  erfolgreich (18.06.2026)
 ```
 

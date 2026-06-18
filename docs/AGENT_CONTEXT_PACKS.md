@@ -22,7 +22,10 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 | `lib/core/data/activity_subcategories.dart`    | UI-Untergruppen für vordefinierte Tätigkeiten            |
 | `lib/core/models/activity_template.dart`       | ActivityTemplate-Modell                                  |
 | `lib/core/enums/activity_category.dart`        | ActivityCategory-Enum (10 Kategorien)                    |
-| `lib/features/today/today_screen.dart`         | Heute-Auswahl mit Suche, häufig genutzt und Auswahlchips |
+| `lib/features/today/today_screen.dart`         | Heute-Orchestrierung, Speichern und Screen-State         |
+| `lib/features/today/activity_picker_model.dart` | Suche, Gruppen, Quick Access und historische IDs         |
+| `lib/features/today/activity_recommender.dart` | Häufig genutzt und Ausbildungsjahr-Empfehlungen          |
+| `lib/features/today/widgets/activity_picker_section.dart` | Aktivitätsauswahl-UI mit bestehenden Keys      |
 | `docs/UI_UX_SPEC.md`                           | Abschnitt "18. Vorlagen-Screen" (Zeile ~447)             |
 | `docs/DATA_MODEL.md`                           | ActivityTemplate-Persistenz-Konzept                      |
 
@@ -144,7 +147,9 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 | -------------------------------------------------------- | ------------------------------------------- |
 | `lib/core/services/notification_service.dart`            | Reminder-Plan, Berechtigung und Tap-Routing |
 | `lib/core/storage/reminder_storage.dart`                 | Persistierte Reminder-Einstellungen         |
-| `lib/features/profile/profile_screen.dart`               | Reminder-UI und Rollback                    |
+| `lib/features/profile/profile_reminder_controller.dart`  | Laden, Speichern, Berechtigung, Rollback und Edit-Regeln |
+| `lib/features/profile/profile_screen.dart`               | Profil-Orchestrierung und Reminder-State    |
+| `lib/features/profile/widgets/reminder_section.dart`     | Reminder-UI mit stabilen Test-Keys          |
 | `lib/app/app.dart`                                       | Lifecycle, Tageswechsel und Tap-Ziel        |
 | `android/app/build.gradle.kts`                           | Application ID, NDK und Release-Signierung  |
 | `android/app/src/main/AndroidManifest.xml`               | Permissions, Receiver und Backup-Regeln     |
@@ -186,6 +191,7 @@ Danach manueller Gerätetest:
 | --------------------------------------------- | ------------------------------------------------------------------ |
 | `lib/core/report/daily_report_generator.dart` | Deterministische Textlogik                                         |
 | `lib/features/today/today_screen.dart`        | Tageseintrag-Steuerung und Report-Trigger                          |
+| `lib/features/today/today_entry_draft.dart`   | DailyEntry-Entwurf für Speichern und Berichtsvorschau              |
 | `lib/features/today/widgets/report_card.dart` | Berichtskarten-Widget (ab Phase 16, ersetzt Bottom-Sheet-Vorschau) |
 | `lib/features/week/week_screen.dart`          | Bericht in Wochenzusammenfassung                                   |
 | `test/daily_report_generator_test.dart`       | Textverträge je Tagtyp und Flag                                    |
@@ -222,6 +228,8 @@ Danach manueller Gerätetest:
 | `lib/app/theme.dart`                         | ThemePreset-Vertrag                                |
 | `lib/app/bootstrap.dart`                     | Initiales Laden                                    |
 | `lib/app/app.dart`                           | App-weite Zustandsübergabe und Reset               |
+| `lib/features/profile/profile_screen.dart`   | Profil-Orchestrierung, Export/Delete, Section-Wiring |
+| `lib/features/profile/widgets/`              | Profil-Header, Editor, Theme- und Reminder-UI      |
 | Ziel-Screen und relevante Widget-Tests       | UI- und Verhaltensvertrag                          |
 
 ### Risiken
