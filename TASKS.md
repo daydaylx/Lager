@@ -201,7 +201,7 @@ Issues #14–#20 aus GitHub abgearbeitet.
 
 - [x] Deterministischer lokaler Tagesberichtsvorschlag in Heute und Woche
 - [x] Berichtsvorschläge lokal kopierbar, ohne KI oder externe API
-- [x] Fünf persistierte Farbthemes inklusive hellem Preset
+- [x] Neun persistierte Farbthemes inklusive hellem Preset; Auswahl über Farbkachel-Grid mit Live-Vorschau
 - [x] Profil-Screen mit separater Darstellungsgruppe
 - [x] Zusätzliche mobile UI-Verbesserungen und Kontrastkorrekturen
 - [ ] Theme-Auswahl und Theme-Persistenz auf echtem Android-Gerät prüfen
