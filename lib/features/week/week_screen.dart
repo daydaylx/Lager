@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/data/default_activities.dart';
+import '../../core/activity_utils.dart';
 import '../../core/report/daily_report_generator.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
@@ -360,12 +360,7 @@ class _WeekScreenState extends State<WeekScreen> {
           days: _weekDays,
           entries: _entries,
           today: _today,
-          activityTitles: {
-            for (final activity in defaultActivities)
-              activity.id: activity.title,
-            for (final activity in _customTemplates.values)
-              activity.id: activity.title,
-          },
+          activityTitles: buildActivityTitlesMap(_customTemplates.values),
         ),
       ),
     );

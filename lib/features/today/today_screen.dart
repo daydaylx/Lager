@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/activity_utils.dart';
 import '../../core/data/default_activities.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
@@ -969,11 +970,6 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
-  Map<String, String> _buildActivityTitlesMap() => {
-        for (final a in defaultActivities) a.id: a.title,
-        for (final a in _customTemplates) a.id: a.title,
-      };
-
   String? _currentReport() {
     if (!_canSave) return null;
     final note = _noteController.text.trim();
@@ -990,7 +986,10 @@ class _TodayScreenState extends State<TodayScreen> {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    return DailyReportGenerator.generate(entry, _buildActivityTitlesMap());
+    return DailyReportGenerator.generate(
+      entry,
+      buildActivityTitlesMap(_customTemplates),
+    );
   }
 
   void _copyReport() {
