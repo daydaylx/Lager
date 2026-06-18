@@ -52,7 +52,11 @@ Implementierter Look seit Phase 11:
 
 - reduzierte native Material-3-Optik
 - standardmäßig dunkles Theme `Lager Teal`
-- fünf lokal wählbare und persistierte Farbthemes, darunter ein helles Theme
+- neun lokal wählbare und persistierte Farbthemes (acht dunkle, ein helles):
+  Lager Teal, Nacht Grün, Warm Sand, Blau Grau, Hell, Nacht Teal, Flieder Nacht,
+  Terrakotta Nacht, Anthrazit — seedColor/surfaceColor je Preset in `lib/app/theme.dart`
+- Auswahl über ein Farbkachel-Grid mit Live-Vorschau (Theme-Hintergrund + Akzentbalken/-punkt);
+  das aktive Theme wird mit einem Ring und Häkchen markiert
 - Karten nur zur sinnvollen Gruppierung
 - große Touchflächen
 - klare Icons
@@ -488,7 +492,10 @@ Felder:
 - optional Name
 - optional Betrieb
 - Datenverwaltung
-- Darstellung / Farbtheme
+- Darstellung / Farbtheme — Farbkachel-Grid (kein Dialog): jede Kachel zeigt eine
+  Miniatur-Vorschau aus `surfaceColor` (Hintergrund = Helligkeit) und `seedColor`
+  (Akzentbalken + Punkt = Farbton) sowie den Preset-Namen; das aktive Theme ist
+  mit Ring + Häkchen markiert
 
 Die Profilfelder selbst liegen auf einem separaten Bearbeitungsscreen.
 Erinnerungen sowie Daten & Datenschutz sind klar getrennte Einstellungsgruppen.

@@ -169,6 +169,8 @@ App-Start:
 | `export_service_test.dart`                 | JSON-Export: Profil, Einträge, eigene Tätigkeiten (`generateJson`) |
 | `profile_storage_test.dart`                | Profil save/load, Validierung Beruf/Jahr, Onboarding-Status        |
 | `theme_preset_storage_test.dart`           | Theme-Preset-Roundtrip und Fallback auf `lagerTeal`                |
+| `theme_test.dart`                          | `buildThemeForPreset` pro Preset: M3, Brightness, primary          |
+| `profile_theme_grid_test.dart`             | Farbkachel-Grid: alle Presets gerendert, eins markiert             |
 
 Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 

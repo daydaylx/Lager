@@ -71,8 +71,8 @@ Neu in Phase 13:
 Weitere akzeptierte aktuelle Funktionen:
 
 - Deterministischer lokaler Tagesberichtsvorschlag in Heute und Woche, inklusive Kopieren
-- Fünf lokal persistierte Farbthemes; `Lager Teal` ist das dunkle Standardpreset
-- Theme-Auswahl im Profil und Zurücksetzen über „Alle Daten löschen"
+- Neun lokal persistierte Farbthemes (acht dunkle, ein helles); `Lager Teal` ist das dunkle Standardpreset
+- Theme-Auswahl im Profil über ein Farbkachel-Grid mit Live-Vorschau; Zurücksetzen über „Alle Daten löschen"
 - Tätigkeitskatalog mit 132 vordefinierten Lagerlogistik-Tätigkeiten inklusive EDV/Scanner, Qualität, Ordnung/5S und Unterweisung
 - Heute-Screen mit Tätigkeitssuche, häufig genutzten Tätigkeiten, Untergruppen, Ausbildungsjahr-Empfehlungen und sichtbaren Auswahlchips
 - Tagesbericht-Generator mit mehreren deterministischen Satzmustern für Betrieb und Berufsschule; Besonderheiten wie Kontrolle, Fehlerkorrektur, Probleme und Notizen werden eingebunden

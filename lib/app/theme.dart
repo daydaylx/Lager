@@ -6,6 +6,10 @@ enum ThemePreset {
   warmSand,
   blauGrau,
   hell,
+  nachtTeal,
+  fliederNacht,
+  terracottaNacht,
+  anthrazit,
 }
 
 extension ThemePresetDetails on ThemePreset {
@@ -15,6 +19,10 @@ extension ThemePresetDetails on ThemePreset {
         ThemePreset.warmSand => 'Warm Sand',
         ThemePreset.blauGrau => 'Blau Grau',
         ThemePreset.hell => 'Hell',
+        ThemePreset.nachtTeal => 'Nacht Teal',
+        ThemePreset.fliederNacht => 'Flieder Nacht',
+        ThemePreset.terracottaNacht => 'Terrakotta Nacht',
+        ThemePreset.anthrazit => 'Anthrazit',
       };
 
   Color get seedColor => switch (this) {
@@ -23,6 +31,10 @@ extension ThemePresetDetails on ThemePreset {
         ThemePreset.warmSand => const Color(0xFF8B6914),
         ThemePreset.blauGrau => const Color(0xFF3A5B8C),
         ThemePreset.hell => const Color(0xFF2E7D6B),
+        ThemePreset.nachtTeal => const Color(0xFF1F6B5C),
+        ThemePreset.fliederNacht => const Color(0xFF6B5B95),
+        ThemePreset.terracottaNacht => const Color(0xFFA65A3C),
+        ThemePreset.anthrazit => const Color(0xFF5C6470),
       };
 
   Color get _surfaceColor => switch (this) {
@@ -31,7 +43,14 @@ extension ThemePresetDetails on ThemePreset {
         ThemePreset.warmSand => const Color(0xFF1A1208),
         ThemePreset.blauGrau => const Color(0xFF0C1520),
         ThemePreset.hell => const Color(0xFFF8FAF9),
+        ThemePreset.nachtTeal => const Color(0xFF0B1714),
+        ThemePreset.fliederNacht => const Color(0xFF13111C),
+        ThemePreset.terracottaNacht => const Color(0xFF1B110D),
+        ThemePreset.anthrazit => const Color(0xFF101214),
       };
+
+  /// Öffentlicher Zugang zur Hintergrundfarbe (für Theme-Vorschauen).
+  Color get surfaceColor => _surfaceColor;
 
   Brightness get brightness => switch (this) {
         ThemePreset.hell => Brightness.light,
