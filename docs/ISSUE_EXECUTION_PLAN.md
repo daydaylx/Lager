@@ -1,5 +1,9 @@
 # Detaillierter Abarbeitungsplan für offene Issues #29–#49
 
+> **Historisches Planungsdokument** (Stand 2026-06-17). Issues #29–#36, #38, #40–#49
+> wurden in den Phasen 14–18 abgeschlossen und sind auf GitHub zu schließen.
+> Aktiv offen sind nur noch **#37** (manueller QA-Durchlauf) und **#39** (Import-Entscheidung).
+
 Stand: 2026-06-17
 
 ## Zweck dieses Dokuments
@@ -18,13 +22,13 @@ Ziel ist, dass Coding-Agenten die Issues nicht als Mini-Fix abarbeiten und ansch
 
 ## Größenklassen
 
-| Klasse | Bedeutung | Erwartung |
-|---|---|---|
-| XS | sehr kleine Korrektur | 1–2 Dateien, klar begrenzte Änderung, Tests falls sinnvoll |
-| S | kleine Änderung | wenige Dateien, geringe Architekturwirkung, Tests erwartet |
-| M | mittlere Änderung | mehrere Dateien oder UI-/Datenfluss betroffen, Tests Pflicht |
-| L | große Änderung | Struktur, Datenmodell oder größere UI-Bereiche betroffen, sorgfältige Zwischenprüfung Pflicht |
-| XL | sehr große Änderung | besser in mehrere PRs/Commits splitten, vorher Plan prüfen |
+| Klasse | Bedeutung             | Erwartung                                                                                     |
+| ------ | --------------------- | --------------------------------------------------------------------------------------------- |
+| XS     | sehr kleine Korrektur | 1–2 Dateien, klar begrenzte Änderung, Tests falls sinnvoll                                    |
+| S      | kleine Änderung       | wenige Dateien, geringe Architekturwirkung, Tests erwartet                                    |
+| M      | mittlere Änderung     | mehrere Dateien oder UI-/Datenfluss betroffen, Tests Pflicht                                  |
+| L      | große Änderung        | Struktur, Datenmodell oder größere UI-Bereiche betroffen, sorgfältige Zwischenprüfung Pflicht |
+| XL     | sehr große Änderung   | besser in mehrere PRs/Commits splitten, vorher Plan prüfen                                    |
 
 Wichtig: Die Größenklasse ist kein Zeitversprechen. Sie beschreibt Risiko und nötige Sorgfalt.
 
@@ -779,17 +783,17 @@ Die App muss auf echter Hardware geprüft werden. Automatische Tests ersetzen da
 
 # Empfohlene Reihenfolge mit Aufwand
 
-| Reihenfolge | Issues | Größe | Begründung |
-|---:|---|---|---|
-| 1 | #43, #44 | S | Doku muss stimmen, bevor Agenten weiterarbeiten. |
-| 2 | #42, #48, #38 | S–L | Datenmodell/Persistenz absichern, bevor neue Datenlogik kommt. |
-| 3 | #47 | L | Struktur schaffen, sonst werden spätere UI-Änderungen riskant. |
-| 4 | #40, #35, #49 | M–L | Tagesbericht erst fachlich verbessern, dann prominent anzeigen. |
-| 5 | #30, #31, #41 | S–L | Tätigkeiten-UI skalierbar machen, bevor Katalog wächst. |
-| 6 | #29, #32, #34, #33, #36 | M–L | Katalog fachlich ausbauen, aber nicht als Button-Müllhalde. |
-| 7 | #45, #46 | S–M | Alltagskomfort und Diagnose verbessern. |
-| 8 | #39 | L–XL | Lokale Sicherung nur sauber, nicht als schneller JSON-Hack. |
-| 9 | #37 | M | Release-QA erst nach den größeren Änderungen wirklich sinnvoll. |
+| Reihenfolge | Issues                  | Größe | Begründung                                                      |
+| ----------: | ----------------------- | ----- | --------------------------------------------------------------- |
+|           1 | #43, #44                | S     | Doku muss stimmen, bevor Agenten weiterarbeiten.                |
+|           2 | #42, #48, #38           | S–L   | Datenmodell/Persistenz absichern, bevor neue Datenlogik kommt.  |
+|           3 | #47                     | L     | Struktur schaffen, sonst werden spätere UI-Änderungen riskant.  |
+|           4 | #40, #35, #49           | M–L   | Tagesbericht erst fachlich verbessern, dann prominent anzeigen. |
+|           5 | #30, #31, #41           | S–L   | Tätigkeiten-UI skalierbar machen, bevor Katalog wächst.         |
+|           6 | #29, #32, #34, #33, #36 | M–L   | Katalog fachlich ausbauen, aber nicht als Button-Müllhalde.     |
+|           7 | #45, #46                | S–M   | Alltagskomfort und Diagnose verbessern.                         |
+|           8 | #39                     | L–XL  | Lokale Sicherung nur sauber, nicht als schneller JSON-Hack.     |
+|           9 | #37                     | M     | Release-QA erst nach den größeren Änderungen wirklich sinnvoll. |
 
 ---
 

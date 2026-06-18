@@ -1,10 +1,10 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-06-17
+Zuletzt aktualisiert: 2026-06-18
 
 ## Aktueller Stand
 
-**Phasen 0–13 im Code abgeschlossen. Lokale Release-Signierung und Installation sind erledigt; manueller Android-Gerätetest ist offen.**
+**Phasen 0–18 im Code abgeschlossen. Phase 19 (Release-QA) läuft: APK gebaut, Checkliste bereit, manueller Gerätetest auf Samsung SM-S931B steht aus.**
 
 ---
 
@@ -32,9 +32,11 @@ Zuletzt aktualisiert: 2026-06-17
   - `lib/core/data/activity_subcategories.dart` — fachliche Untergruppen für Tätigkeiten
   - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
   - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge ohne KI
+  - `lib/core/services/export_service.dart` — JSON-Export aller Daten via System-Share-Sheet
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
-  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und Berichtsvorschau
+  - `lib/features/today/today_screen.dart` — persistenter Tageseintrag mit Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und Berichtskarte
+  - `lib/features/today/widgets/` — extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection`, `ReportCard`
   - `lib/features/week/week_screen.dart` — Wochenliste, Tagesstatus, Zusammenfassung und kopierbare Berichte
   - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung mit Suche und Bottom Sheet
   - `lib/features/profile/profile_screen.dart` — Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung
@@ -58,22 +60,23 @@ Zuletzt aktualisiert: 2026-06-17
 - `test/version_consistency_test.dart` — verhindert Drift zwischen `pubspec.yaml` und `kAppVersion`
 - `test/notification_service_test.dart` — Reminder-Plan, IDs und Tap-Payload
 - `test/bootstrap_test.dart` — sichtbarer Bootstrap-Fehler und Retry
+- `test/templates_screen_test.dart` — Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)
 - `test/ui_layout_test.dart` — kleine Displays, große Schrift, Tastatur, Touchflächen und Goldens
 - `test/goldens/` — vier visuelle Referenzen zentraler UI-Zustände
 
 ## Ausgeführte Checks
 
-| Check                                  | Ergebnis                              |
-| -------------------------------------- | ------------------------------------- |
-| `flutter create --platforms=android .` | Erfolgreich, android/ generiert       |
-| `flutter pub get`                      | Erfolgreich, Abhängigkeiten aufgelöst |
-| `flutter analyze`                      | 0 Issues                              |
-| `flutter test`                         | 168/168 Tests bestanden               |
-| `flutter build apk --debug`            | Erfolgreich, Debug-APK 91 MB           |
-| `flutter build apk --release`          | Erfolgreich signiert erzeugt, 24.1 MB  |
-| Release-Signatur                       | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |
-| Zusammengeführtes Release-Manifest     | Package-ID und Backup-Sperre bestätigt |
-| Installation und Start auf Android-Gerät | Samsung SM-S931B: installiert und gestartet |
+| Check                                    | Ergebnis                                                   |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `flutter create --platforms=android .`   | Erfolgreich, android/ generiert                            |
+| `flutter pub get`                        | Erfolgreich, Abhängigkeiten aufgelöst                      |
+| `flutter analyze`                        | 0 Issues                                                   |
+| `flutter test`                           | 184/184 Tests bestanden                                    |
+| `flutter build apk --debug`              | Erfolgreich, Debug-APK 91 MB                               |
+| `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.1 MB                      |
+| Release-Signatur                         | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |
+| Zusammengeführtes Release-Manifest       | Package-ID und Backup-Sperre bestätigt                     |
+| Installation und Start auf Android-Gerät | Samsung SM-S931B: installiert und gestartet                |
 
 Debug-APK: `build/app/outputs/flutter-apk/app-debug.apk`
 Release-APK: `build/app/outputs/flutter-apk/app-release.apk`
@@ -86,13 +89,19 @@ Release-Build wurden damit erfolgreich erzeugt.
 - Favoriten
 - Bearbeiten eigener Tätigkeitstitel
 - Tätigkeiten vom Vortag übernehmen
-- Lokaler Datenexport/-import
+- Lokaler Datenimport (Export ist implementiert; Import: Produktentscheidung offen)
 - Direkte „nur heute“-Tätigkeit ohne Vorlage
 - PDF-Export (nicht geplant)
 - Cloud/Backend (nicht geplant)
 
 ## Nächster Schritt
 
-Manuellen Android-Gerätetest über `docs/QA_REMINDER_CHECKLIST.md` mit der
-installierten Release-APK durchführen. Den lokalen Release-Keystore sicher
-aufbewahren, weil spätere Release-Updates dieselbe Signatur benötigen.
+Release-QA-Durchlauf (Phase 19) mit der installierten Release-APK nach
+`docs/QA_RELEASE_CHECKLIST.md` durchführen:
+
+```bash
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+Den lokalen Release-Keystore sicher aufbewahren, weil spätere Release-Updates
+dieselbe Signatur benötigen.

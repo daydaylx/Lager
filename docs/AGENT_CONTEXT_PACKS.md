@@ -14,17 +14,17 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 
 ### Dateien lesen (in dieser Reihenfolge)
 
-| Datei                                          | Warum                                                   |
-| ---------------------------------------------- | ------------------------------------------------------- |
-| `TASKS.md`                                     | Genaue Anforderungen Phase 6                            |
+| Datei                                          | Warum                                                    |
+| ---------------------------------------------- | -------------------------------------------------------- |
+| `TASKS.md`                                     | Genaue Anforderungen Phase 6                             |
 | `lib/features/templates/templates_screen.dart` | Eigene Tätigkeiten verwalten                             |
-| `lib/core/data/default_activities.dart`        | 132 Tätigkeiten mit stabilen IDs und Kategorien         |
-| `lib/core/data/activity_subcategories.dart`    | UI-Untergruppen für vordefinierte Tätigkeiten           |
-| `lib/core/models/activity_template.dart`       | ActivityTemplate-Modell                                 |
-| `lib/core/enums/activity_category.dart`        | ActivityCategory-Enum (10 Kategorien)                   |
+| `lib/core/data/default_activities.dart`        | 132 Tätigkeiten mit stabilen IDs und Kategorien          |
+| `lib/core/data/activity_subcategories.dart`    | UI-Untergruppen für vordefinierte Tätigkeiten            |
+| `lib/core/models/activity_template.dart`       | ActivityTemplate-Modell                                  |
+| `lib/core/enums/activity_category.dart`        | ActivityCategory-Enum (10 Kategorien)                    |
 | `lib/features/today/today_screen.dart`         | Heute-Auswahl mit Suche, häufig genutzt und Auswahlchips |
-| `docs/UI_UX_SPEC.md`                           | Abschnitt "18. Vorlagen-Screen" (Zeile ~447)            |
-| `docs/DATA_MODEL.md`                           | ActivityTemplate-Persistenz-Konzept                     |
+| `docs/UI_UX_SPEC.md`                           | Abschnitt "18. Vorlagen-Screen" (Zeile ~447)             |
+| `docs/DATA_MODEL.md`                           | ActivityTemplate-Persistenz-Konzept                      |
 
 ### Risiken
 
@@ -56,7 +56,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 | `docs/DATA_MODEL.md`                             | Vollständige Referenz, Persistenz-Strategie                 |
 | `lib/core/models/daily_entry.dart`               | Model-Definition                                            |
 | `lib/core/storage/daily_entry_adapter.dart`      | Hive-CE-Adapter — muss bei Felderweiterung angepasst werden |
-| `lib/core/storage/persisted_enum.dart`           | Kontrollierte Parser für persistierte Enum-Namen             |
+| `lib/core/storage/persisted_enum.dart`           | Kontrollierte Parser für persistierte Enum-Namen            |
 | `lib/core/storage/hive_daily_entry_storage.dart` | Produktiv-Impl.                                             |
 | `test/hive_daily_entry_storage_test.dart`        | Persistenz-Tests                                            |
 | `test/hive_activity_template_storage_test.dart`  | Bei ActivityTemplate-/Adapter-Änderungen                    |
@@ -140,18 +140,18 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 
 ### Dateien lesen
 
-| Datei                                           | Warum                                      |
-| ----------------------------------------------- | ------------------------------------------ |
-| `lib/core/services/notification_service.dart`   | Reminder-Plan, Berechtigung und Tap-Routing |
-| `lib/core/storage/reminder_storage.dart`        | Persistierte Reminder-Einstellungen         |
-| `lib/features/profile/profile_screen.dart`      | Reminder-UI und Rollback                    |
-| `lib/app/app.dart`                              | Lifecycle, Tageswechsel und Tap-Ziel        |
-| `android/app/build.gradle.kts`                  | Application ID, NDK und Release-Signierung  |
-| `android/app/src/main/AndroidManifest.xml`      | Permissions, Receiver und Backup-Regeln     |
-| `android/app/src/main/res/xml/backup_rules.xml` | Backup-Regeln bis Android 11                 |
-| `android/app/src/main/res/xml/data_extraction_rules.xml` | Backup und Gerätetransfer ab Android 12 |
-| `docs/PRIVACY_CONTEXT.md`                       | Lokale Daten und Backup-No-Go               |
-| `docs/QA_REMINDER_CHECKLIST.md`                 | Manueller Android-Nachweis                  |
+| Datei                                                    | Warum                                       |
+| -------------------------------------------------------- | ------------------------------------------- |
+| `lib/core/services/notification_service.dart`            | Reminder-Plan, Berechtigung und Tap-Routing |
+| `lib/core/storage/reminder_storage.dart`                 | Persistierte Reminder-Einstellungen         |
+| `lib/features/profile/profile_screen.dart`               | Reminder-UI und Rollback                    |
+| `lib/app/app.dart`                                       | Lifecycle, Tageswechsel und Tap-Ziel        |
+| `android/app/build.gradle.kts`                           | Application ID, NDK und Release-Signierung  |
+| `android/app/src/main/AndroidManifest.xml`               | Permissions, Receiver und Backup-Regeln     |
+| `android/app/src/main/res/xml/backup_rules.xml`          | Backup-Regeln bis Android 11                |
+| `android/app/src/main/res/xml/data_extraction_rules.xml` | Backup und Gerätetransfer ab Android 12     |
+| `docs/PRIVACY_CONTEXT.md`                                | Lokale Daten und Backup-No-Go               |
+| `docs/QA_REMINDER_CHECKLIST.md`                          | Manueller Android-Nachweis                  |
 
 ### Risiken
 
@@ -169,7 +169,10 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 /home/d/flutter/bin/flutter build apk --debug
 ```
 
-Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.
+Danach manueller Gerätetest:
+
+- `docs/QA_REMINDER_CHECKLIST.md` — für isolierte Reminder-Prüfung
+- `docs/QA_RELEASE_CHECKLIST.md` — für vollständigen Release-QA-Durchlauf
 
 ---
 
@@ -179,14 +182,15 @@ Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.
 
 ### Dateien lesen
 
-| Datei | Warum |
-| ----- | ----- |
-| `lib/core/report/daily_report_generator.dart` | Deterministische Textlogik |
-| `lib/features/today/today_screen.dart` | Live-Vorschau und Kopieren |
-| `lib/features/week/week_screen.dart` | Bericht in Wochenzusammenfassung |
-| `test/daily_report_generator_test.dart` | Textverträge je Tagtyp und Flag |
-| `test/today_screen_test.dart` | Heute-Integration |
-| `test/week_screen_test.dart` | Wochen-Integration |
+| Datei                                         | Warum                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `lib/core/report/daily_report_generator.dart` | Deterministische Textlogik                                         |
+| `lib/features/today/today_screen.dart`        | Tageseintrag-Steuerung und Report-Trigger                          |
+| `lib/features/today/widgets/report_card.dart` | Berichtskarten-Widget (ab Phase 16, ersetzt Bottom-Sheet-Vorschau) |
+| `lib/features/week/week_screen.dart`          | Bericht in Wochenzusammenfassung                                   |
+| `test/daily_report_generator_test.dart`       | Textverträge je Tagtyp und Flag                                    |
+| `test/today_screen_test.dart`                 | Heute-Integration                                                  |
+| `test/week_screen_test.dart`                  | Wochen-Integration                                                 |
 
 ### Risiken
 
@@ -210,15 +214,15 @@ Danach manueller Gerätetest nach `docs/QA_REMINDER_CHECKLIST.md`.
 
 ### Dateien lesen
 
-| Datei | Warum |
-| ----- | ----- |
-| `lib/core/profile_storage.dart` | Profil- und Onboarding-Persistenz |
-| `lib/core/constants.dart` | Ausbildungsberufe, zulässige Jahre und App-Version |
-| `lib/core/storage/theme_preset_storage.dart` | Theme-Persistenz |
-| `lib/app/theme.dart` | ThemePreset-Vertrag |
-| `lib/app/bootstrap.dart` | Initiales Laden |
-| `lib/app/app.dart` | App-weite Zustandsübergabe und Reset |
-| Ziel-Screen und relevante Widget-Tests | UI- und Verhaltensvertrag |
+| Datei                                        | Warum                                              |
+| -------------------------------------------- | -------------------------------------------------- |
+| `lib/core/profile_storage.dart`              | Profil- und Onboarding-Persistenz                  |
+| `lib/core/constants.dart`                    | Ausbildungsberufe, zulässige Jahre und App-Version |
+| `lib/core/storage/theme_preset_storage.dart` | Theme-Persistenz                                   |
+| `lib/app/theme.dart`                         | ThemePreset-Vertrag                                |
+| `lib/app/bootstrap.dart`                     | Initiales Laden                                    |
+| `lib/app/app.dart`                           | App-weite Zustandsübergabe und Reset               |
+| Ziel-Screen und relevante Widget-Tests       | UI- und Verhaltensvertrag                          |
 
 ### Risiken
 

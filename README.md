@@ -94,5 +94,5 @@ auf `AGENTS.md`.
 
 ## Nächster Schritt
 
-Siehe `TASKS.md` → manueller Android-Gerätetest und lokale Release-Signierung
-für Phase 13.
+Siehe `TASKS.md` → Phase 19: Release-QA-Durchlauf nach `docs/QA_RELEASE_CHECKLIST.md`
+auf echtem Android-Gerät. Release-Signierung ist abgeschlossen.

@@ -21,8 +21,9 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | Datei                               | Status    | Beschreibung                                                                                                                         |
 | ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `onboarding/onboarding_screen.dart` | ✅ fertig | Zweistufiger Erststart                                                                                                               |
-| `today/today_screen.dart`           | ✅ fertig | Tageseintrag, Suche, Untergruppen, Empfehlungen und Berichtsvorschau                                                                 |
+| `today/today_screen.dart`           | ✅ fertig | Tageseintrag, Suche, Untergruppen, Empfehlungen und Berichtskarte                                                                    |
 | `today/widgets/`                    | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection` |
+| `today/widgets/report_card.dart`    | ✅ fertig | Generierte Berichtskarte mit Gespeichert-Chip und Kopier-Button                                                                      |
 | `week/week_screen.dart`             | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                            |
 | `templates/templates_screen.dart`   | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                |
 | `profile/profile_screen.dart`       | ✅ fertig | Profil, Erinnerungen, Theme-Auswahl und Datenverwaltung                                                                              |
@@ -150,6 +151,7 @@ App-Start:
 | `widget_test.dart`                         | Onboarding, Navigation, Profil, Reminder-SnackBar               |
 | `today_screen_test.dart`                   | Formular, Speicherung, Suche, Untergruppen, Empfehlungen        |
 | `week_screen_test.dart`                    | Wochenstatus, Navigation                                        |
+| `templates_screen_test.dart`               | Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)            |
 | `week_utils_test.dart`                     | ISO-Kalenderwochen, Jahreswechsel                               |
 | `default_activities_test.dart`             | 132 Einträge, eindeutige IDs                                    |
 | `hive_daily_entry_storage_test.dart`       | Persistenz über Box-Neuöffnung                                  |

@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 16: Tagesbericht fachlich und sichtbar verbessern** ✅ — Code abgeschlossen; visuelle Prüfung auf Gerät noch offen.
+**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — APK gebaut (18.06.2026), Checkliste bereit; manueller Gerätetest ausstehend.
 
 ---
 
@@ -314,11 +314,12 @@ Bereits in früheren Phasen implementiert; Phase-17-Einträge waren stale.
 - [x] #33 Unterweisung punktuell über Tätigkeiten/Besonderheiten
 - [x] #36 Ausbildungsjahr-Priorisierung als weiche Empfehlung
 
-### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung 🔨
+### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung ✅ (Export erledigt; Import bewusst offen)
 
 - [x] #45 Notification-Initialisierungsfehler sichtbar — in `profile_screen.dart`
 - [x] #46 SnackBar „Eintrag fehlt” mit direkter Aktion — in `today_screen.dart`
-- [ ] #39 Lokalen Datenexport und Import — bewusst offen (Produktentscheidung)
+- [x] #39 JSON-Export via System-Share-Sheet implementiert (`export_service.dart`, Commit 352c8f6)
+- [ ] #39 Import: Produktentscheidung offen — erst implementieren, wenn Scope entschieden
 - [ ] Export/Import nur lokal und einfach halten; keine Cloud, kein Account, kein PDF-Overhead.
 
 ### Phase 19: Release-QA auf echtem Android-Gerät
