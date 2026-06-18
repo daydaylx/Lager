@@ -80,3 +80,31 @@ int trainingYearPriority(ActivityTemplate activity, int trainingYear) {
 bool matchesAny(String value, List<String> needles) {
   return needles.any(value.contains);
 }
+
+List<ActivityTemplate> computeFrequentActivities(
+  List<ActivityCategory> categories,
+  Map<String, ActivityTemplate> activitiesById,
+  List<String> frequentActivityIds,
+  Set<String> selectedIds,
+) {
+  final categorySet = categories.toSet();
+  final frequent = <ActivityTemplate>[];
+  for (final id in frequentActivityIds) {
+    final activity = activitiesById[id];
+    if (activity == null || !categorySet.contains(activity.category)) {
+      continue;
+    }
+    if (selectedIds.contains(activity.id)) {
+      continue;
+    }
+    if (!activity.isActive && !selectedIds.contains(activity.id)) {
+      continue;
+    }
+    if (frequent.any((item) => item.id == activity.id)) {
+      continue;
+    }
+    frequent.add(activity);
+    if (frequent.length == 6) break;
+  }
+  return frequent;
+}

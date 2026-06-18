@@ -356,7 +356,12 @@ class _TodayScreenState extends State<TodayScreen> {
         .whereType<ActivityTemplate>()
         .toList(growable: false);
     final frequentActivities = _activitySearchQuery.trim().isEmpty
-        ? _frequentActivitiesFor(categories, activitiesById)
+        ? computeFrequentActivities(
+            categories,
+            activitiesById,
+            _frequentActivityIds,
+            _selectedActivityIds,
+          )
         : const <ActivityTemplate>[];
     final frequentIds = frequentActivities.map((a) => a.id).toSet();
     final recommendedActivities =
@@ -533,31 +538,6 @@ class _TodayScreenState extends State<TodayScreen> {
         _selectedActivityIds.contains(activity.id);
   }
 
-  List<ActivityTemplate> _frequentActivitiesFor(
-    List<ActivityCategory> categories,
-    Map<String, ActivityTemplate> activitiesById,
-  ) {
-    final categorySet = categories.toSet();
-    final frequent = <ActivityTemplate>[];
-    for (final id in _frequentActivityIds) {
-      final activity = activitiesById[id];
-      if (activity == null || !categorySet.contains(activity.category)) {
-        continue;
-      }
-      if (_selectedActivityIds.contains(activity.id)) {
-        continue;
-      }
-      if (!activity.isActive && !_selectedActivityIds.contains(activity.id)) {
-        continue;
-      }
-      if (frequent.any((item) => item.id == activity.id)) {
-        continue;
-      }
-      frequent.add(activity);
-      if (frequent.length == 6) break;
-    }
-    return frequent;
-  }
 
 
 
