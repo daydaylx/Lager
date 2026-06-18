@@ -146,26 +146,29 @@ App-Start:
 
 ## Tests (test/)
 
-| Datei                                      | Getestet                                                        |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `widget_test.dart`                         | Onboarding, Navigation, Profil, Reminder-SnackBar               |
-| `today_screen_test.dart`                   | Formular, Speicherung, Suche, Untergruppen, Empfehlungen        |
-| `week_screen_test.dart`                    | Wochenstatus, Navigation                                        |
-| `templates_screen_test.dart`               | Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)            |
-| `week_utils_test.dart`                     | ISO-Kalenderwochen, Jahreswechsel                               |
-| `default_activities_test.dart`             | 132 Einträge, eindeutige IDs                                    |
-| `hive_daily_entry_storage_test.dart`       | Persistenz über Box-Neuöffnung                                  |
-| `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität                           |
-| `reminder_settings_test.dart`              | Modell-Defaults, Gleichheit, Serialisierung                     |
-| `reminder_storage_test.dart`               | SharedPreferences-Roundtrip, mehrere Zeiten/Tage                |
-| `profile_reminder_screen_test.dart`        | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage)             |
-| `notification_service_test.dart`           | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload        |
-| `daily_report_generator_test.dart`         | Deterministische Berichtstexte je Tagtyp und Flag               |
-| `bootstrap_test.dart`                      | sichtbarer Startfehler und Retry                                |
-| `preferences_write_test.dart`              | fehlgeschlagene SharedPreferences-Schreibvorgänge               |
-| `persistence_stability_test.dart`          | stabile Enum-Namen, Parser und Tätigkeits-IDs                   |
-| `version_consistency_test.dart`            | `pubspec.yaml`-Version gegen `kAppVersion`                      |
-| `ui_layout_test.dart`                      | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens |
+| Datei                                      | Getestet                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `widget_test.dart`                         | Onboarding, Navigation, Profil, Reminder-SnackBar                  |
+| `today_screen_test.dart`                   | Formular, Speicherung, Suche, Untergruppen, Empfehlungen           |
+| `week_screen_test.dart`                    | Wochenstatus, Navigation                                           |
+| `templates_screen_test.dart`               | Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)               |
+| `week_utils_test.dart`                     | ISO-Kalenderwochen, Jahreswechsel                                  |
+| `default_activities_test.dart`             | 132 Einträge, eindeutige IDs                                       |
+| `hive_daily_entry_storage_test.dart`       | Persistenz über Box-Neuöffnung                                     |
+| `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität                              |
+| `reminder_settings_test.dart`              | Modell-Defaults, Gleichheit, Serialisierung                        |
+| `reminder_storage_test.dart`               | SharedPreferences-Roundtrip, mehrere Zeiten/Tage                   |
+| `profile_reminder_screen_test.dart`        | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage)                |
+| `notification_service_test.dart`           | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload           |
+| `daily_report_generator_test.dart`         | Deterministische Berichtstexte je Tagtyp und Flag                  |
+| `bootstrap_test.dart`                      | sichtbarer Startfehler und Retry                                   |
+| `preferences_write_test.dart`              | fehlgeschlagene SharedPreferences-Schreibvorgänge                  |
+| `persistence_stability_test.dart`          | stabile Enum-Namen, Parser und Tätigkeits-IDs                      |
+| `version_consistency_test.dart`            | `pubspec.yaml`-Version gegen `kAppVersion`                         |
+| `ui_layout_test.dart`                      | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens    |
+| `export_service_test.dart`                 | JSON-Export: Profil, Einträge, eigene Tätigkeiten (`generateJson`) |
+| `profile_storage_test.dart`                | Profil save/load, Validierung Beruf/Jahr, Onboarding-Status        |
+| `theme_preset_storage_test.dart`           | Theme-Preset-Roundtrip und Fallback auf `lagerTeal`                |
 
 Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 
