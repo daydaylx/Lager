@@ -132,7 +132,7 @@ void main() {
               ? 'Urlaub'
               : 'Gespeichert'
           : date.weekday <= DateTime.friday && !date.isAfter(today)
-              ? 'Fehlt'
+              ? 'Offen'
               : 'Kein Eintrag';
       expect(
         find.descendant(of: dayCard, matching: find.text(expectedStatus)),
@@ -269,7 +269,7 @@ void main() {
     expect(find.text('Besonderheiten: Selbstständig'), findsOneWidget);
     expect(find.text('Notiz: Neue Warenannahme'), findsOneWidget);
     if (today.weekday >= DateTime.tuesday) {
-      expect(find.text('Kein Eintrag – fehlt'), findsWidgets);
+      expect(find.text('Kein Eintrag – offen'), findsWidgets);
     }
   });
 

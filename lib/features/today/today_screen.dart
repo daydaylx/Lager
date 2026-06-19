@@ -103,7 +103,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String get _statusLabel {
     if (_savedEntry == null) {
-      return 'Noch nicht gespeichert';
+      return 'Noch offen';
     }
     return _hasUnsavedChanges ? 'Änderungen offen' : 'Gespeichert';
   }
@@ -233,7 +233,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       const SizedBox(height: 24),
                       AppSectionHeader(
                         title: 'Bereich',
-                        badge: 'Pflicht',
+                        badge: 'Benötigt',
                         badgeRequired: true,
                         description: _isToday
                             ? 'Wo hast du heute gearbeitet?'
@@ -250,7 +250,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       const SizedBox(height: 24),
                       AppSectionHeader(
                         title: 'Tätigkeiten',
-                        badge: 'Pflicht',
+                        badge: 'Benötigt',
                         badgeRequired: true,
                         description: _isToday
                             ? 'Wähle aus, was du heute gemacht hast.'
@@ -324,7 +324,7 @@ class _TodayScreenState extends State<TodayScreen> {
     if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
       return const AppMessage(
         icon: Icons.touch_app_outlined,
-        title: 'Bereich wählen, dann erscheinen passende Tätigkeiten.',
+        title: 'Wähle zuerst einen Bereich – dann erscheinen passende Tätigkeiten.',
       );
     }
 

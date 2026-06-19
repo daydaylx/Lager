@@ -31,6 +31,17 @@ Future<void> tapVisible(
   await tester.pumpAndSettle();
 }
 
+// #52: Bereichs-Chips sind mit Unterzeile höher — nach Bereichswahl zu den
+// Tätigkeiten scrollen, damit diese im ListView gebaut und prüfbar sind.
+Future<void> scrollToActivities(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.byKey(const ValueKey('activity_search')),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+}
+
 Future<void> tapSave(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
   await tester.pump();
@@ -158,18 +169,19 @@ void main() {
   ) async {
     await pumpToday(tester);
 
-    await expectStatus(tester, 'Noch nicht gespeichert');
-    expect(find.text('Fehlt: Bereich · Tätigkeit'), findsOneWidget);
+    await expectStatus(tester, 'Noch offen');
+    expect(find.text('Noch offen: Bereich · Tätigkeit'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(
       tester,
       find.byKey(const ValueKey('area_wareneingang')),
     );
+    await scrollToActivities(tester);
 
     expect(find.text('Ware angenommen'), findsOneWidget);
     expect(find.text('Ware verpackt'), findsNothing);
-    expect(find.text('Fehlt: Tätigkeit'), findsOneWidget);
+    expect(find.text('Noch offen: Tätigkeit'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(
@@ -191,11 +203,7 @@ void main() {
     await pumpToday(tester);
 
     await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('activity_search')),
-      -300,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await scrollToActivities(tester);
     await tester.enterText(
       find.byKey(const ValueKey('activity_search')),
       'Scanner',
@@ -212,6 +220,7 @@ void main() {
     await pumpToday(tester);
 
     await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await scrollToActivities(tester);
 
     expect(find.text('Annahme'), findsOneWidget);
     expect(find.text('Prüfung'), findsOneWidget);
@@ -223,6 +232,7 @@ void main() {
     await pumpToday(tester, trainingYear: 2);
 
     await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await scrollToActivities(tester);
 
     expect(find.text('Passend zum 2. Ausbildungsjahr'), findsOneWidget);
     expect(find.text('Wareneingang mit Scanner erfasst'), findsWidgets);
@@ -292,6 +302,7 @@ void main() {
 
     await pumpToday(tester, storage: storage);
     await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await scrollToActivities(tester);
 
     expect(find.text('Häufig genutzt'), findsOneWidget);
     expect(find.text('Wareneingang mit Scanner erfasst'), findsWidgets);
@@ -575,6 +586,7 @@ void main() {
     );
     await pumpToday(tester, templateStorage: templateStorage);
     await tapVisible(tester, find.byKey(const ValueKey('area_wareneingang')));
+    await scrollToActivities(tester);
 
     expect(
       find.textContaining('Eigene Tätigkeiten konnten nicht geladen werden.'),
@@ -630,7 +642,7 @@ void main() {
     await tester.pumpWidget(subject(dayTwo));
     await tester.pumpAndSettle();
     expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
-    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
@@ -675,7 +687,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
-    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
   });
 
   testWidgets('Vorhandener Eintrag wird vollständig in das Formular geladen', (
@@ -803,7 +815,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(storage.loadCalls, 2);
-    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
   });
 
   testWidgets('Schreibfehler erhält Eingaben und zeigt verständlichen Fehler', (
@@ -835,7 +847,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    await expectStatus(tester, 'Noch nicht gespeichert');
+    await expectStatus(tester, 'Noch offen');
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('daily_note_field')),
       300,
@@ -891,7 +903,7 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Nicht gespeichert'), findsOneWidget);
+      expect(find.text('Entwurf'), findsOneWidget);
     });
 
     testWidgets('Kopieren-Button zeigt SnackBar', (

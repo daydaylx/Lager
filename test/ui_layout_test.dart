@@ -208,7 +208,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const ValueKey('edit_profile')), findsOneWidget);
+      expect(find.byKey(const ValueKey('profile_header')), findsOneWidget);
       expect(find.byType(Scrollable), findsWidgets);
       expect(tester.takeException(), isNull);
     });

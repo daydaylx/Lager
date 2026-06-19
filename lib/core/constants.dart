@@ -31,6 +31,16 @@ class TrainingOccupationValues {
   ];
 }
 
+/// Lesbarer Ausbildungsberuf für einen gespeicherten occupation-String (#57).
+extension TrainingOccupationLabel on String? {
+  String get occupationLabel => switch (this) {
+        TrainingOccupationValues.fachlagerist => 'Fachlagerist/in',
+        TrainingOccupationValues.fachkraftLagerlogistik =>
+          'Fachkraft für Lagerlogistik',
+        _ => 'Ausbildung noch nicht ausgewählt',
+      };
+}
+
 class TrainingYearValues {
   static const List<int> all = [1, 2, 3];
 

@@ -9,6 +9,7 @@ import '../../core/models/daily_entry.dart';
 import '../../core/models/activity_template.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
+import '../../core/ui/day_status_colors.dart';
 import '../../core/week_utils.dart';
 import '../../shared/widgets/app_ui.dart';
 import '../today/today_screen.dart';
@@ -228,8 +229,8 @@ class _WeekScreenState extends State<WeekScreen> {
 
     if (_isDueWeekDay(date)) {
       return const _DayStatus(
-        label: 'Fehlt',
-        icon: Icons.error_outline,
+        label: 'Offen',
+        icon: Icons.pending_outlined,
         kind: _DayStatusKind.missing,
       );
     }
@@ -243,7 +244,7 @@ class _WeekScreenState extends State<WeekScreen> {
 
   String _summaryFor(DailyEntry? entry) {
     if (entry == null) {
-      return 'Noch kein Tageseintrag';
+      return 'Noch kein Eintrag';
     }
 
     return switch (entry.dayType) {
@@ -482,8 +483,8 @@ class _MissingDaysBanner extends StatelessWidget {
     return AppMessage(
       key: const ValueKey('missing_days_banner'),
       icon: Icons.warning_amber_outlined,
-      title: '$count ${count == 1 ? 'Tag fehlt' : 'Tage fehlen'} noch diese Woche',
-      message: 'Tippe auf einen offenen Tag, um ihn einzutragen.',
+      title: '$count ${count == 1 ? 'Tag offen' : 'Tage offen'} diese Woche',
+      message: 'Tippe auf einen offenen Tag, um ihn nachzutragen. Dauert nur kurz.',
       tone: AppMessageTone.warning,
     );
   }
@@ -713,7 +714,7 @@ class _SummaryDayCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (entry == null)
-              Text(isMissing ? 'Kein Eintrag – fehlt' : 'Kein Eintrag')
+              Text(isMissing ? 'Kein Eintrag – offen' : 'Kein Eintrag')
             else ...[
               Text(
                 entry!.dayType == DayType.betrieb && entry!.areas.isNotEmpty
@@ -822,21 +823,17 @@ class _DayStatus {
     required this.kind,
   });
 
-  Color color(ColorScheme colorScheme) {
-    return switch (kind) {
-      _DayStatusKind.saved => colorScheme.primary,
-      _DayStatusKind.absence => colorScheme.tertiary,
-      _DayStatusKind.missing => colorScheme.error,
-      _DayStatusKind.neutral => colorScheme.onSurfaceVariant,
-    };
-  }
+  // Farbquelle ist zentral in DayStatusColors (#54): offene Tage nutzen den
+  // ruhigen Tertiär-Akzent statt Rot; Abwesenheit einen eigenen Sekundär-Akzent.
+  DayStatusKind get _statusKind => switch (kind) {
+        _DayStatusKind.saved => DayStatusKind.saved,
+        _DayStatusKind.absence => DayStatusKind.absence,
+        _DayStatusKind.missing => DayStatusKind.open,
+        _DayStatusKind.neutral => DayStatusKind.neutral,
+      };
 
-  Color containerColor(ColorScheme colorScheme) {
-    return switch (kind) {
-      _DayStatusKind.saved => colorScheme.primaryContainer,
-      _DayStatusKind.absence => colorScheme.tertiaryContainer,
-      _DayStatusKind.missing => colorScheme.errorContainer,
-      _DayStatusKind.neutral => colorScheme.surfaceContainer,
-    };
-  }
+  Color color(ColorScheme colorScheme) => _statusKind.color(colorScheme);
+
+  Color containerColor(ColorScheme colorScheme) =>
+      _statusKind.containerColor(colorScheme);
 }

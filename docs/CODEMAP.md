@@ -18,20 +18,20 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 
 ## Features (lib/features/)
 
-| Datei                               | Status    | Beschreibung                                                                                                                         |
-| ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `onboarding/onboarding_screen.dart` | ✅ fertig | Zweistufiger Erststart                                                                                                               |
-| `today/today_screen.dart`           | ✅ fertig | Tageseintrag-Orchestrierung, Laden/Speichern, Tageswechsel und Berichtskarte                                                          |
-| `today/activity_picker_model.dart`  | ✅ fertig | Tätigkeitsauswahl-Logik: Suche, Gruppen, häufig genutzt, Empfehlungen und historische IDs                                             |
-| `today/today_entry_draft.dart`      | ✅ fertig | DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau                                                                    |
-| `today/activity_recommender.dart`   | ✅ fertig | Häufig-genutzt-Sortierung und Ausbildungsjahr-Empfehlungen                                                                            |
-| `today/widgets/`                    | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
-| `today/widgets/report_card.dart`    | ✅ fertig | Generierte Berichtskarte mit Gespeichert-Chip und Kopier-Button                                                                      |
-| `week/week_screen.dart`             | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                            |
-| `templates/templates_screen.dart`   | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                |
-| `profile/profile_screen.dart`       | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                              |
-| `profile/profile_reminder_controller.dart` | ✅ fertig | Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln                                                                      |
-| `profile/widgets/`                  | ✅ fertig | Profil-Header, Profil-Editor, Reminder-Section und Theme-Auswahl                                                                      |
+| Datei                                      | Status    | Beschreibung                                                                                                                               |
+| ------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onboarding/onboarding_screen.dart`        | ✅ fertig | Zweistufiger Erststart                                                                                                                     |
+| `today/today_screen.dart`                  | ✅ fertig | Tageseintrag-Orchestrierung, Laden/Speichern, Tageswechsel und Berichtskarte                                                               |
+| `today/activity_picker_model.dart`         | ✅ fertig | Tätigkeitsauswahl-Logik: Suche, Gruppen, häufig genutzt, Empfehlungen und historische IDs                                                  |
+| `today/today_entry_draft.dart`             | ✅ fertig | DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau                                                                         |
+| `today/activity_recommender.dart`          | ✅ fertig | Häufig-genutzt-Sortierung und Ausbildungsjahr-Empfehlungen                                                                                 |
+| `today/widgets/`                           | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
+| `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Gespeichert-Chip und Kopier-Button                                                                            |
+| `week/week_screen.dart`                    | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                                  |
+| `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |
+| `profile/profile_screen.dart`              | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                                   |
+| `profile/profile_reminder_controller.dart` | ✅ fertig | Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln                                                                           |
+| `profile/widgets/`                         | ✅ fertig | Profil-Header, Profil-Editor, Reminder-Section und Theme-Auswahl                                                                           |
 
 ---
 
@@ -79,13 +79,14 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 
 ### Sonstiges Core
 
-| Datei                                   | Inhalt                                         |
-| --------------------------------------- | ---------------------------------------------- |
-| `core/constants.dart`                   | `AppStrings` + SharedPreferences-Schlüssel     |
-| `core/profile_storage.dart`             | `StoredProfile` in SharedPreferences           |
-| `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                      |
-| `core/data/default_activities.dart`     | 132 vordefinierte Tätigkeiten mit stabilen IDs |
-| `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten    |
+| Datei                                   | Inhalt                                             |
+| --------------------------------------- | -------------------------------------------------- |
+| `core/constants.dart`                   | `AppStrings` + SharedPreferences-Schlüssel         |
+| `core/profile_storage.dart`             | `StoredProfile` in SharedPreferences               |
+| `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                          |
+| `core/data/default_activities.dart`     | 132 vordefinierte Tätigkeiten mit stabilen IDs     |
+| `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten        |
+| `core/ui/day_status_colors.dart`        | Zentrale Statusfarben (saved/open/absence/neutral) |
 
 ---
 
@@ -171,7 +172,7 @@ App-Start:
 | `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität                              |
 | `reminder_settings_test.dart`              | Modell-Defaults, Gleichheit, Serialisierung                        |
 | `reminder_storage_test.dart`               | SharedPreferences-Roundtrip, mehrere Zeiten/Tage                   |
-| `profile_reminder_controller_test.dart`    | Reminder speichern, Permission, Rollback und Edit-Regeln            |
+| `profile_reminder_controller_test.dart`    | Reminder speichern, Permission, Rollback und Edit-Regeln           |
 | `profile_reminder_screen_test.dart`        | Profil-Screen Erinnerungs-UI (Toggle, Zeiten, Tage)                |
 | `notification_service_test.dart`           | IDs, Folgeerinnerung über Mitternacht, Kaltstart-Payload           |
 | `daily_report_generator_test.dart`         | Deterministische Berichtstexte je Tagtyp und Flag                  |

@@ -43,6 +43,14 @@ SharedPreferences gespeichert und zentral über `buildThemeForPreset()` auf die
 gesamte App angewendet. Widgets lesen Farben weiterhin ausschließlich über
 `Theme.of(context)`.
 
+**Zentrale Statusfarben statt Rot für offene Tage (#54)**
+Tages- und Wochenstatus nutzen eine zentrale Farbquelle
+(`lib/core/ui/day_status_colors.dart`): gespeichert = `primary`, offen = `tertiary`
+(ruhiger Amber-Akzent), Abwesenheit = `secondary`, neutral = `onSurfaceVariant`.
+Rot (`error`/`errorContainer`) ist echten Fehlern (Ladefehler, Vorlagen-Warnung)
+vorbehalten und wird nicht mehr für normale offene Werktage verwendet. So wirkt die
+App weniger nach Kontrolle/Pflicht, ohne die Zustandsunterscheidbarkeit zu schwächen.
+
 **IndexedStack für Tab-Persistence**
 Scroll-Position und Screen-State bleiben beim Tab-Wechsel erhalten. Bessere UX als Navigator-Pop/Push für jeden Tab.
 

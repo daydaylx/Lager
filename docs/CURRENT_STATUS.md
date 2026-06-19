@@ -1,18 +1,79 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-06-19 (Profil/Reminder-Refactor umgesetzt; Phase 19 QA-Vorbereitung läuft)
+Stand: 2026-06-19 (Phase 20h #57 Profil persönlicher abgeschlossen; Phase 19 QA-Vorbereitung läuft)
 
 ---
 
 ## Aktive Phase
 
-**Phase 19: Release-QA auf echtem Android-Gerät** — APK gebaut (18.06.2026), Checkliste bereit
+**Phase 20: Freundlichere UX (#50–#57)** — 20a–20h abgeschlossen.
+(Phase 19: Release-QA auf echtem Android-Gerät — APK gebaut (18.06.2026), Checkliste bereit; bleibt parallel offen.)
 
 ---
 
 ## Was fertig ist
 
 Phasen 0–16 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+
+Neu Phase 20a (#54, Farbwelt weicher):
+
+- Neue zentrale Farbquelle `lib/core/ui/day_status_colors.dart` (saved=primary, open=tertiary, absence=secondary, neutral=onSurfaceVariant)
+- `ThemePreset.lagerTeal`-Surface aufgehellt (`0xFF0F1F1C` → `0xFF142822`); andere Presets unangetastet
+- `week_screen.dart` `_DayStatus` delegiert Farben an den Helper; offene Tage nutzen Amber statt Rot
+- `error`/`errorContainer` bleibt echten Fehlern vorbehalten (Ladefehler, Vorlagen-Warnung)
+- DECISIONS.md: ADR zu zentralen Statusfarben; CODEMAP.md: neue Datei eingetragen
+- `flutter analyze` — 0 Issues; theme/week/ui_layout-Tests grün; Goldens `today_empty`/`week_mixed`/`profile_overview`/`onboarding_welcome` regeneriert
+
+Neu Phase 20b (#55, UX-Writing entschärft):
+
+- Status-/Fehlertexte alltagstauglicher: „Noch nicht gespeichert"→„Noch offen", „Fehlt"→„Offen", „Fehlt: …"→„Noch offen: …", „Kein Eintrag – fehlt"→„Kein Eintrag – offen", Wochenbanner „… Tage offen"
+- „Pflicht"-Badge → „Benötigt" (`today_screen.dart` Bereich + Tätigkeiten) + `app_ui.dart` Badge-Default
+- Berichtskarten-Chip „Nicht gespeichert" → „Entwurf" (eindeutig gegenüber Status „Noch offen")
+- DayStatusCard „Noch … auswählen" → „Wähle kurz: …"
+- Echte Fehler-Texte bewusst unverändert (Permission-, Speicher-, Vorlagenfehler)
+- Test-Assertions angepasst (`today_screen_test`, `week_screen_test`); Goldens `today_empty`/`week_mixed` regeneriert
+- `flutter analyze` — 0 Issues; `flutter test` today/week — 40/40; ui_layout — 14/14
+
+Neu Phase 20c (#50, Wochenübersicht weniger streng):
+
+- Offene Werktage: ruhiges Icon `pending_outlined` statt `error_outline` (Farbe bleibt Amber aus 20a); Label „Offen"
+- Wochentag-Banner-Message weicher: „Tippe auf einen offenen Tag, um ihn nachzutragen. Dauert nur kurz."
+- `_summaryFor`: „Noch kein Tageseintrag" → „Noch kein Eintrag"
+- Rot (`error`/`errorContainer`) nur noch bei echten Fehlern (Ladefehler, Vorlagen-Warnung)
+- `flutter analyze` — 0 Issues; week_screen_test 13/13; Golden `week_mixed` regeneriert
+
+Neu Phase 20d (#51, Heute-Screen freundlicher):
+
+- Bereichs-Platzhalter weicher: „Wähle zuerst einen Bereich – dann erscheinen passende Tätigkeiten."
+- Freundlichere Tageskarte/Ablauf bereits durch 20b-Texte erreicht (Status „Noch offen", „Wähle kurz: …", freundliche Section-Descriptions)
+- `flutter analyze` — 0 Issues; today_screen_test 27/27; Golden `today_empty` regeneriert
+
+Neu Phase 20e (#56, Empty States freundlicher):
+
+- `AppEmptyState` (`app_ui.dart`): Icon in weichem Kreis-Container (`surfaceContainer`, 64×64) statt flachem 48-px-Icon — ruhiger und freundlicher
+- Statuskarten (`AppMessage`) bereits durch 20a/20c beruhigt (kein Rot für offene Tage, ruhige container-Akzente)
+- `flutter analyze` — 0 Issues; ui_layout 14/14; Goldens unverändert (kein Empty-State-Fehlerzustand in den Referenzen)
+
+Neu Phase 20f (#52, Bereichsauswahl mit Unterzeile):
+
+- `TrainingArea`-Enum: neuer `subtitle`-Getter („Annehmen & prüfen", „Einlagern & sortieren" … je Bereich)
+- `AreaGrid`: FilterChip zeigt Label + kurze Unterzeile; Icons bleiben; selected-bewusste Subtitle-Farbe für Kontrast
+- today_screen_test robust gemacht: neuer `scrollToActivities`-Helper nach Bereichs-Tap (höhere Chips verschoben sonst Tätigkeiten aus dem Viewport)
+- `flutter analyze` — 0 Issues; today_screen_test 27/27; ui_layout 14/14; Golden `today_empty` regeneriert
+
+Neu Phase 20g (#53, Vorlagen-Schnellzugriff):
+
+- `TemplatesScreen`: optionaler `dailyEntryStorage`-Parameter; „Häufig genutzt"-Sektion (bis 6 Tätigkeiten, horizontale Chips) via `computeFrequentActivityIds` — nur bei Einträgen und ohne aktiven Such-/Kategorie-Filter
+- `app.dart` übergibt `dailyEntryStorage` an `TemplatesScreen`
+- FAB `.extended` („Eigene Tätigkeit") → kompakter Plus-FAB (Typ bleibt `FloatingActionButton`)
+- Neuer Test „zeigt häufig genutzte Tätigkeiten aus gespeicherten Einträgen"; templates_screen_test 11/11; ui_layout 14/14; analyze 0 Issues
+
+Neu Phase 20h (#57, Profil persönlicher):
+
+- `ProfileHeader` (`lib/features/profile/widgets/profile_header.dart`): Avatar 28→24, Hintergrund `surfaceContainer`, Padding 16→12, freundliche Begrüßung „Hallo [Name],“, Tippen öffnet Bearbeitung (`profile_header` Key)
+- `ProfileScreen`: redundanten „Ausbildungsprofil"-Abschnitt entfernt (Info steht im Header)
+- Golden `profile_overview.png` & `ui_layout_test.dart` Key (`edit_profile` → `profile_header`) aktualisiert
+- `flutter analyze` — 0 Issues; `flutter test` — alle Tests grün
 
 Neu nach Profil/Reminder-Refactor (19.06.2026):
 
@@ -106,11 +167,11 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Profil/Reminder-Refactor (19.06.2026):
+Aktuell nach Phase 20h (#57 Profil persönlicher, 19.06.2026):
 
 ```
 flutter analyze          →  0 Issues
-flutter test             →  244/244 bestanden
+flutter test             →  246/246 bestanden
 flutter build apk --debug  →  erfolgreich
 flutter build apk --release  →  erfolgreich (18.06.2026)
 ```
@@ -130,11 +191,15 @@ Release-Zertifikat; der installierte Build meldet `apkSigningVersion=2`.
 
 ## Nächster Schritt
 
-**Phase 19 Release-QA:** APK auf echtem Gerät installieren und `docs/QA_RELEASE_CHECKLIST.md` Punkt für Punkt durcharbeiten.
+**Phase 19: Release-QA auf echtem Android-Gerät** — APK installieren und `docs/QA_RELEASE_CHECKLIST.md` Punkt für Punkt durcharbeiten.
 
 ```bash
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
+
+Issue #39 (Export/Import) ist bewusst offen — eigene Produktentscheidung erforderlich, bevor Code dafür entsteht.
+
+Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.
 
 Issue #39 (Export/Import) ist bewusst offen — eigene Produktentscheidung erforderlich, bevor Code dafür entsteht.
 

@@ -35,7 +35,7 @@ class SaveBar extends StatelessWidget {
           children: [
             if (missingItems.isNotEmpty) ...[
               Text(
-                'Fehlt: ${missingItems.join(' · ')}',
+                'Noch offen: ${missingItems.join(' · ')}',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

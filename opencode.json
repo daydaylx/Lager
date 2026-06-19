@@ -1,4 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": "The canonical repository rules are in AGENTS.md. Follow AGENTS.md before making or handing off changes, especially the Documentation Freshness Rule. Keep tool-specific instructions thin and do not duplicate the full repository rules."
+  "instructions": [
+    "AGENTS.md"
+  ]
 }

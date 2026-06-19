@@ -41,7 +41,7 @@ class AppSectionHeader extends StatelessWidget {
                   ),
                   if (badge case final b?) ...[
                     const SizedBox(width: 8),
-                    _BadgePill(label: b, highlighted: badgeRequired ?? (b == 'Pflicht')),
+                    _BadgePill(label: b, highlighted: badgeRequired ?? (b == 'Benötigt')),
                   ],
                 ],
               ),
@@ -206,10 +206,18 @@ class AppEmptyState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 48,
-                color: theme.colorScheme.onSurfaceVariant,
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 32,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 16),
               Text(

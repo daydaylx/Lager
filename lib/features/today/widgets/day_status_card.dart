@@ -69,7 +69,7 @@ class DayStatusCard extends StatelessWidget {
             if (missingItems.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
-                'Noch ${missingItems.join(' und ')} auswählen',
+                'Wähle kurz: ${missingItems.join(' und ')}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: cs.onSurfaceVariant,
                 ),

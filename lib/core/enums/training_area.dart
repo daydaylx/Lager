@@ -49,4 +49,16 @@ extension TrainingAreaDetails on TrainingArea {
         TrainingArea.inventur => Icons.fact_check_outlined,
         TrainingArea.retouren => Icons.assignment_return_outlined,
       };
+
+  /// Kurze Unterzeile je Bereich (#52): was dort typischerweise gemacht wird.
+  String get subtitle => switch (this) {
+        TrainingArea.wareneingang => 'Annehmen & prüfen',
+        TrainingArea.lager => 'Einlagern & sortieren',
+        TrainingArea.transport => 'Bewegen & fahren',
+        TrainingArea.kommissionierung => 'Artikel zusammenstellen',
+        TrainingArea.verpackung => 'Verpacken & vorbereiten',
+        TrainingArea.versand => 'Versenden',
+        TrainingArea.inventur => 'Zählen & prüfen',
+        TrainingArea.retouren => 'Rücksendungen',
+      };
 }

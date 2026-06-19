@@ -342,6 +342,79 @@ Ziel: Erst nach den obigen Änderungen ernsthaft testen. Vorher ist ein komplett
 
 ---
 
+## Phase 20: Freundlichere UX (#50–#57)
+
+Ziel: Die App weniger nach Amt/Pflicht/Kontrolle wirken lassen — ruhigere Farben,
+entschärftes UX-Writing, freundlichere leere Zustände und persönlicheres Profil.
+Ohne Gamification, Comic-Optik oder Motivationssprüche. Funktionalität bleibt
+erhalten; nur UX/UI. Pro Unterphase ein eigener Analyze/Test/Doku-Zyklus.
+
+### Phase 20a: Farbwelt weicher (#54) ✅
+
+- [x] Neue zentrale Farbquelle `lib/core/ui/day_status_colors.dart` (saved=primary, open=tertiary, absence=secondary, neutral=onSurfaceVariant)
+- [x] `ThemePreset.lagerTeal`-Surface aufgehellt (`0xFF0F1F1C` → `0xFF142822`)
+- [x] `week_screen.dart` `_DayStatus` delegiert Farben an den Helper; `missing → open`
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — theme/week/ui_layout grün; Goldens `today_empty`/`week_mixed`/`profile_overview`/`onboarding_welcome` regeneriert
+
+### Phase 20b: UX-Writing entschärfen (#55) ✅
+
+- [x] „Noch nicht gespeichert"→„Noch offen", „Fehlt"→„Offen"/„Noch offen", „Kein Eintrag – fehlt"→„… offen", Wochentag-Banner „… Tage offen"
+- [x] „Pflicht"-Badge → „Benötigt" (today_screen ×2) + `app_ui.dart` Badge-Default
+- [x] Berichtskarten-Chip „Nicht gespeichert" → „Entwurf" (eindeutig gegenüber Status „Noch offen")
+- [x] DayStatusCard „Noch … auswählen" → „Wähle kurz: …"
+- [x] Test-Assertions angepasst (today_screen_test, week_screen_test); Goldens `today_empty`/`week_mixed` regeneriert
+- [x] `flutter analyze` — 0 Issues; `flutter test` today/week — 40/40; ui_layout — 14/14
+
+### Phase 20c: Wochenübersicht weniger streng (#50) ✅
+
+- [x] Offene Tage: ruhiges Icon `pending_outlined` statt `error_outline` (Farbe bleibt Amber aus 20a)
+- [x] Banner-Message weicher: „… um ihn nachzutragen. Dauert nur kurz."
+- [x] `_summaryFor` „Noch kein Tageseintrag" → „Noch kein Eintrag"
+- [x] `error`/`errorContainer` bleibt echten Fehlern vorbehalten (Ladefehler, Vorlagen-Warnung)
+- [x] `flutter analyze` — 0 Issues; week_screen_test 13/13; Golden `week_mixed` regeneriert
+
+### Phase 20d: Heute-Screen freundlicher (#51) ✅
+
+- [x] Bereichs-Platzhalter weicher: „Wähle zuerst einen Bereich – dann erscheinen passende Tätigkeiten."
+- [x] Freundlichere Tageskarte/Ablauf-Texte bereits durch 20b abgedeckt (Status „Noch offen", „Wähle kurz: …"; Section-Descriptions bleiben freundlich)
+- [x] `flutter analyze` — 0 Issues; today_screen_test 27/27; Golden `today_empty` regeneriert
+
+### Phase 20e: Empty States & Statuskarten freundlicher (#56) ✅
+
+- [x] `AppEmptyState`: Icon in weichem Kreis-Container (`surfaceContainer`) statt flachem 48-px-Icon — ruhiger, freundlicher
+- [x] Statuskarten (`AppMessage`) bereits durch 20a/20c beruhigt (kein Rot für offene Tage, ruhige container-Akzente)
+- [x] `flutter analyze` — 0 Issues; ui_layout 14/14 (Goldens unverändert — kein Empty-State in den Referenzen)
+
+### Phase 20f: Bereichsauswahl Karten + Unterzeile (#52) ✅
+
+- [x] `TrainingArea.subtitle`-Getter („Annehmen & prüfen", „Einlagern & sortieren" …)
+- [x] `AreaGrid`: Label + Unterzeile im FilterChip (Icons bleiben); selected-bewusste Subtitle-Farbe für Kontrast
+- [x] today_screen_test robust gemacht: `scrollToActivities`-Helper nach Bereichs-Tap (höhere Chips verschoben Tätigkeiten aus dem Viewport)
+- [x] `flutter analyze` — 0 Issues; today_screen_test 27/27; ui_layout 14/14; Golden `today_empty` regeneriert
+
+### Phase 20g: Vorlagen-Schnellzugriff (#53) ✅
+
+- [x] `TemplatesScreen`: optionaler `dailyEntryStorage`-Parameter; „Häufig genutzt"-Sektion (bis 6 Tätigkeiten) via `computeFrequentActivityIds` — nur bei Einträgen und ohne aktiven Filter
+- [x] `app.dart` übergibt `dailyEntryStorage` an `TemplatesScreen`
+- [x] FAB `.extended` → kompakter Plus-FAB (Typ bleibt `FloatingActionButton`)
+- [x] Neuer Test „Häufig genutzt"; templates_screen_test 11/11; ui_layout 14/14; analyze 0 Issues
+
+### Phase 20h: Profil persönlicher (#57) ✅
+
+- [x] `ProfileHeader`: leichteres Design (Avatar 28→24, Hintergrund `surfaceContainer`, Padding 16→12), freundliche Begrüßung „Hallo [Name],“, Tippen öffnet Profilbearbeitung
+- [x] `ProfileScreen`: redundanten „Ausbildungsprofil"-Abschnitt entfernt (Info steht im Header)
+- [x] Golden `profile_overview.png` & `ui_layout_test.dart` Key (`edit_profile` → `profile_header`) aktualisiert
+- [x] `flutter analyze` — 0 Issues; `flutter test` — alle Tests grün
+
+### Phase 20e: Empty States & Statuskarten (#56) — offen
+
+### Phase 20f: Bereichsauswahl Karten + Unterzeile (#52) — offen
+
+### Phase 20g: Vorlagen-Schnellzugriff (#53) — offen
+
+---
+
 ## Spätere Phase: Toolchain- und Dependency-Modernisierung
 
 - [ ] Flutter, Android Gradle Plugin, Kotlin und Dependencies gemeinsam aktualisieren

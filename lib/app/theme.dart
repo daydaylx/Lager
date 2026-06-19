@@ -38,7 +38,7 @@ extension ThemePresetDetails on ThemePreset {
       };
 
   Color get _surfaceColor => switch (this) {
-        ThemePreset.lagerTeal => const Color(0xFF0F1F1C),
+        ThemePreset.lagerTeal => const Color(0xFF142822),
         ThemePreset.nachtGruen => const Color(0xFF081510),
         ThemePreset.warmSand => const Color(0xFF1A1208),
         ThemePreset.blauGrau => const Color(0xFF0C1520),

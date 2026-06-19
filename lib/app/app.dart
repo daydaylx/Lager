@@ -306,6 +306,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           ),
           TemplatesScreen(
             storage: widget.templateStorage,
+            dailyEntryStorage: widget.dailyEntryStorage,
             onTemplatesChanged: () {
               setState(() => _templateRefreshSignal++);
             },

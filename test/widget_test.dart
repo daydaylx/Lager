@@ -240,7 +240,7 @@ void main() {
     );
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('edit_profile')));
+    await tester.tap(find.byKey(const ValueKey('profile_header')));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -302,7 +302,7 @@ void main() {
     );
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('edit_profile')));
+    await tester.tap(find.byKey(const ValueKey('profile_header')));
     await tester.pumpAndSettle();
 
     // Zu Fachlagerist wechseln — Jahr 3 war gültig für Fachkraft, nicht für Fachlagerist.
@@ -341,7 +341,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Noch nicht gespeichert'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.tabWeek));
     await tester.pumpAndSettle();
@@ -354,7 +354,7 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
-    expect(find.text('Ausbildungsprofil'), findsOneWidget);
+    expect(find.text('Dein Profil'), findsOneWidget);
   });
 
   testWidgets('Notification-Tap öffnet den Heute-Tab', (tester) async {
@@ -501,7 +501,7 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
-    expect(find.text('Ausbildungsprofil'), findsOneWidget);
+    expect(find.text('Dein Profil'), findsOneWidget);
     final vertical = find.byWidgetPredicate(
       (widget) =>
           widget is Scrollable && widget.axisDirection == AxisDirection.down,

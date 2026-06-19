@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:berichtsheft_merker/core/enums/activity_category.dart';
+import 'package:berichtsheft_merker/core/enums/day_type.dart';
+import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/activity_template.dart';
+import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
+import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/templates/templates_screen.dart';
 
 void main() {
@@ -229,5 +233,37 @@ void main() {
 
     expect(find.text('Eigene Wareneingang-Aufgabe'), findsOneWidget);
     expect(find.text('Eigene Versand-Aufgabe'), findsNothing);
+  });
+
+  testWidgets('zeigt häufig genutzte Tätigkeiten aus gespeicherten Einträgen', (
+    tester,
+  ) async {
+    final dailyStorage = InMemoryDailyEntryStorage(
+      initialEntries: [
+        DailyEntry(
+          id: DailyEntry.idForDate(DateTime(2026, 6, 8)),
+          date: DateTime(2026, 6, 8),
+          dayType: DayType.betrieb,
+          areas: const [TrainingArea.wareneingang],
+          selectedActivities: const ['wareneingang_01'],
+          specialFlags: const [],
+          note: null,
+          createdAt: DateTime(2026, 6, 8),
+          updatedAt: DateTime(2026, 6, 8),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TemplatesScreen(storage: storage, dailyEntryStorage: dailyStorage),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Häufig genutzt'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('frequent_wareneingang_01')),
+      findsOneWidget,
+    );
   });
 }

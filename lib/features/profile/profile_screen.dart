@@ -322,24 +322,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        ProfileHeader(profile: profile),
-        const SizedBox(height: 24),
-        AppSettingsSection(
-          title: 'Ausbildungsprofil',
-          description: 'Diese Angaben helfen dir bei der täglichen Einordnung.',
-          children: [
-            ListTile(
-              key: const ValueKey('edit_profile'),
-              leading: const Icon(Icons.badge_outlined),
-              title: Text(_occupationLabel(profile.occupation)),
-              subtitle: Text(
-                '${profile.trainingYear ?? '–'}. Ausbildungsjahr'
-                '${profile.company == null ? '' : ' · ${profile.company}'}',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _openProfileEditor,
-            ),
-          ],
+        ProfileHeader(
+          key: const ValueKey('profile_header'),
+          profile: profile,
+          onTap: _openProfileEditor,
         ),
         const SizedBox(height: 24),
         ReminderSection(
@@ -415,14 +401,5 @@ class _ProfileScreenState extends State<ProfileScreen>
         const SizedBox(height: 8),
       ],
     );
-  }
-
-  String _occupationLabel(String? occupation) {
-    return switch (occupation) {
-      TrainingOccupationValues.fachlagerist => 'Fachlagerist/in',
-      TrainingOccupationValues.fachkraftLagerlogistik =>
-        'Fachkraft für Lagerlogistik',
-      _ => 'Ausbildung noch nicht ausgewählt',
-    };
   }
 }

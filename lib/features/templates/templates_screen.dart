@@ -4,15 +4,19 @@ import '../../core/data/default_activities.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/models/activity_template.dart';
 import '../../core/storage/activity_template_storage.dart';
+import '../../core/storage/daily_entry_storage.dart';
 import '../../shared/widgets/app_ui.dart';
+import '../today/activity_recommender.dart';
 
 class TemplatesScreen extends StatefulWidget {
   final ActivityTemplateStorage storage;
+  final DailyEntryStorage? dailyEntryStorage;
   final VoidCallback? onTemplatesChanged;
 
   const TemplatesScreen({
     super.key,
     required this.storage,
+    this.dailyEntryStorage,
     this.onTemplatesChanged,
   });
 
@@ -27,6 +31,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   ActivityCategory? _selectedCategory;
   String _searchQuery = '';
   List<ActivityTemplate> _customTemplates = [];
+  List<ActivityTemplate> _frequentActivities = [];
   bool _isLoading = true;
   bool _loadFailed = false;
 
@@ -60,6 +65,33 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
           _loadFailed = true;
         });
       }
+    }
+    await _loadFrequent();
+  }
+
+  /// „Häufig genutzt"-Schnellzugriff (#53): die am häufigsten verwendeten
+  /// Tätigkeiten aus gespeicherten Einträgen. Optional — nur wenn ein
+  /// [DailyEntryStorage] übergeben wurde und Einträge vorliegen.
+  Future<void> _loadFrequent() async {
+    final storage = widget.dailyEntryStorage;
+    if (storage == null || !mounted) return;
+    try {
+      final entries = await storage.loadAll();
+      final ids = computeFrequentActivityIds(entries);
+      final byId = <String, ActivityTemplate>{
+        for (final template in [...defaultActivities, ..._customTemplates])
+          template.id: template,
+      };
+      final frequent = <ActivityTemplate>[];
+      for (final id in ids) {
+        final template = byId[id];
+        if (template == null) continue;
+        frequent.add(template);
+        if (frequent.length == 6) break;
+      }
+      if (mounted) setState(() => _frequentActivities = frequent);
+    } catch (_) {
+      // Häufig-genutzt-Anzeige ist optional; bei Fehler einfach weglassen.
     }
   }
 
@@ -281,10 +313,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vorlagen')),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddSheet,
-        icon: const Icon(Icons.add),
-        label: const Text('Eigene Tätigkeit'),
+        tooltip: 'Eigene Tätigkeit hinzufügen',
+        child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
@@ -311,6 +343,38 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
+          if (_frequentActivities.isNotEmpty &&
+              _searchQuery.isEmpty &&
+              _selectedCategory == null) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(
+                'Häufig genutzt',
+                key: const ValueKey('frequent_section'),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _frequentActivities.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final template = _frequentActivities[index];
+                  return Chip(
+                    key: ValueKey('frequent_${template.id}'),
+                    label: Text(template.title),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
           _CategoryFilter(
             selected: _selectedCategory,
             onSelected: (c) => setState(() => _selectedCategory = c),
