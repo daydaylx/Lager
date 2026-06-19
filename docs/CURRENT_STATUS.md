@@ -200,7 +200,3 @@ adb install -r build/app/outputs/flutter-apk/app-release.apk
 Issue #39 (Export/Import) ist bewusst offen — eigene Produktentscheidung erforderlich, bevor Code dafür entsteht.
 
 Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.
-
-Issue #39 (Export/Import) ist bewusst offen — eigene Produktentscheidung erforderlich, bevor Code dafür entsteht.
-
-Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.

@@ -31,7 +31,10 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |
 | `profile/profile_screen.dart`              | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                                   |
 | `profile/profile_reminder_controller.dart` | ✅ fertig | Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln                                                                           |
-| `profile/widgets/`                         | ✅ fertig | Profil-Header, Profil-Editor, Reminder-Section und Theme-Auswahl                                                                           |
+| `profile/widgets/profile_header.dart`        | ✅ fertig | Profil-Header (Avatar, Begrüßung, Unterzeile, Tap→Editor)                                                           |
+| `profile/widgets/profile_edit_screen.dart`   | ✅ fertig | Profil-Bearbeitungsscreen (shared ProfileForm)                                                                      |
+| `profile/widgets/profile_theme_section.dart` | ✅ fertig | Theme-Auswahl als Farbkachel-Grid mit Live-Vorschau                                                                 |
+| `profile/widgets/reminder_section.dart`      | ✅ fertig | Reminder-UI (Toggle, Zeiten, Wochentage, Samsung-Hinweis)                                                            |
 
 ---
 

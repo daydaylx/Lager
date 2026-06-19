@@ -407,12 +407,6 @@ erhalten; nur UX/UI. Pro Unterphase ein eigener Analyze/Test/Doku-Zyklus.
 - [x] Golden `profile_overview.png` & `ui_layout_test.dart` Key (`edit_profile` → `profile_header`) aktualisiert
 - [x] `flutter analyze` — 0 Issues; `flutter test` — alle Tests grün
 
-### Phase 20e: Empty States & Statuskarten (#56) — offen
-
-### Phase 20f: Bereichsauswahl Karten + Unterzeile (#52) — offen
-
-### Phase 20g: Vorlagen-Schnellzugriff (#53) — offen
-
 ---
 
 ## Spätere Phase: Toolchain- und Dependency-Modernisierung

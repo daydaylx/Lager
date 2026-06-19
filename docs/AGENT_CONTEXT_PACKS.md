@@ -149,6 +149,9 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 | `lib/core/storage/reminder_storage.dart`                 | Persistierte Reminder-Einstellungen         |
 | `lib/features/profile/profile_reminder_controller.dart`  | Laden, Speichern, Berechtigung, Rollback und Edit-Regeln |
 | `lib/features/profile/profile_screen.dart`               | Profil-Orchestrierung und Reminder-State    |
+| `lib/features/profile/widgets/profile_header.dart`       | Profil-Header (Avatar, Begrüßung, Unterzeile, Tap→Editor) |
+| `lib/features/profile/widgets/profile_edit_screen.dart`  | Profil-Bearbeitungsscreen (shared ProfileForm) |
+| `lib/features/profile/widgets/profile_theme_section.dart`| Theme-Auswahl als Farbkachel-Grid mit Live-Vorschau |
 | `lib/features/profile/widgets/reminder_section.dart`     | Reminder-UI mit stabilen Test-Keys          |
 | `lib/app/app.dart`                                       | Lifecycle, Tageswechsel und Tap-Ziel        |
 | `android/app/build.gradle.kts`                           | Application ID, NDK und Release-Signierung  |
@@ -229,7 +232,10 @@ Danach manueller Gerätetest:
 | `lib/app/bootstrap.dart`                     | Initiales Laden                                    |
 | `lib/app/app.dart`                           | App-weite Zustandsübergabe und Reset               |
 | `lib/features/profile/profile_screen.dart`   | Profil-Orchestrierung, Export/Delete, Section-Wiring |
-| `lib/features/profile/widgets/`              | Profil-Header, Editor, Theme- und Reminder-UI      |
+| `lib/features/profile/widgets/profile_header.dart`       | Profil-Header (Avatar, Begrüßung, Unterzeile, Tap→Editor) |
+| `lib/features/profile/widgets/profile_edit_screen.dart`  | Profil-Bearbeitungsscreen (shared ProfileForm) |
+| `lib/features/profile/widgets/profile_theme_section.dart`| Theme-Auswahl als Farbkachel-Grid mit Live-Vorschau |
+| `lib/features/profile/widgets/reminder_section.dart`     | Reminder-UI (Toggle, Zeiten, Wochentage, Samsung-Hinweis) |
 | Ziel-Screen und relevante Widget-Tests       | UI- und Verhaltensvertrag                          |
 
 ### Risiken
