@@ -39,14 +39,14 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ### 3.1 Betriebstag
 
-- [ ] Tagtyp „Betrieb" auswählen
+- [ ] Tagtyp „Betrieb“ auswählen
 - [ ] Bereich wählen → passende Tätigkeiten erscheinen
 - [ ] Tätigkeit auswählen → Auswahlchip erscheint oben
 - [ ] Berichtskarte erscheint sichtbar nach Bereich + Tätigkeit
-- [ ] Berichtskarte zeigt „Nicht gespeichert"
-- [ ] „Bericht kopieren" kopiert den Text → Clipboard-Inhalt prüfen
-- [ ] Speichern → Berichtskarte zeigt „Gespeichert"
-- [ ] Bestätigung per SnackBar „Heute gespeichert."
+- [ ] Berichtskarte zeigt „Entwurf“
+- [ ] „Bericht kopieren“ kopiert den Text → Clipboard-Inhalt prüfen
+- [ ] Speichern → Berichtskarte zeigt „Gespeichert“
+- [ ] Bestätigung per SnackBar „Heute gespeichert.“
 - [ ] Gespeicherter Eintrag lädt beim nächsten Öffnen korrekt
 
 ### 3.2 Berufsschultag
@@ -79,21 +79,21 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ### 3.7 Tageswechsel nach Pause
 
-- [ ] App nach Mitternacht wieder öffnen → Banner „Ein neuer Tag hat begonnen"
+- [ ] App nach Mitternacht wieder öffnen → Banner „Ein neuer Tag hat begonnen“
 - [ ] Offene Eingaben bleiben dem alten Tag zugeordnet
 
 ---
 
 ## 4. Wochenübersicht
 
-- [ ] 7 Tageskacheln zeigen korrekten Status (eingetragen / fehlt / Frei/Urlaub/Krank)
+- [ ] 7 Tageskacheln zeigen korrekten Status (Gespeichert / Offen / Abwesenheit / Kein Eintrag)
 - [ ] Navigation eine Woche zurück und vorwärts möglich
 - [ ] Navigation in die Zukunft ist nicht möglich
 - [ ] Fortschrittsbalken und Zusammenfassung korrekt
-- [ ] Banner „X Tage fehlen noch" erscheint bei unvollständiger Woche
+- [ ] Banner „X Tag/Tage offen diese Woche“ erscheint bei unvollständiger Woche
 - [ ] Tap auf einen Tag öffnet den Tageseintrag
-- [ ] Berichtsvorschlag-Button in der Wochenzusammenfassung sichtbar
-- [ ] Kopieren aus der Wochenzusammenfassung funktioniert
+- [ ] Wochenzusammenfassung über AppBar-Icon öffnen
+- [ ] Pro vorhandenem Eintrag: Berichtsvorschlag sichtbar und kopierbar
 
 ---
 
@@ -120,9 +120,9 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ### 6.2 Theme
 
-- [ ] 5 Farbthemes auswählbar
+- [ ] 9 Farbthemes auswählbar
 - [ ] Gewähltes Theme überlebt App-Neustart
-- [ ] „Lager Teal" ist das dunkle Standardtheme
+- [ ] „Lager Teal“ ist das dunkle Standardtheme
 
 ### 6.3 Erinnerungen
 

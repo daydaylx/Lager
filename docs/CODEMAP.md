@@ -26,7 +26,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `today/today_entry_draft.dart`             | ✅ fertig | DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau                                                                         |
 | `today/activity_recommender.dart`          | ✅ fertig | Häufig-genutzt-Sortierung und Ausbildungsjahr-Empfehlungen                                                                                 |
 | `today/widgets/`                           | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
-| `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Gespeichert-Chip und Kopier-Button                                                                            |
+| `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Entwurf/Gespeichert-Chip und Kopier-Button                                                                    |
 | `week/week_screen.dart`                    | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                                  |
 | `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |
 | `profile/profile_screen.dart`              | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                                   |
@@ -204,4 +204,6 @@ Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 | `docs/AGENT_CONTEXT_PACKS.md` | Aufgabenbezogene Dateilisten                         |
 | `docs/VALIDATION_MATRIX.md`   | Mindestprüfungen pro Änderungstyp                    |
 | `docs/UI_UX_SPEC.md`          | Design-Vorgaben, Screen-Layouts                      |
-| `DECISIONS.md`                | Architekturentscheidungen (nicht erneut diskutieren) |
+| `docs/QA_RELEASE_CHECKLIST.md`  | Manueller Release-Test auf echtem Android-Gerät      |
+| `docs/QA_REMINDER_CHECKLIST.md` | Manueller Reminder-/Notification-Test                |
+| `DECISIONS.md`                  | Architekturentscheidungen (nicht erneut diskutieren) |

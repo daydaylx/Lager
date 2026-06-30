@@ -38,7 +38,7 @@ ist das Standardpreset; weitere ruhige Farbpresets sind lokal wählbar. Custom
 Fonts und neue UI-Pakete sind nicht nötig.
 
 **Lokale Theme-Presets statt System-Dark-Mode**
-Die Nutzerin wählt eines von fünf Farbthemes im Profil. Das Preset wird lokal in
+Die Nutzerin wählt eines von neun Farbthemes im Profil. Das Preset wird lokal in
 SharedPreferences gespeichert und zentral über `buildThemeForPreset()` auf die
 gesamte App angewendet. Widgets lesen Farben weiterhin ausschließlich über
 `Theme.of(context)`.

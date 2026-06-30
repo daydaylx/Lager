@@ -111,10 +111,16 @@ Nicht geeignet:
 
 ### Statusfarben
 
-- Grün: gespeichert / vollständig
-- Gelb oder Orange: teilweise gefüllt
-- Rot oder Koralle: fehlt
-- Grau: neutral / nicht relevant
+Die App nutzt zentrale Statusfarben für Tages- und Wochenansicht:
+
+- `primary` / `primaryContainer`: gespeichert / vollständig
+- `tertiary` / `tertiaryContainer`: offen / noch nachzutragen
+- `secondary` / `secondaryContainer`: Abwesenheit (Frei, Urlaub, Krank, Feiertag)
+- `onSurfaceVariant` / neutrale Container: neutral / kein relevanter Status
+
+Rot (`error` / `errorContainer`) bleibt echten Fehlern vorbehalten, zum Beispiel
+Ladefehlern oder Vorlagen-Warnungen. Normale offene Werktage sollen nicht mit Rot
+wirken, sondern mit dem ruhigen Tertiär-Akzent.
 
 Wichtig:
 
@@ -179,7 +185,7 @@ Beispiel:
 ```text
 Heute
 Dienstag, 16. Juni
-Noch nicht gespeichert
+Noch offen
 ```
 
 Darunter:
@@ -213,7 +219,7 @@ Kein Dropdown, wenn es vermeidbar ist.
 
 Begründung:
 
-Dropdowns sind auf dem Handy oft unnötig langsam. Für sechs Optionen sind Chips besser.
+Dropdowns sind auf dem Handy oft unnötig langsam. Für sieben Optionen sind Chips besser.
 
 ---
 
@@ -235,6 +241,7 @@ Bereiche:
 Darstellung:
 
 - zweispaltige, mobile FilterChip-Karten mit Icon
+- jeder Bereich zeigt eine kurze Unterzeile (z. B. „Annehmen & prüfen“)
 - mehrere Bereiche auswählbar
 - ausgewählte Bereiche deutlich markiert
 - große Touchflächen ohne horizontales Gewische
@@ -370,7 +377,7 @@ Beispiel:
 
 ```text
 KW 25
-4 von 5 Tagen eingetragen
+3 von 5 fälligen Werktagen eingetragen
 ```
 
 Darunter eine zusammenhängende kompakte Tagesliste:
@@ -378,19 +385,19 @@ Darunter eine zusammenhängende kompakte Tagesliste:
 ```text
 Montag
 Betrieb · Wareneingang · 4 Tätigkeiten
-Status: vollständig
+Status: Gespeichert
 
 Dienstag
 Betrieb · Kommissionierung · 3 Tätigkeiten
-Status: vollständig
+Status: Gespeichert
 
 Mittwoch
 Berufsschule · 2 Themen
-Status: vollständig
+Status: Gespeichert
 
 Donnerstag
-Kein Eintrag
-Status: fehlt
+Noch kein Eintrag
+Status: Offen
 ```
 
 ---
@@ -399,34 +406,38 @@ Status: fehlt
 
 Mögliche Status:
 
-- leer
-- begonnen
+- noch offen
+- Änderungen offen
 - gespeichert
-- frei/krank/urlaub
-- fehlt
+- Abwesenheit (Frei, Urlaub, Krank, Feiertag)
+- kein Eintrag / Zukunft
 
 Status muss visuell und textlich erkennbar sein.
 
 Beispiel:
 
 ```text
-Fehlt
+Noch offen
+Änderungen offen
 Gespeichert
-Berufsschule
 Frei
+Urlaub
+Krank
+Kein Eintrag
 ```
 
 ---
 
 ## 17. Wochenzusammenfassung
 
-Im Wochen-Screen soll es einen Button geben:
+Im Wochen-Screen gibt es in der AppBar ein Wochenzusammenfassungs-Icon:
 
 ```text
-Wochenzusammenfassung anzeigen
+summarize_outlined
 ```
 
-Die Zusammenfassung zeigt die Daten geordnet nach Tagen.
+Die Zusammenfassung öffnet einen eigenen Screen und zeigt die gespeicherten Daten
+geordnet nach Tagen.
 
 Beispiel:
 
@@ -441,7 +452,7 @@ Dienstag:
 - Ware verpackt
 
 Donnerstag:
-- kein Eintrag
+- Kein Eintrag – offen
 ```
 
 Ziel:

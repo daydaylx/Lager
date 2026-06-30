@@ -23,6 +23,7 @@ Erstellt am: 2026-06-12
 - `PRIVACY_CONTEXT.md` — lokale Datenhaltung und No-Gos
 - `VALIDATION_MATRIX.md` — erforderliche Prüfungen
 - `QA_REMINDER_CHECKLIST.md` — offener manueller Android-Test
+- `QA_RELEASE_CHECKLIST.md` — Release-QA auf echtem Gerät
 
 ## Ziel des Projekts
 
