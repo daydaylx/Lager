@@ -254,7 +254,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Heutiger Eintrag fehlt noch – jetzt kurz eintragen?',
+            'Heute noch nicht eingetragen – jetzt kurz?',
           ),
           action: SnackBarAction(
             label: 'Eintragen',

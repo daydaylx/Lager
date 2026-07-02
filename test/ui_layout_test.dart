@@ -109,14 +109,34 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(area);
+      await tester.pumpAndSettle();
+      // Carousel-Karte liegt im horizontalen PageView; der Default-Tap wird
+      // dort als „missed" markiert -> warnIfMissed:false, damit onTap zuverlässig
+      // feuert (entspricht der Bereichsauswahl per zentrierter Karte).
+      await tester.tap(area, warnIfMissed: false);
       await tester.pumpAndSettle();
 
       final activity = find.byKey(const ValueKey('activity_wareneingang_01'));
+      // Das Carousel bringt einen weiteren (horizontalen) Scrollable mit; daher
+      // die ListView gezielt ansteuern und in Schritten scrollen, bis die lazy
+      // Tätigkeits-Sektion gebaut ist, dann die Tätigkeit ins Blickfeld holen.
+      final listScroll = find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      for (var i = 0; i < 12; i++) {
+        if (activity.evaluate().isNotEmpty) {
+          break;
+        }
+        await tester.drag(listScroll, const Offset(0, -250));
+        await tester.pumpAndSettle();
+      }
       await tester.scrollUntilVisible(
         activity,
         200,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: listScroll,
       );
       await tester.pumpAndSettle();
       expect(tester.getSize(activity).height, greaterThanOrEqualTo(48));

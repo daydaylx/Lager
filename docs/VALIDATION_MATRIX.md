@@ -25,6 +25,26 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 | Golden bewusst aktualisieren              | Änderung visuell prüfen                                                  | `flutter test test/ui_layout_test.dart --update-goldens`                                                                                                                                          |
 | Nur Dokumentation ändern                  | Links, Pfade und Aussagen gegen ausführbare Quellen prüfen               | bei Befehlsänderungen betroffene Befehle ausführen                                                                                                                                                |
 | Phase abschließen                         | `flutter analyze` + `flutter test`                                       | `PROJECT_STATUS.md` + `TASKS.md` + `docs/CURRENT_STATUS.md` updaten                                                                                                                               |
+| Repo-Hygiene (Imports, Secrets, Backup)   | `bash scripts/check_repo_hygiene.sh`                                     | `flutter test test/android_backup_test.dart` + `test/persistence_stability_test.dart`                                                                                                             |
+
+---
+
+## CI
+
+`.github/workflows/flutter-ci.yml` (Job `flutter-checks`) läuft bei jedem Push
+auf `main` und jedem Pull Request gegen `main` und prüft verpflichtend:
+
+```bash
+flutter pub get
+bash scripts/check_repo_hygiene.sh   # relative Imports, keine Secrets, Backup aus
+flutter analyze
+flutter test
+flutter build apk --debug
+```
+
+Der Debug-APK-Build wird als Artefakt (`debug-apk`) hochgeladen. `main` ist
+per Branch Protection so abgesichert, dass diese Status-Prüfung grün sein
+muss, bevor gemergt werden darf.
 
 ---
 

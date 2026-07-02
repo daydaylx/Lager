@@ -185,7 +185,7 @@ Beispiel:
 ```text
 Heute
 Dienstag, 16. Juni
-Noch offen
+Noch nicht abgeschlossen
 ```
 
 Darunter:
@@ -238,13 +238,17 @@ Bereiche:
 - Retoure
 - Inventur
 
-Darstellung:
+Darstellung (Phase 22c — Snap-Carousel):
 
-- zweispaltige, mobile FilterChip-Karten mit Icon
-- jeder Bereich zeigt eine kurze Unterzeile (z. B. „Annehmen & prüfen“)
-- mehrere Bereiche auswählbar
-- ausgewählte Bereiche deutlich markiert
-- große Touchflächen ohne horizontales Gewische
+- horizontales Snap-Carousel (PageView, keine Fremd-Dependency); zentrale Karte
+  groß mit Icon + Titel + Unterzeile, Nachbarn kleiner/abgesetzt
+- **Wischen** = blättern, **Tippen auf die zentrierte Karte** = Bereich
+  ein-/ausschalten, ausgewählte Bereiche erscheinen darunter als Chips
+  (Chip-Tap entfernt den Bereich)
+- startet zentriert auf dem häufigsten Bereich (Wareneingang)
+- mehrere Bereiche auswählbar (Multi-Select bleibt erhalten)
+- ausgewählte Bereiche deutlich markiert (Akzent-Hintergrund + Chip)
+- große Touchflächen; Fallback auf 2-spaltiges Grid bei sehr schmalen Displays
 
 ---
 
@@ -348,13 +352,13 @@ Empfehlung:
 Beispiel:
 
 ```text
-Heute speichern
+Tag abschließen
 ```
 
 Nach Speichern:
 
 ```text
-Gespeichert
+Erledigt
 ```
 
 Keine übertriebene Animation. Kurz, klar, fertig.
@@ -371,32 +375,38 @@ Oben:
 
 - Kalenderwoche
 - Wechsel vorherige/nächste Woche
-- Fortschritt
+- Fortschritt als Punkt-Leiste (Mo–So) statt Prozent
 
 Beispiel:
 
 ```text
 KW 25
-3 von 5 fälligen Werktagen eingetragen
+15.06. – 21.06.
+3 / 5 Tage erledigt
+● ● ○ ◎ · · ·
 ```
+
+Die Punkt-Leiste zeigt at-a-glance den Wochenfortschritt: gefüllter Punkt =
+erledigt, Ring = offen, blasser Punkt = nicht fällig (Wochenende/Zukunft),
+Rahmen = heute. Die genaue Zahl steht als Text daneben („3 / 5 Tage erledigt").
 
 Darunter eine zusammenhängende kompakte Tagesliste:
 
 ```text
 Montag
 Betrieb · Wareneingang · 4 Tätigkeiten
-Status: Gespeichert
+Status: Erledigt
 
 Dienstag
 Betrieb · Kommissionierung · 3 Tätigkeiten
-Status: Gespeichert
+Status: Erledigt
 
 Mittwoch
 Berufsschule · 2 Themen
-Status: Gespeichert
+Status: Erledigt
 
 Donnerstag
-Noch kein Eintrag
+Noch nichts erfasst
 Status: Offen
 ```
 
@@ -406,24 +416,24 @@ Status: Offen
 
 Mögliche Status:
 
-- noch offen
-- Änderungen offen
-- gespeichert
+- noch nicht abgeschlossen
+- Aktualisierung offen
+- erledigt
 - Abwesenheit (Frei, Urlaub, Krank, Feiertag)
-- kein Eintrag / Zukunft
+- nicht fällig / Wochenende, Zukunft
 
 Status muss visuell und textlich erkennbar sein.
 
 Beispiel:
 
 ```text
-Noch offen
-Änderungen offen
-Gespeichert
+Noch nicht abgeschlossen
+Aktualisierung offen
+Erledigt
 Frei
 Urlaub
 Krank
-Kein Eintrag
+Nicht fällig
 ```
 
 ---
@@ -452,7 +462,7 @@ Dienstag:
 - Ware verpackt
 
 Donnerstag:
-- Kein Eintrag – offen
+- Noch nichts erfasst
 ```
 
 Ziel:

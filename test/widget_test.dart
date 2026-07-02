@@ -341,7 +341,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Noch offen'), findsOneWidget);
+    expect(find.text('Noch nicht abgeschlossen'), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.tabWeek));
     await tester.pumpAndSettle();

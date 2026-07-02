@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — APK gebaut (18.06.2026), Checkliste bereit; manueller Gerätetest ausstehend.
+**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — Phase 22 UI/UX-Redesign abgeschlossen; APK/Checkliste für manuellen Gerätetest nach neuem UI erneut relevant. Manueller Gerätetest bleibt ausstehend.
 
 ---
 
@@ -342,7 +342,7 @@ Ziel: Erst nach den obigen Änderungen ernsthaft testen. Vorher ist ein komplett
 
 ---
 
-## Phase 20: Freundlichere UX (#50–#57)
+## Phase 20: Freundlichere UX (#50–#57) ✅
 
 Ziel: Die App weniger nach Amt/Pflicht/Kontrolle wirken lassen — ruhigere Farben,
 entschärftes UX-Writing, freundlichere leere Zustände und persönlicheres Profil.
@@ -406,6 +406,59 @@ erhalten; nur UX/UI. Pro Unterphase ein eigener Analyze/Test/Doku-Zyklus.
 - [x] `ProfileScreen`: redundanten „Ausbildungsprofil"-Abschnitt entfernt (Info steht im Header)
 - [x] Golden `profile_overview.png` & `ui_layout_test.dart` Key (`edit_profile` → `profile_header`) aktualisiert
 - [x] `flutter analyze` — 0 Issues; `flutter test` — alle Tests grün
+
+---
+
+## Phase 21: Agenten-Qualität und Repo-Härtung (#58–#64) ✅
+
+Ziel: Die wichtigsten Qualitätsregeln nicht nur in Markdown, sondern maschinell
+absichern. Keine Produkt-/UI-Änderung, nur Tooling, CI, Doku und Tests.
+
+- [x] #58 CI-Quality-Gate: `.github/workflows/flutter-ci.yml` (Job `flutter-checks`)
+      prüft pub get → Repo-Hygiene → analyze → test → debug-APK und lädt die
+      Debug-APK als Artefakt hoch. Läuft bei Push und PR gegen `main`.
+- [x] #59 PR-Template `.github/pull_request_template.md` (Summary, Validation,
+      Documentation Freshness Check, Risk Check); AGENTS.md verweist darauf.
+- [x] #60 Branch Protection für `main`: erfordert PR + grüne `flutter-checks`
+      Status-Prüfung, keine erfundenen Pflicht-Reviewer (Solo-Repo).
+- [x] #61 Release-QA-Status in CURRENT_STATUS.md und PROJECT_STATUS.md als
+      eindeutige Tabelle (Code fertig / CI / APKs / manuelle QA offen).
+- [x] #62 Offene UX-Issues einsortiert: Phase 20 (#50–#57) vollständig erledigt
+      und auf GitHub geschlossen; kein offenes UX-Backlog. Aktiver Fokus ist
+      Phase 19 (Gerätetest).
+- [x] #63 `docs/AGENT_HANDOFF_TEMPLATE.md` als einheitliche Übergabevorlage;
+      AGENTS.md verweist darauf.
+- [x] #64 Repo-Hygiene-Checks: `scripts/check_repo_hygiene.sh` (relative Imports,
+      keine Secrets, allowBackup aus) läuft in CI; `test/android_backup_test.dart`
+      sichert das Backup-Regelwerk verbindlich. Enum-Namen und Activity-IDs waren
+      bereits über `persistence_stability_test.dart` / `default_activities_test.dart`
+      abgesichert.
+- [x] `flutter analyze` — 0 Issues; `flutter test` grün; Repo-Hygiene-Skript OK
+
+### Bewusst offen (keine Code-Aufgabe)
+
+- [ ] #37 Manueller Android-Release-QA-Durchlauf (Phase 19) — braucht echtes Gerät.
+- [ ] #39 Lokaler Import — Produktentscheidung offen (Export ist implementiert).
+
+---
+
+## Phase 22: Daily-Check-in-Redesign ✅
+
+Ziel: Heute/Woche weniger formular- und kontrollhaft, mehr kurzer Daily Check-in.
+Keine neuen Dependencies, kein Backend, keine Datenmodelländerung.
+
+- [x] Texte entschärft: „Erledigt" statt „Gespeichert", „Tag abschließen",
+      keine „Benötigt"-Badges; Tests/Goldens synchron.
+- [x] Woche beruhigt: `WeekDotStrip` Mo–So statt Prozentbalken,
+      „X / Y Tage erledigt", neutraler Banner „X Tage warten noch".
+- [x] Bereichsauswahl: `AreaCarousel` via `PageView` + ausgewählte Chips;
+      Start auf Wareneingang, Multi-Select bleibt, Fallback auf `AreaGrid`.
+- [x] Weiche Progression: aktiver Abschnitt mit Akzentsäule, kommende Schritte
+      lesbar ruhiger (kein Opacity-Dimmen).
+- [x] Tageskarte/SaveBar/NavBar leichter; `lagerTeal` minimal wärmer,
+      Karten mit subtiler Outline/Tint.
+- [x] Validierung: `/home/d/flutter/bin/flutter analyze` — 0 Issues;
+      `/home/d/flutter/bin/flutter test` — 249/249; alle Goldens aktualisiert.
 
 ---
 

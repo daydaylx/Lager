@@ -1,4 +1,11 @@
-name: Flutter CI
+name: CI
+
+# Quality Gate für das Repository. Läuft bei jedem Push auf main und bei jedem
+# Pull Request gegen main. Ein Agent kann im PR auf die grüne „CI / flutter-checks“
+# Status-Prüfung verweisen; `main` ist per Branch Protection dagegen abgesichert,
+# dass diese Checks bestanden sein müssen (siehe AGENTS.md).
+#
+# Toolchain ist bewusst gepinnt (Flutter 3.32.1). Keine Nebenbei-Upgrades.
 
 on:
   push:
@@ -17,9 +24,16 @@ jobs:
         with:
           flutter-version: "3.32.1"
           channel: stable
+          cache: true
+
+      - name: Flutter / Dart Version
+        run: flutter --version
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Repo-Hygiene-Check (relative Imports, keine Secrets)
+        run: bash scripts/check_repo_hygiene.sh
 
       - name: Analyze
         run: flutter analyze
@@ -29,3 +43,11 @@ jobs:
 
       - name: Build debug APK
         run: flutter build apk --debug
+
+      - name: Debug-APK hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error

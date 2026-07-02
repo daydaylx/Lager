@@ -85,6 +85,19 @@ Die einzige Quelle für aktive Phase und offene Aufgaben ist `TASKS.md`.
 
 ---
 
+## Pull Requests und Übergaben
+
+- Änderungen laufen über Pull Requests gegen `main`. Die CI (`Flutter CI`,
+  siehe `.github/workflows/flutter-ci.yml`) prüft `flutter analyze`,
+  `flutter test` und den Debug-APK-Build — sie muss grün sein.
+- Beim Erstellen/Überschreiben eines PR wird das Pflichttemplate
+  `.github/pull_request_template.md` automatisch eingeblendet: Summary,
+  Validation, Documentation Freshness Check und Risk Check sind auszufüllen.
+- Übergaben an den nächsten Agenten folgen `docs/AGENT_HANDOFF_TEMPLATE.md`
+  (kurz: Aufgabe, Dateien, Tests, Risiken, Doku-Check, nächster Schritt).
+
+---
+
 ## Documentation Freshness Rule
 
 This rule applies to all coding agents working in this repository.

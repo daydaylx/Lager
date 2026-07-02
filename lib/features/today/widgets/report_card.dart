@@ -65,7 +65,7 @@ class _StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Chip(
-      label: Text(isSaved ? 'Gespeichert' : 'Entwurf'),
+      label: Text(isSaved ? 'Erledigt' : 'Entwurf'),
       labelStyle: theme.textTheme.labelSmall?.copyWith(
         color: isSaved
             ? theme.colorScheme.onPrimaryContainer

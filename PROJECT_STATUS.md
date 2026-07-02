@@ -1,10 +1,23 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-06-19
+Zuletzt aktualisiert: 2026-07-02
 
 ## Aktueller Stand
 
-**Phasen 0–18 + Phase 20a–20h im Code abgeschlossen. Phase 19 (Release-QA) läuft: APK gebaut, Checkliste bereit, manueller Gerätetest auf Samsung SM-S931B steht aus.**
+**Phasen 0–22 im Code abgeschlossen (inkl. Daily-Check-in-Redesign Phase 22). Agenten-Qualität #58–#64 umgesetzt (CI-Quality-Gate, PR-/Handoff-Template, Repo-Hygiene-Checks, Branch Protection, QA-Status-Doku). Phase 19 (Release-QA) ist der einzige offene Punkt: manueller Gerätetest auf echtem Android-Gerät steht nach dem UI-Redesign weiter aus.**
+
+### Release-QA-Status (eindeutig)
+
+| Aspekt                          | Status                                           |
+| ------------------------------- | ------------------------------------------------ |
+| Code fertig                     | ja (Phase 0–22)                                  |
+| Automatisierte Checks (CI)      | bestanden — analyze 0, test grün, debug-APK baut |
+| Debug-APK gebaut                | ja                                               |
+| Release-APK gebaut/signiert     | ja (v1/v2, lokaler Upload-Keystore)              |
+| Manuelle Android-QA            | **offen** (Gerätetest nach QA_RELEASE_CHECKLIST) |
+| Bekannte manuelle Risiken       | Theme-Persistenz, Reminder unter Samsung, Backup-Sperre am Gerät |
+
+Der offene Punkt ist manuelles Testen, kein Code-Mangel.
 
 ---
 
@@ -38,13 +51,14 @@ Zuletzt aktualisiert: 2026-06-19
   - `lib/features/today/today_screen.dart` — persistenter Tageseintrag, Screen-State, Laden/Speichern, Tageswechsel und Berichtskarte
   - `lib/features/today/activity_picker_model.dart` — Tätigkeitsauswahl-Logik für Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und historische IDs
   - `lib/features/today/today_entry_draft.dart` — DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau
-  - `lib/features/today/widgets/` — extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection`, `ActivityPickerSection`, `ReportCard`
+  - `lib/features/today/widgets/` — extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaCarousel` (+ `AreaGrid`-Fallback), `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivitySection`, `ActivityPickerSection`, `ReportCard`
   - `lib/features/week/week_screen.dart` — Wochenliste, Tagesstatus, Zusammenfassung und kopierbare Berichte
+  - `lib/features/week/widgets/week_dot_strip.dart` — Mo–So-Punkt-Leiste für Wochenfortschritt statt Prozentbalken
   - `lib/features/templates/templates_screen.dart` — Vorlagenverwaltung mit Suche und Bottom Sheet
   - `lib/features/profile/profile_screen.dart` — Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring
   - `lib/features/profile/profile_reminder_controller.dart` — Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln
   - `lib/features/profile/widgets/` — Profil-Header, Profil-Editor, Reminder-Section und Theme-Auswahl
-- Phase 20h (#57 Profil persönlicher): leichterer ProfileHeader (Avatar 24, surfaceContainer, Padding 12, „Hallo [Name],“-Begrüßung, Tippen öffnet Editor), redundanten Ausbildungsprofil-Abschnitt entfernt, Golden profile_overview.png aktualisiert
+- Phase 22 Daily-Check-in-Redesign: Heute-Sprache und Save-Flow entschärft, Bereichs-Carousel, weiche Progression, Wochen-Dot-Strip statt Prozent, leichtere Tageskarte/SaveBar/NavBar und wärmeres `lagerTeal`; alle Goldens aktualisiert
   - `lib/shared/widgets/app_ui.dart` — gemeinsame Abschnitts-, Status- und Empty-State-Bausteine
 - `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
 - `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
@@ -80,7 +94,7 @@ Zuletzt aktualisiert: 2026-06-19
 | `flutter create --platforms=android .`   | Erfolgreich, android/ generiert                            |
 | `flutter pub get`                        | Erfolgreich, Abhängigkeiten aufgelöst                      |
 | `flutter analyze`                        | 0 Issues                                                   |
-| `flutter test`                           | 246/246 Tests bestanden                                    |
+| `flutter test`                           | 249/249 Tests bestanden                                    |
 | `flutter build apk --debug`              | Erfolgreich, Debug-APK 91 MB                               |
 | `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.1 MB                      |
 | Release-Signatur                         | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |

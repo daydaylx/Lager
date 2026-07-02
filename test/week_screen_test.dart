@@ -111,8 +111,7 @@ void main() {
     await pumpWeek(tester, storage: storage, initialDate: today);
 
     expect(
-      find.text(
-          '${entries.length} von $dueDays fälligen Werktagen eingetragen'),
+      find.text('${entries.length} / $dueDays Tage erledigt'),
       findsOneWidget,
     );
 
@@ -130,10 +129,10 @@ void main() {
       final expectedStatus = entries.any((entry) => entry.date == date)
           ? entries.firstWhere((entry) => entry.date == date).dayType.isAbsence
               ? 'Urlaub'
-              : 'Gespeichert'
+              : 'Erledigt'
           : date.weekday <= DateTime.friday && !date.isAfter(today)
               ? 'Offen'
-              : 'Kein Eintrag';
+              : 'Nicht fällig';
       expect(
         find.descendant(of: dayCard, matching: find.text(expectedStatus)),
         findsOneWidget,
@@ -269,7 +268,7 @@ void main() {
     expect(find.text('Besonderheiten: Selbstständig'), findsOneWidget);
     expect(find.text('Notiz: Neue Warenannahme'), findsOneWidget);
     if (today.weekday >= DateTime.tuesday) {
-      expect(find.text('Kein Eintrag – offen'), findsWidgets);
+      expect(find.text('Noch nichts erfasst'), findsWidgets);
     }
   });
 
@@ -345,8 +344,8 @@ void main() {
 
     expect(find.text('Frei'), findsWidgets);
     expect(
-      find.text('1 von ${today.weekday > 5 ? 5 : today.weekday} '
-          'fälligen Werktagen eingetragen'),
+      find.text(
+          '1 / ${today.weekday > 5 ? 5 : today.weekday} Tage erledigt'),
       findsOneWidget,
     );
   });

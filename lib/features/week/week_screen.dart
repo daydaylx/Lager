@@ -13,6 +13,7 @@ import '../../core/ui/day_status_colors.dart';
 import '../../core/week_utils.dart';
 import '../../shared/widgets/app_ui.dart';
 import '../today/today_screen.dart';
+import 'widgets/week_dot_strip.dart';
 
 class WeekScreen extends StatefulWidget {
   final DailyEntryStorage storage;
@@ -139,6 +140,18 @@ class _WeekScreenState extends State<WeekScreen> {
     final hasEntries = _entries.isNotEmpty;
     final isCurrentWeek = _selectedWeekStart == _currentWeekStart;
     final missingCount = dueWeekDays.length - enteredDueDays;
+    final weekDots = [
+      for (final day in weekDays)
+        WeekDot(
+          weekday: _weekdayShort(day.weekday),
+          status: _hasEntry(day)
+              ? WeekDotStatus.done
+              : _isDueWeekDay(day)
+                  ? WeekDotStatus.open
+                  : WeekDotStatus.idle,
+          isToday: day == _today,
+        ),
+    ];
 
     return Column(
       children: [
@@ -148,6 +161,7 @@ class _WeekScreenState extends State<WeekScreen> {
             weekStart: _selectedWeekStart,
             enteredDays: enteredDueDays,
             dueDays: dueWeekDays.length,
+            dots: weekDots,
             canGoForward: _selectedWeekStart.isBefore(_currentWeekStart),
             onPrevious: () => _changeWeek(-7),
             onNext: () => _changeWeek(7),
@@ -211,6 +225,10 @@ class _WeekScreenState extends State<WeekScreen> {
     return date.weekday <= DateTime.friday && !date.isAfter(_today);
   }
 
+  static const _weekdayShorts = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+  static String _weekdayShort(int weekday) => _weekdayShorts[weekday - 1];
+
   _DayStatus _statusFor(DateTime date, DailyEntry? entry) {
     if (entry != null) {
       if (entry.dayType.isAbsence) {
@@ -221,7 +239,7 @@ class _WeekScreenState extends State<WeekScreen> {
         );
       }
       return const _DayStatus(
-        label: 'Gespeichert',
+        label: 'Erledigt',
         icon: Icons.check_circle_outline,
         kind: _DayStatusKind.saved,
       );
@@ -236,7 +254,7 @@ class _WeekScreenState extends State<WeekScreen> {
     }
 
     return const _DayStatus(
-      label: 'Kein Eintrag',
+      label: 'Nicht fällig',
       icon: Icons.circle_outlined,
       kind: _DayStatusKind.neutral,
     );
@@ -244,7 +262,7 @@ class _WeekScreenState extends State<WeekScreen> {
 
   String _summaryFor(DailyEntry? entry) {
     if (entry == null) {
-      return 'Noch kein Eintrag';
+      return 'Noch nichts erfasst';
     }
 
     return switch (entry.dayType) {
@@ -372,6 +390,7 @@ class _WeekHeader extends StatelessWidget {
   final DateTime weekStart;
   final int enteredDays;
   final int dueDays;
+  final List<WeekDot> dots;
   final bool canGoForward;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
@@ -380,6 +399,7 @@ class _WeekHeader extends StatelessWidget {
     required this.weekStart,
     required this.enteredDays,
     required this.dueDays,
+    required this.dots,
     required this.canGoForward,
     required this.onPrevious,
     required this.onNext,
@@ -429,40 +449,15 @@ class _WeekHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                '$enteredDays von $dueDays fälligen Werktagen eingetragen',
-                key: const ValueKey('week_progress'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              dueDays == 0
-                  ? '0 %'
-                  : '${((enteredDays / dueDays) * 100).round()} %',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Semantics(
-          label: '$enteredDays von $dueDays Tagen eingetragen',
-          value: dueDays == 0
-              ? '0 Prozent'
-              : '${((enteredDays / dueDays) * 100).round()} Prozent',
-          child: LinearProgressIndicator(
-            value: dueDays == 0 ? 0 : enteredDays / dueDays,
-            borderRadius: BorderRadius.circular(8),
+        Text(
+          '$enteredDays / $dueDays Tage erledigt',
+          key: const ValueKey('week_progress'),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
           ),
         ),
+        const SizedBox(height: 10),
+        WeekDotStrip(dots: dots),
       ],
     );
   }
@@ -482,10 +477,10 @@ class _MissingDaysBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppMessage(
       key: const ValueKey('missing_days_banner'),
-      icon: Icons.warning_amber_outlined,
-      title: '$count ${count == 1 ? 'Tag offen' : 'Tage offen'} diese Woche',
+      icon: Icons.pending_outlined,
+      title: '$count ${count == 1 ? 'Tag wartet' : 'Tage warten'} noch',
       message: 'Tippe auf einen offenen Tag, um ihn nachzutragen. Dauert nur kurz.',
-      tone: AppMessageTone.warning,
+      tone: AppMessageTone.neutral,
     );
   }
 }
@@ -714,7 +709,7 @@ class _SummaryDayCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (entry == null)
-              Text(isMissing ? 'Kein Eintrag – offen' : 'Kein Eintrag')
+              Text(isMissing ? 'Noch nichts erfasst' : 'Nicht fällig')
             else ...[
               Text(
                 entry!.dayType == DayType.betrieb && entry!.areas.isNotEmpty

@@ -26,7 +26,7 @@ extension ThemePresetDetails on ThemePreset {
       };
 
   Color get seedColor => switch (this) {
-        ThemePreset.lagerTeal => const Color(0xFF2E7D6B),
+        ThemePreset.lagerTeal => const Color(0xFF347A63), // #22f: minimal wärmer/grüner
         ThemePreset.nachtGruen => const Color(0xFF1A5C40),
         ThemePreset.warmSand => const Color(0xFF8B6914),
         ThemePreset.blauGrau => const Color(0xFF3A5B8C),
@@ -78,6 +78,11 @@ ThemeData _buildTheme(
   );
   final roundedShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(16),
+    side: BorderSide(
+      color: colorScheme.outlineVariant.withValues(
+        alpha: brightness == Brightness.dark ? 0.34 : 0.55,
+      ),
+    ),
   );
 
   // Slightly lifted secondary text for dark themes (#27)
@@ -98,9 +103,9 @@ ThemeData _buildTheme(
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      height: 80,
-      backgroundColor: colorScheme.surfaceContainer,
-      indicatorColor: colorScheme.secondaryContainer,
+      height: 72, // #22e: leichtere Bottom-Leiste (vorher 80)
+      backgroundColor: colorScheme.surfaceContainerLow,
+      indicatorColor: colorScheme.surfaceContainerHighest, // dezenter Pillenhintergrund
       elevation: 0,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         return base.textTheme.labelMedium?.copyWith(
@@ -117,7 +122,7 @@ ThemeData _buildTheme(
       margin: EdgeInsets.zero,
       elevation: 0,
       color: colorScheme.surfaceContainerLow,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: colorScheme.primary.withValues(alpha: 0.05),
       shape: roundedShape,
     ),
     dividerTheme: DividerThemeData(

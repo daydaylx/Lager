@@ -72,6 +72,7 @@ die App deaktiviert.
 | `DECISIONS.md`                | Architekturentscheidungen                     |
 | `docs/CODEMAP.md`             | Kompakte Projektkarte und wichtige Pfade      |
 | `docs/AGENT_CONTEXT_PACKS.md` | Taskbezogene Kontextpakete für Agenten        |
+| `docs/AGENT_HANDOFF_TEMPLATE.md` | Einheitliche Vorlage für Agenten-Übergaben  |
 | `docs/CURRENT_STATUS.md`      | Aktueller Projektstand für Agent-Handoff      |
 | `docs/VALIDATION_MATRIX.md`   | Prüfkommandos pro Änderungstyp                |
 | `docs/DATA_MODEL.md`          | Datenmodell, Storage und Persistenzregeln     |

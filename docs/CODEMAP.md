@@ -25,9 +25,10 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `today/activity_picker_model.dart`         | ✅ fertig | Tätigkeitsauswahl-Logik: Suche, Gruppen, häufig genutzt, Empfehlungen und historische IDs                                                  |
 | `today/today_entry_draft.dart`             | ✅ fertig | DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau                                                                         |
 | `today/activity_recommender.dart`          | ✅ fertig | Häufig-genutzt-Sortierung und Ausbildungsjahr-Empfehlungen                                                                                 |
-| `today/widgets/`                           | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
-| `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Entwurf/Gespeichert-Chip und Kopier-Button                                                                    |
+| `today/widgets/`                           | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaCarousel` (+ `AreaGrid`-Fallback), `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
+| `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Entwurf/Erledigt-Chip und Kopier-Button                                                                       |
 | `week/week_screen.dart`                    | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                                  |
+| `week/widgets/week_dot_strip.dart`         | ✅ fertig | Mo–So-Punkt-Leiste für Wochenfortschritt (`done`/`open`/`idle`, heute markiert)                                                             |
 | `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |
 | `profile/profile_screen.dart`              | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                                   |
 | `profile/profile_reminder_controller.dart` | ✅ fertig | Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln                                                                           |
@@ -98,7 +99,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | Datei               | Inhalt                                                     |
 | ------------------- | ---------------------------------------------------------- |
 | `profile_form.dart` | Profilmaske (Onboarding + Profil-Screen teilen sich diese) |
-| `app_ui.dart`       | Abschnittsköpfe, Statusmeldungen, Empty States, Gruppen    |
+| `app_ui.dart`       | Abschnittsköpfe inkl. `SectionEmphasis`, Statusmeldungen, Empty States, Gruppen |
 
 ---
 
@@ -182,6 +183,7 @@ App-Start:
 | `bootstrap_test.dart`                      | sichtbarer Startfehler und Retry                                   |
 | `preferences_write_test.dart`              | fehlgeschlagene SharedPreferences-Schreibvorgänge                  |
 | `persistence_stability_test.dart`          | stabile Enum-Namen, Parser und Tätigkeits-IDs                      |
+| `android_backup_test.dart`               | Android-Cloud-Backup und Gerätetransfer bleiben deaktiviert         |
 | `version_consistency_test.dart`            | `pubspec.yaml`-Version gegen `kAppVersion`                         |
 | `ui_layout_test.dart`                      | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens    |
 | `export_service_test.dart`                 | JSON-Export: Profil, Einträge, eigene Tätigkeiten (`generateJson`) |
@@ -202,6 +204,7 @@ Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 | `TASKS.md`                    | Aktive Phase und offene Aufgaben                     |
 | `docs/DATA_MODEL.md`          | Vollständige Enum/Model-Referenz                     |
 | `docs/AGENT_CONTEXT_PACKS.md` | Aufgabenbezogene Dateilisten                         |
+| `docs/AGENT_HANDOFF_TEMPLATE.md` | Einheitliche Agenten-Übergabevorlage              |
 | `docs/VALIDATION_MATRIX.md`   | Mindestprüfungen pro Änderungstyp                    |
 | `docs/UI_UX_SPEC.md`          | Design-Vorgaben, Screen-Layouts                      |
 | `docs/QA_RELEASE_CHECKLIST.md`  | Manueller Release-Test auf echtem Android-Gerät      |

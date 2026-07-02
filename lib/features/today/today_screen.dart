@@ -15,7 +15,7 @@ import 'activity_recommender.dart';
 import 'today_entry_draft.dart';
 import 'widgets/activity_section.dart';
 import 'widgets/activity_picker_section.dart';
-import 'widgets/area_grid.dart';
+import 'widgets/area_carousel.dart';
 import 'widgets/day_status_card.dart';
 import 'widgets/day_type_selector.dart';
 import 'widgets/report_card.dart';
@@ -83,6 +83,22 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String get _screenTitle => _isToday ? 'Heute' : 'Tageseintrag';
 
+  /// Erster noch offener Schritt („weiche Progression", Phase 22d):
+  /// 'bereich' | 'taetigkeit' | '' (nichts offen). Bestimmt, welcher
+  /// Abschnitts-Header hervorgehoben und welcher als „kommend" ruhiger gezeigt wird.
+  String get _activeStep {
+    switch (_selectedDayType) {
+      case DayType.betrieb:
+        if (_selectedAreas.isEmpty) return 'bereich';
+        if (_selectedActivityIds.isEmpty) return 'taetigkeit';
+        return '';
+      case DayType.berufsschule:
+        return _selectedActivityIds.isEmpty ? 'taetigkeit' : '';
+      default:
+        return '';
+    }
+  }
+
   TodayEntryDraft get _draft => TodayEntryDraft(
         date: _today,
         dayType: _selectedDayType,
@@ -103,9 +119,9 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String get _statusLabel {
     if (_savedEntry == null) {
-      return 'Noch offen';
+      return 'Noch nicht abgeschlossen';
     }
-    return _hasUnsavedChanges ? 'Änderungen offen' : 'Gespeichert';
+    return _hasUnsavedChanges ? 'Aktualisierung offen' : 'Erledigt';
   }
 
   List<String> get _missingItems {
@@ -221,8 +237,8 @@ class _TodayScreenState extends State<TodayScreen> {
                     AppSectionHeader(
                       title: 'Tagestyp',
                       description: _isToday
-                          ? 'Was für ein Tag ist heute?'
-                          : 'Was für ein Tag war das?',
+                          ? 'Wie war dein Tag?'
+                          : 'Wie war der Tag?',
                     ),
                     const SizedBox(height: 12),
                     DayTypeSelector(
@@ -233,14 +249,16 @@ class _TodayScreenState extends State<TodayScreen> {
                       const SizedBox(height: 24),
                       AppSectionHeader(
                         title: 'Bereich',
-                        badge: 'Benötigt',
-                        badgeRequired: true,
                         description: _isToday
                             ? 'Wo hast du heute gearbeitet?'
                             : 'Wo hast du an diesem Tag gearbeitet?',
+                        emphasis: _selectedAreas.isEmpty &&
+                                _activeStep == 'bereich'
+                            ? SectionEmphasis.active
+                            : SectionEmphasis.normal,
                       ),
                       const SizedBox(height: 12),
-                      AreaGrid(
+                      AreaCarousel(
                         areas: TrainingArea.values,
                         selected: _selectedAreas,
                         onToggle: _toggleArea,
@@ -250,13 +268,16 @@ class _TodayScreenState extends State<TodayScreen> {
                       const SizedBox(height: 24),
                       AppSectionHeader(
                         title: 'Tätigkeiten',
-                        badge: 'Benötigt',
-                        badgeRequired: true,
                         description: _isToday
                             ? 'Wähle aus, was du heute gemacht hast.'
                             : 'Wähle aus, was du an diesem Tag gemacht hast.',
                         trailing:
                             SelectionCount(count: _selectedActivityIds.length),
+                        emphasis: _activeStep == 'taetigkeit'
+                            ? SectionEmphasis.active
+                            : _activeStep == 'bereich'
+                                ? SectionEmphasis.upcoming
+                                : SectionEmphasis.normal,
                       ),
                       const SizedBox(height: 12),
                       _buildActivities(context),
@@ -625,7 +646,7 @@ class _TodayScreenState extends State<TodayScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isToday ? 'Heute gespeichert.' : 'Tageseintrag gespeichert.',
+              _isToday ? 'Tag abgeschlossen.' : 'Tag eingetragen.',
             ),
           ),
         );

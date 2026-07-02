@@ -1,19 +1,61 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-06-19 (Phase 20h #57 Profil persönlicher abgeschlossen; Phase 19 QA-Vorbereitung läuft)
+Stand: 2026-07-02 (Phase 22 Daily-Check-in-Redesign umgesetzt; Phase 19 Gerätetest bleibt offen)
 
 ---
 
 ## Aktive Phase
 
-**Phase 20: Freundlichere UX (#50–#57)** — 20a–20h abgeschlossen.
-(Phase 19: Release-QA auf echtem Android-Gerät — APK gebaut (18.06.2026), Checkliste bereit; bleibt parallel offen.)
+**Phase 19: Release-QA auf echtem Android-Gerät** — APK installierbereit,
+Checkliste vorbereitet; manueller Gerätetest steht aus (braucht echtes Gerät).
+
+Phase 20 (Freundlichere UX #50–#57) ist vollständig abgeschlossen und auf
+GitHub geschlossen. Phase 22 (Daily-Check-in-Redesign) ist code- und testseitig
+abgeschlossen; die finale manuelle Android-QA aus Phase 19 sollte gegen dieses
+neue UI erneut laufen.
+
+### Release-QA-Status (eindeutig)
+
+| Aspekt                                  | Status                                             |
+| --------------------------------------- | -------------------------------------------------- |
+| Code fertig                             | ja (Phase 0–20)                                    |
+| Automatisierte Checks                   | bestanden (analyze 0, test grün, debug-APK baut)   |
+| Debug-APK gebaut                        | ja                                                 |
+| Release-APK gebaut/signiert             | ja (lokaler Upload-Keystore, v1/v2)                |
+| Manuelle Android-QA                     | offen (Gerätetest nach QA_RELEASE_CHECKLIST)       |
+| Bekannte manuelle Risiken               | Theme-Persistenz, Reminder unter Samsung, Backup-Sperre am Gerät |
+
+Der offene Punkt ist **manuelles Testen**, kein Code-Mangel. Ein Agent darf
+Release-QA nicht als erledigt markieren, solange der Gerätetest aussteht.
+
+### Offene Agenten-/Produktfragen
+
+- **#39 Import:** Produktentscheidung offen (Export ist implementiert). Erst
+  nach Entscheidung bauen.
+- **#37 Gerätetest:** braucht echtes Android-Gerät, nicht von einem Agenten erledigbar.
 
 ---
 
 ## Was fertig ist
 
 Phasen 0–16 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+
+Neu Phase 22 (Daily-Check-in-Redesign):
+
+- Heute-Sprache entschärft: Status „Erledigt", „Tag abschließen", keine
+  „Benötigt"-Badges; `DayStatusCard` als Tageskarte mit dezentem Verlauf.
+- Woche weniger alarmistisch: `WeekDotStrip` (Mo–So) statt Prozentbalken,
+  Fortschritt „X / Y Tage erledigt", neutraler Banner „X Tage warten noch".
+- Bereichsauswahl: `AreaCarousel` via `PageView` + ausgewählte Chips,
+  Start auf Wareneingang; Multi-Select und Tätigkeitsfilter über alle Bereiche
+  bleiben erhalten; sehr schmale Displays nutzen `AreaGrid` als Fallback.
+- Weiche Progression: `AppSectionHeader` unterstützt `SectionEmphasis`;
+  aktiver Schritt wird dekorativ markiert, kommende Schritte bleiben lesbar.
+- Visual polish: leichtere SaveBar/NavigationBar, wärmeres `lagerTeal`, Karten
+  mit subtiler Outline/Tint; keine neuen Dependencies.
+- `flutter analyze` — 0 Issues; `flutter test` — 249/249; alle Goldens
+  (`onboarding_welcome`, `today_empty`, `week_mixed`, `profile_overview`) aktualisiert.
+
 
 Neu Phase 20a (#54, Farbwelt weicher):
 
@@ -167,13 +209,15 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Phase 20h (#57 Profil persönlicher, 19.06.2026):
+Aktuell nach Agenten-Qualität #58–#64 (01.07.2026):
 
 ```
+bash scripts/check_repo_hygiene.sh  →  OK
 flutter analyze          →  0 Issues
-flutter test             →  246/246 bestanden
+flutter test             →  249/249 bestanden
 flutter build apk --debug  →  erfolgreich
 flutter build apk --release  →  erfolgreich (18.06.2026)
+CI (Job flutter-checks)    →  Required-Check für main (Branch Protection)
 ```
 
 Vorherige Geräteverifikation (Phase 13):
@@ -197,6 +241,8 @@ Release-Zertifikat; der installierte Build meldet `apkSigningVersion=2`.
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
 
-Issue #39 (Export/Import) ist bewusst offen — eigene Produktentscheidung erforderlich, bevor Code dafür entsteht.
+Issue #39 (Export/Import) ist bewusst offen und wartet auf eine
+Produktentscheidung, bevor Code dafür entsteht.
 
-Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit demselben Keystore signiert werden.
+Lokalen Release-Keystore sicher aufbewahren; spätere Release-Updates müssen mit
+demselben Keystore signiert werden.

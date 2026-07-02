@@ -40,13 +40,13 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 ### 3.1 Betriebstag
 
 - [ ] Tagtyp „Betrieb“ auswählen
-- [ ] Bereich wählen → passende Tätigkeiten erscheinen
+- [ ] Bereich über Carousel wählen → passende Tätigkeiten erscheinen; mehrere Bereiche bleiben möglich
 - [ ] Tätigkeit auswählen → Auswahlchip erscheint oben
 - [ ] Berichtskarte erscheint sichtbar nach Bereich + Tätigkeit
 - [ ] Berichtskarte zeigt „Entwurf“
 - [ ] „Bericht kopieren“ kopiert den Text → Clipboard-Inhalt prüfen
-- [ ] Speichern → Berichtskarte zeigt „Gespeichert“
-- [ ] Bestätigung per SnackBar „Heute gespeichert.“
+- [ ] „Tag abschließen“ → Berichtskarte zeigt „Erledigt“
+- [ ] Bestätigung per SnackBar „Tag abgeschlossen.“
 - [ ] Gespeicherter Eintrag lädt beim nächsten Öffnen korrekt
 
 ### 3.2 Berufsschultag
@@ -86,11 +86,11 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ## 4. Wochenübersicht
 
-- [ ] 7 Tageskacheln zeigen korrekten Status (Gespeichert / Offen / Abwesenheit / Kein Eintrag)
+- [ ] 7 Tageskacheln zeigen korrekten Status (Erledigt / Offen / Abwesenheit / Nicht fällig)
 - [ ] Navigation eine Woche zurück und vorwärts möglich
 - [ ] Navigation in die Zukunft ist nicht möglich
-- [ ] Fortschrittsbalken und Zusammenfassung korrekt
-- [ ] Banner „X Tag/Tage offen diese Woche“ erscheint bei unvollständiger Woche
+- [ ] Punkt-Leiste und Zusammenfassung korrekt; kein Prozentbalken sichtbar
+- [ ] Banner „X Tag/Tage warten noch“ erscheint neutral bei unvollständiger Woche
 - [ ] Tap auf einen Tag öffnet den Tageseintrag
 - [ ] Wochenzusammenfassung über AppBar-Icon öffnen
 - [ ] Pro vorhandenem Eintrag: Berichtsvorschlag sichtbar und kopierbar
