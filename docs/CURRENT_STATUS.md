@@ -1,6 +1,24 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-02 (Phase 22 Daily-Check-in-Redesign umgesetzt; Phase 19 Gerätetest bleibt offen)
+Stand: 2026-07-10 (Tätigkeitserfassungs-Überarbeitung + private Notizen abgeschlossen)
+
+---
+
+## Letzte Änderung: Tätigkeitserfassung + private Notiz
+
+- Tätigkeitskatalog von 132 auf 38 aktive grobe Tätigkeiten reduziert (die
+  übrigen 94 sind deaktiviert, im Vorlagen-Screen reaktivierbar & persistent).
+- Eigene Tätigkeiten direkt im Tagesformular („+ Eigene Tätigkeit hinzufügen")
+  mit einmaliger (Adhoc) oder dauerhafter (Template) Speicherung.
+- `DailyEntry.note` in `reportNote` (berichtsrelevant) und `privateNote`
+  (nie im Bericht) getrennt; alte `note`-Werte automatisch nach `reportNote`
+  migriert (Feldindex 6, rückwärtskompatibel).
+- `AdhocActivity` (einmalige Tätigkeit) als `List<List<String>>` im
+  `DailyEntryAdapter` persistiert (kein neuer Hive-Type-ID).
+- `DefaultActivityStateStorage` (SharedPreferences) für Overrides.
+- Template-Screen: aktive Defaults oben, deaktivierte in einklappbarem
+  „Weitere Standardtätigkeiten (deaktiviert)"-Abschnitt.
+- `flutter analyze` 0 Issues, `flutter test` 256/256 bestanden.
 
 ---
 
@@ -9,16 +27,15 @@ Stand: 2026-07-02 (Phase 22 Daily-Check-in-Redesign umgesetzt; Phase 19 Gerätet
 **Phase 19: Release-QA auf echtem Android-Gerät** — APK installierbereit,
 Checkliste vorbereitet; manueller Gerätetest steht aus (braucht echtes Gerät).
 
-Phase 20 (Freundlichere UX #50–#57) ist vollständig abgeschlossen und auf
-GitHub geschlossen. Phase 22 (Daily-Check-in-Redesign) ist code- und testseitig
-abgeschlossen; die finale manuelle Android-QA aus Phase 19 sollte gegen dieses
-neue UI erneut laufen.
+Phase 20 (Freundlichere UX #50–#57) ist der aktuelle UI-Stand.
+Phase 22 (Daily-Check-in-Redesign) wurde am 2026-07-10 selektiv rückgängig gemacht.
+Phase 21 (Agenten-Qualität: CI, PR-Template, Hygiene-Skript) bleibt bestehen.
 
 ### Release-QA-Status (eindeutig)
 
 | Aspekt                                  | Status                                             |
 | --------------------------------------- | -------------------------------------------------- |
-| Code fertig                             | ja (Phase 0–20)                                    |
+| Code fertig                             | ja (Phase 0–20, +Phase 21 Infra)                   |
 | Automatisierte Checks                   | bestanden (analyze 0, test grün, debug-APK baut)   |
 | Debug-APK gebaut                        | ja                                                 |
 | Release-APK gebaut/signiert             | ja (lokaler Upload-Keystore, v1/v2)                |
@@ -38,26 +55,13 @@ Release-QA nicht als erledigt markieren, solange der Gerätetest aussteht.
 
 ## Was fertig ist
 
-Phasen 0–16 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+Phasen 0–20 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+Phase 21 (Agenten-Qualität: CI, PR-Template, Hygiene-Skript) bleibt bestehen.
 
-Neu Phase 22 (Daily-Check-in-Redesign):
+Phase 22 (Daily-Check-in-Redesign) wurde am 2026-07-10 rückgängig gemacht.
+Die App ist zurück auf dem UI-Stand von Phase 20.
 
-- Heute-Sprache entschärft: Status „Erledigt", „Tag abschließen", keine
-  „Benötigt"-Badges; `DayStatusCard` als Tageskarte mit dezentem Verlauf.
-- Woche weniger alarmistisch: `WeekDotStrip` (Mo–So) statt Prozentbalken,
-  Fortschritt „X / Y Tage erledigt", neutraler Banner „X Tage warten noch".
-- Bereichsauswahl: `AreaCarousel` via `PageView` + ausgewählte Chips,
-  Start auf Wareneingang; Multi-Select und Tätigkeitsfilter über alle Bereiche
-  bleiben erhalten; sehr schmale Displays nutzen `AreaGrid` als Fallback.
-- Weiche Progression: `AppSectionHeader` unterstützt `SectionEmphasis`;
-  aktiver Schritt wird dekorativ markiert, kommende Schritte bleiben lesbar.
-- Visual polish: leichtere SaveBar/NavigationBar, wärmeres `lagerTeal`, Karten
-  mit subtiler Outline/Tint; keine neuen Dependencies.
-- `flutter analyze` — 0 Issues; `flutter test` — 249/249; alle Goldens
-  (`onboarding_welcome`, `today_empty`, `week_mixed`, `profile_overview`) aktualisiert.
-
-
-Neu Phase 20a (#54, Farbwelt weicher):
+Phase 20a (#54, Farbwelt weicher):
 
 - Neue zentrale Farbquelle `lib/core/ui/day_status_colors.dart` (saved=primary, open=tertiary, absence=secondary, neutral=onSurfaceVariant)
 - `ThemePreset.lagerTeal`-Surface aufgehellt (`0xFF0F1F1C` → `0xFF142822`); andere Presets unangetastet
@@ -209,13 +213,13 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Agenten-Qualität #58–#64 (01.07.2026):
+Aktuell nach Phase-22-Revert (2026-07-10):
 
 ```
 bash scripts/check_repo_hygiene.sh  →  OK
 flutter analyze          →  0 Issues
 flutter test             →  249/249 bestanden
-flutter build apk --debug  →  erfolgreich
+flutter build apk --debug  →  erfolgreich (nicht erneut gebaut)
 flutter build apk --release  →  erfolgreich (18.06.2026)
 CI (Job flutter-checks)    →  Required-Check für main (Branch Protection)
 ```

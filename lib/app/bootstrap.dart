@@ -3,6 +3,7 @@ import '../core/profile_storage.dart';
 import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
+import '../core/storage/default_activity_state_storage.dart';
 import '../core/storage/hive_activity_template_storage.dart';
 import '../core/storage/hive_daily_entry_storage.dart';
 import '../core/storage/theme_preset_storage.dart';
@@ -13,12 +14,14 @@ import 'theme.dart';
 class BootstrapData {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final DefaultActivityStateStorage defaultActivityStateStorage;
   final StoredProfile profile;
   final ThemePreset themePreset;
 
   const BootstrapData({
     required this.dailyEntryStorage,
     required this.templateStorage,
+    required this.defaultActivityStateStorage,
     required this.profile,
     required this.themePreset,
   });
@@ -50,6 +53,7 @@ Future<BootstrapData> loadBootstrapData() async {
   return BootstrapData(
     dailyEntryStorage: dailyEntryStorage,
     templateStorage: templateStorage,
+    defaultActivityStateStorage: const DefaultActivityStateStorage(),
     profile: profile,
     themePreset: themePreset,
   );
@@ -97,6 +101,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
       return BerichtsheftApp(
         dailyEntryStorage: data.dailyEntryStorage,
         templateStorage: data.templateStorage,
+        defaultActivityStateStorage: data.defaultActivityStateStorage,
         initialOnboardingCompleted:
             ProfileStorage.isOnboardingComplete(profile),
         initialName: profile.name,

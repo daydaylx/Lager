@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — Phase 22 UI/UX-Redesign abgeschlossen; APK/Checkliste für manuellen Gerätetest nach neuem UI erneut relevant. Manueller Gerätetest bleibt ausstehend.
+**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — UI-Stand: Phase 20 (Freundlichere UX). Phase 22 (Daily-Check-in-Redesign) wurde rückgängig gemacht. Phase 21 (Agenten-Qualität) bleibt bestehen. Manueller Gerätetest bleibt ausstehend.
 
 ---
 
@@ -442,23 +442,11 @@ absichern. Keine Produkt-/UI-Änderung, nur Tooling, CI, Doku und Tests.
 
 ---
 
-## Phase 22: Daily-Check-in-Redesign ✅
+## Phase 22: Daily-Check-in-Redesign ❌ (rückgängig gemacht 2026-07-10)
 
-Ziel: Heute/Woche weniger formular- und kontrollhaft, mehr kurzer Daily Check-in.
-Keine neuen Dependencies, kein Backend, keine Datenmodelländerung.
-
-- [x] Texte entschärft: „Erledigt" statt „Gespeichert", „Tag abschließen",
-      keine „Benötigt"-Badges; Tests/Goldens synchron.
-- [x] Woche beruhigt: `WeekDotStrip` Mo–So statt Prozentbalken,
-      „X / Y Tage erledigt", neutraler Banner „X Tage warten noch".
-- [x] Bereichsauswahl: `AreaCarousel` via `PageView` + ausgewählte Chips;
-      Start auf Wareneingang, Multi-Select bleibt, Fallback auf `AreaGrid`.
-- [x] Weiche Progression: aktiver Abschnitt mit Akzentsäule, kommende Schritte
-      lesbar ruhiger (kein Opacity-Dimmen).
-- [x] Tageskarte/SaveBar/NavBar leichter; `lagerTeal` minimal wärmer,
-      Karten mit subtiler Outline/Tint.
-- [x] Validierung: `/home/d/flutter/bin/flutter analyze` — 0 Issues;
-      `/home/d/flutter/bin/flutter test` — 249/249; alle Goldens aktualisiert.
+Die UI-Änderungen aus Phase 22 wurden selektiv rückgängig gemacht. Die
+App ist nun zurück auf dem UI-Stand von Phase 20 (Freundlichere UX).
+Phase-21-Infrastruktur (CI, PR-Template, Hygiene-Skript) bleibt bestehen.
 
 ---
 

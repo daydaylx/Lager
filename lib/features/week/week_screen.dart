@@ -9,15 +9,16 @@ import '../../core/models/daily_entry.dart';
 import '../../core/models/activity_template.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
+import '../../core/storage/default_activity_state_storage.dart';
 import '../../core/ui/day_status_colors.dart';
 import '../../core/week_utils.dart';
 import '../../shared/widgets/app_ui.dart';
 import '../today/today_screen.dart';
-import 'widgets/week_dot_strip.dart';
 
 class WeekScreen extends StatefulWidget {
   final DailyEntryStorage storage;
   final ActivityTemplateStorage templateStorage;
+  final DefaultActivityStateStorage defaultActivityStateStorage;
   final DateTime? initialDate;
   final DateTime? currentDate;
   final int refreshSignal;
@@ -28,6 +29,7 @@ class WeekScreen extends StatefulWidget {
     super.key,
     required this.storage,
     required this.templateStorage,
+    this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     this.initialDate,
     this.currentDate,
     this.refreshSignal = 0,
@@ -140,18 +142,6 @@ class _WeekScreenState extends State<WeekScreen> {
     final hasEntries = _entries.isNotEmpty;
     final isCurrentWeek = _selectedWeekStart == _currentWeekStart;
     final missingCount = dueWeekDays.length - enteredDueDays;
-    final weekDots = [
-      for (final day in weekDays)
-        WeekDot(
-          weekday: _weekdayShort(day.weekday),
-          status: _hasEntry(day)
-              ? WeekDotStatus.done
-              : _isDueWeekDay(day)
-                  ? WeekDotStatus.open
-                  : WeekDotStatus.idle,
-          isToday: day == _today,
-        ),
-    ];
 
     return Column(
       children: [
@@ -161,7 +151,6 @@ class _WeekScreenState extends State<WeekScreen> {
             weekStart: _selectedWeekStart,
             enteredDays: enteredDueDays,
             dueDays: dueWeekDays.length,
-            dots: weekDots,
             canGoForward: _selectedWeekStart.isBefore(_currentWeekStart),
             onPrevious: () => _changeWeek(-7),
             onNext: () => _changeWeek(7),
@@ -174,39 +163,40 @@ class _WeekScreenState extends State<WeekScreen> {
               key: const ValueKey('week_list'),
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-          if (isCurrentWeek && missingCount > 0) ...[
-            const SizedBox(height: 16),
-            _MissingDaysBanner(count: missingCount),
-          ],
-          if (!hasEntries) ...[
-            const SizedBox(height: 16),
-            _EmptyWeekCard(onNavigateToToday: widget.onNavigateToToday),
-          ],
-          if (_templatesLoadFailed) ...[
-            const SizedBox(height: 16),
-            _WeekTemplateWarning(onRetry: _loadTemplates),
-          ],
-          const SizedBox(height: 16),
-          Material(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: weekDays.indexed.map((entry) {
-                final index = entry.$1;
-                final date = entry.$2;
-                final dailyEntry = _entryFor(date);
-                return _DayCard(
-                  date: date,
-                  entry: dailyEntry,
-                  status: _statusFor(date, dailyEntry),
-                  summary: _summaryFor(dailyEntry),
-                  onTap: date.isAfter(_today) ? null : () => _openDay(date),
-                  showDivider: index < weekDays.length - 1,
-                );
-              }).toList(growable: false),
-            ),
-          ),
+                if (isCurrentWeek && missingCount > 0) ...[
+                  const SizedBox(height: 16),
+                  _MissingDaysBanner(count: missingCount),
+                ],
+                if (!hasEntries) ...[
+                  const SizedBox(height: 16),
+                  _EmptyWeekCard(onNavigateToToday: widget.onNavigateToToday),
+                ],
+                if (_templatesLoadFailed) ...[
+                  const SizedBox(height: 16),
+                  _WeekTemplateWarning(onRetry: _loadTemplates),
+                ],
+                const SizedBox(height: 16),
+                Material(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: weekDays.indexed.map((entry) {
+                      final index = entry.$1;
+                      final date = entry.$2;
+                      final dailyEntry = _entryFor(date);
+                      return _DayCard(
+                        date: date,
+                        entry: dailyEntry,
+                        status: _statusFor(date, dailyEntry),
+                        summary: _summaryFor(dailyEntry),
+                        onTap:
+                            date.isAfter(_today) ? null : () => _openDay(date),
+                        showDivider: index < weekDays.length - 1,
+                      );
+                    }).toList(growable: false),
+                  ),
+                ),
               ],
             ),
           ),
@@ -225,10 +215,6 @@ class _WeekScreenState extends State<WeekScreen> {
     return date.weekday <= DateTime.friday && !date.isAfter(_today);
   }
 
-  static const _weekdayShorts = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-
-  static String _weekdayShort(int weekday) => _weekdayShorts[weekday - 1];
-
   _DayStatus _statusFor(DateTime date, DailyEntry? entry) {
     if (entry != null) {
       if (entry.dayType.isAbsence) {
@@ -239,7 +225,7 @@ class _WeekScreenState extends State<WeekScreen> {
         );
       }
       return const _DayStatus(
-        label: 'Erledigt',
+        label: 'Gespeichert',
         icon: Icons.check_circle_outline,
         kind: _DayStatusKind.saved,
       );
@@ -254,7 +240,7 @@ class _WeekScreenState extends State<WeekScreen> {
     }
 
     return const _DayStatus(
-      label: 'Nicht fällig',
+      label: 'Kein Eintrag',
       icon: Icons.circle_outlined,
       kind: _DayStatusKind.neutral,
     );
@@ -262,7 +248,7 @@ class _WeekScreenState extends State<WeekScreen> {
 
   String _summaryFor(DailyEntry? entry) {
     if (entry == null) {
-      return 'Noch nichts erfasst';
+      return 'Noch kein Eintrag';
     }
 
     return switch (entry.dayType) {
@@ -274,7 +260,7 @@ class _WeekScreenState extends State<WeekScreen> {
       DayType.krank ||
       DayType.feiertag =>
         'Als ${entry.dayType.label} eingetragen',
-      DayType.sonstiges => entry.note ?? 'Sonstiger Tag',
+      DayType.sonstiges => entry.reportNote ?? 'Sonstiger Tag',
     };
   }
 
@@ -364,6 +350,7 @@ class _WeekScreenState extends State<WeekScreen> {
         builder: (context) => TodayScreen(
           storage: widget.storage,
           templateStorage: widget.templateStorage,
+          defaultActivityStateStorage: widget.defaultActivityStateStorage,
           date: date,
         ),
       ),
@@ -390,7 +377,6 @@ class _WeekHeader extends StatelessWidget {
   final DateTime weekStart;
   final int enteredDays;
   final int dueDays;
-  final List<WeekDot> dots;
   final bool canGoForward;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
@@ -399,7 +385,6 @@ class _WeekHeader extends StatelessWidget {
     required this.weekStart,
     required this.enteredDays,
     required this.dueDays,
-    required this.dots,
     required this.canGoForward,
     required this.onPrevious,
     required this.onNext,
@@ -449,15 +434,40 @@ class _WeekHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
-        Text(
-          '$enteredDays / $dueDays Tage erledigt',
-          key: const ValueKey('week_progress'),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$enteredDays von $dueDays fälligen Werktagen eingetragen',
+                key: const ValueKey('week_progress'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              dueDays == 0
+                  ? '0 %'
+                  : '${((enteredDays / dueDays) * 100).round()} %',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Semantics(
+          label: '$enteredDays von $dueDays Tagen eingetragen',
+          value: dueDays == 0
+              ? '0 Prozent'
+              : '${((enteredDays / dueDays) * 100).round()} Prozent',
+          child: LinearProgressIndicator(
+            value: dueDays == 0 ? 0 : enteredDays / dueDays,
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
-        const SizedBox(height: 10),
-        WeekDotStrip(dots: dots),
       ],
     );
   }
@@ -477,10 +487,11 @@ class _MissingDaysBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppMessage(
       key: const ValueKey('missing_days_banner'),
-      icon: Icons.pending_outlined,
-      title: '$count ${count == 1 ? 'Tag wartet' : 'Tage warten'} noch',
-      message: 'Tippe auf einen offenen Tag, um ihn nachzutragen. Dauert nur kurz.',
-      tone: AppMessageTone.neutral,
+      icon: Icons.warning_amber_outlined,
+      title: '$count ${count == 1 ? 'Tag offen' : 'Tage offen'} diese Woche',
+      message:
+          'Tippe auf einen offenen Tag, um ihn nachzutragen. Dauert nur kurz.',
+      tone: AppMessageTone.warning,
     );
   }
 }
@@ -693,6 +704,13 @@ class _SummaryDayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final entry = this.entry;
+    final titles = entry == null
+        ? activityTitles
+        : {
+            ...activityTitles,
+            for (final a in entry.adhocActivities) a.id: a.title,
+          };
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(16),
@@ -709,30 +727,30 @@ class _SummaryDayCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (entry == null)
-              Text(isMissing ? 'Noch nichts erfasst' : 'Nicht fällig')
+              Text(isMissing ? 'Kein Eintrag – offen' : 'Kein Eintrag')
             else ...[
               Text(
-                entry!.dayType == DayType.betrieb && entry!.areas.isNotEmpty
-                    ? '${entry!.dayType.label} · ${entry!.areas.map((a) => a.label).join(', ')}'
-                    : entry!.dayType.label,
+                entry.dayType == DayType.betrieb && entry.areas.isNotEmpty
+                    ? '${entry.dayType.label} · ${entry.areas.map((a) => a.label).join(', ')}'
+                    : entry.dayType.label,
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: theme.colorScheme.primary,
                 ),
               ),
-              if (entry!.selectedActivities.isNotEmpty) ...[
+              if (entry.selectedActivities.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                ...entry!.selectedActivities.map(
-                  (id) => _BulletText(text: _activityTitle(id)),
+                ...entry.selectedActivities.map(
+                  (id) => _BulletText(text: _activityTitle(id, titles)),
                 ),
               ],
-              if (entry!.specialFlags.isNotEmpty) ...[
+              if (entry.specialFlags.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Besonderheiten: '
-                  '${entry!.specialFlags.map((flag) => flag.label).join(', ')}',
+                  '${entry.specialFlags.map((flag) => flag.label).join(', ')}',
                 ),
               ],
-              if (entry!.note case final note?) ...[
+              if (entry.reportNote case final note?) ...[
                 const SizedBox(height: 8),
                 Text('Notiz: $note'),
               ],
@@ -747,19 +765,19 @@ class _SummaryDayCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               SelectableText(
-                DailyReportGenerator.generate(entry!, activityTitles),
+                DailyReportGenerator.generate(entry, titles),
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
-                key: Key('copy_report_${entry!.id}'),
+                key: Key('copy_report_${entry.id}'),
                 icon: const Icon(Icons.copy_outlined),
                 label: const Text('Kopieren'),
                 onPressed: () {
                   Clipboard.setData(
                     ClipboardData(
                       text: DailyReportGenerator.generate(
-                        entry!,
-                        activityTitles,
+                        entry,
+                        titles,
                       ),
                     ),
                   );
@@ -775,8 +793,8 @@ class _SummaryDayCard extends StatelessWidget {
     );
   }
 
-  String _activityTitle(String id) {
-    return activityTitles[id] ?? 'Nicht mehr verfügbare Tätigkeit';
+  String _activityTitle(String id, Map<String, String> titles) {
+    return titles[id] ?? 'Nicht mehr verfügbare Tätigkeit';
   }
 }
 

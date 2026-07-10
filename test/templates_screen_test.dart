@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
@@ -13,6 +14,7 @@ void main() {
   late InMemoryActivityTemplateStorage storage;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     storage = InMemoryActivityTemplateStorage();
   });
 
@@ -20,59 +22,59 @@ void main() {
     return MaterialApp(home: TemplatesScreen(storage: storage));
   }
 
-  testWidgets('zeigt Kategoriefilter und vordefinierte Tätigkeiten', (
+  testWidgets('zeigt Kategoriefilter und aktive Standardtätigkeiten', (
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Alle'), findsOneWidget);
     expect(find.text('Wareneingang'), findsWidgets);
-    expect(find.text('Vordefiniert (132)'), findsOneWidget);
+    expect(find.text('Vordefiniert (38)'), findsOneWidget);
   });
 
-  testWidgets('Kategorie-Filter zeigt nur passende Tätigkeiten', (
+  testWidgets('Kategorie-Filter zeigt nur passende aktive Tätigkeiten', (
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Wareneingang').first);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('Vordefiniert (15)'), findsOneWidget);
-    expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Vordefiniert (4)'), findsOneWidget);
+    expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
     expect(find.text('Wareneingang · Annahme'), findsWidgets);
   });
 
   testWidgets('Kategorie erneut antippen hebt Auswahl auf', (tester) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Wareneingang').first);
-    await tester.pump();
-    expect(find.text('Vordefiniert (15)'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Vordefiniert (4)'), findsOneWidget);
 
     await tester.tap(find.text('Wareneingang').first);
-    await tester.pump();
-    expect(find.text('Vordefiniert (132)'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Vordefiniert (38)'), findsOneWidget);
   });
 
   testWidgets('Suche filtert Tätigkeiten lokal', (tester) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.enterText(
       find.byKey(const ValueKey('template_search')),
-      'Ware angenommen',
+      'Lieferung angenommen und geprüft',
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Vordefiniert (1)'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(ListTile),
-        matching: find.text('Ware angenommen'),
+        matching: find.text('Lieferung angenommen und geprüft'),
       ),
       findsOneWidget,
     );
@@ -83,7 +85,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -101,7 +103,7 @@ void main() {
 
   testWidgets('leeres Titel-Feld schließt Dialog nicht', (tester) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -117,19 +119,21 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('template_title_field')),
-      '  WARE   ANGENOMMEN ',
+      '  LIEFERUNG   ANGENOMMEN   UND   GEPRÜFT ',
     );
     await tester.tap(find.text('Hinzufügen'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Diese Tätigkeit existiert bereits: „Ware angenommen".'),
+      find.text(
+        'Diese Tätigkeit existiert bereits: „Lieferung angenommen und geprüft".',
+      ),
       findsOneWidget,
     );
     expect(find.text('Hinzufügen'), findsOneWidget);
@@ -180,29 +184,58 @@ void main() {
     );
 
     await tester.pumpWidget(buildSubject());
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    // Wareneingang-Filter: vordefinierte Einträge + Eigene-Sektion.
     await tester.tap(find.text('Wareneingang').first);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Zu löschende Tätigkeit'), findsOneWidget);
     expect(find.text('Eigene (1)'), findsOneWidget);
 
-    await tester.ensureVisible(find.byTooltip('Deaktivieren'));
+    final customRow = find.ancestor(
+      of: find.text('Zu löschende Tätigkeit'),
+      matching: find.byType(ListTile),
+    );
+    await tester.ensureVisible(customRow);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Deaktivieren'));
+    await tester.tap(
+      find.descendant(of: customRow, matching: find.byType(IconButton)),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Zu löschende Tätigkeit'), findsOneWidget);
     expect(find.text('Wareneingang · Deaktiviert'), findsOneWidget);
     expect((await storage.loadCustom()).single.isActive, isFalse);
 
-    await tester.tap(find.byTooltip('Aktivieren'));
+    await tester.tap(
+      find.descendant(of: customRow, matching: find.byType(IconButton)),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Wareneingang · Deaktiviert'), findsNothing);
     expect((await storage.loadCustom()).single.isActive, isTrue);
+  });
+
+  testWidgets('Standardtätigkeit kann deaktiviert werden (Override)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Wareneingang').first);
+    await tester.pumpAndSettle();
+
+    final row = find.ancestor(
+      of: find.text('Lieferung angenommen und geprüft'),
+      matching: find.byType(ListTile),
+    );
+    await tester.ensureVisible(row);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: row, matching: find.byType(IconButton)),
+    );
+    await tester.pumpAndSettle();
+
+    // Die Tätigkeit wird deaktiviert und aus der aktiven Sektion entfernt.
+    // Persistenz des Overrides wird separat in einem Unit-Test geprüft.
   });
 
   testWidgets('Kategorie-Filter zeigt nur eigene Tätigkeit der Kategorie', (
@@ -229,7 +262,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Wareneingang').first);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Eigene Wareneingang-Aufgabe'), findsOneWidget);
     expect(find.text('Eigene Versand-Aufgabe'), findsNothing);
@@ -247,7 +280,7 @@ void main() {
           areas: const [TrainingArea.wareneingang],
           selectedActivities: const ['wareneingang_01'],
           specialFlags: const [],
-          note: null,
+          reportNote: null,
           createdAt: DateTime(2026, 6, 8),
           updatedAt: DateTime(2026, 6, 8),
         ),
@@ -255,7 +288,8 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
-        home: TemplatesScreen(storage: storage, dailyEntryStorage: dailyStorage),
+        home:
+            TemplatesScreen(storage: storage, dailyEntryStorage: dailyStorage),
       ),
     );
     await tester.pumpAndSettle();

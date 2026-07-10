@@ -1,6 +1,7 @@
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
 import '../../core/enums/training_area.dart';
+import '../../core/models/adhoc_activity.dart';
 import '../../core/models/daily_entry.dart';
 
 class TodayEntryDraft {
@@ -9,7 +10,9 @@ class TodayEntryDraft {
   final Set<TrainingArea> selectedAreas;
   final Set<String> selectedActivityIds;
   final Set<SpecialFlag> selectedSpecialFlags;
-  final String note;
+  final String reportNote;
+  final String privateNote;
+  final Map<String, String> adhocActivities;
 
   const TodayEntryDraft({
     required this.date,
@@ -17,7 +20,9 @@ class TodayEntryDraft {
     required this.selectedAreas,
     required this.selectedActivityIds,
     required this.selectedSpecialFlags,
-    required this.note,
+    required this.reportNote,
+    required this.privateNote,
+    required this.adhocActivities,
   });
 
   bool get canSave {
@@ -49,7 +54,8 @@ class TodayEntryDraft {
     required DateTime timestamp,
     DailyEntry? existingEntry,
   }) {
-    final trimmedNote = note.trim();
+    final trimmedReportNote = reportNote.trim();
+    final trimmedPrivateNote = privateNote.trim();
     return DailyEntry(
       id: DailyEntry.idForDate(date),
       date: date,
@@ -61,7 +67,11 @@ class TodayEntryDraft {
       specialFlags: SpecialFlag.values
           .where(selectedSpecialFlags.contains)
           .toList(growable: false),
-      note: trimmedNote.isEmpty ? null : trimmedNote,
+      reportNote: trimmedReportNote.isEmpty ? null : trimmedReportNote,
+      privateNote: trimmedPrivateNote.isEmpty ? null : trimmedPrivateNote,
+      adhocActivities: adhocActivities.entries
+          .map((e) => AdhocActivity(id: e.key, title: e.value))
+          .toList(growable: false),
       createdAt: existingEntry?.createdAt ?? timestamp,
       updatedAt: timestamp,
     );

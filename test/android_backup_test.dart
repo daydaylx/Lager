@@ -33,9 +33,13 @@ void main() {
     test('dataExtractionRules schließen für cloud-backup alles aus', () {
       final content = extractionRules.readAsStringSync();
       expect(content, contains('<cloud-backup>'));
-      final cloudSection = content.split('<cloud-backup>').last.split(
+      final cloudSection = content
+          .split('<cloud-backup>')
+          .last
+          .split(
             '</cloud-backup>',
-          ).first;
+          )
+          .first;
       // Die Root- und Datenbereiche müssen ausgeschlossen sein.
       expect(
         cloudSection,
@@ -58,9 +62,13 @@ void main() {
     test('dataExtractionRules schließen für device-transfer alles aus', () {
       final content = extractionRules.readAsStringSync();
       expect(content, contains('<device-transfer>'));
-      final transferSection = content.split('<device-transfer>').last.split(
+      final transferSection = content
+          .split('<device-transfer>')
+          .last
+          .split(
             '</device-transfer>',
-          ).first;
+          )
+          .first;
       expect(
         transferSection,
         contains('<exclude domain="root" path="."/>'),

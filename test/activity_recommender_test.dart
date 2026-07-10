@@ -15,7 +15,7 @@ DailyEntry _entry(
     areas: const [],
     selectedActivities: activities,
     specialFlags: const [],
-    note: null,
+    reportNote: null,
     createdAt: date,
     updatedAt: date,
   );

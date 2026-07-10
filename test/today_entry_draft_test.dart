@@ -1,6 +1,7 @@
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
+import 'package:berichtsheft_merker/core/models/adhoc_activity.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/features/today/today_entry_draft.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,9 @@ TodayEntryDraft _draft({
   Set<TrainingArea> areas = const {},
   Set<String> activities = const {},
   Set<SpecialFlag> flags = const {},
-  String note = '',
+  String reportNote = '',
+  String privateNote = '',
+  Map<String, String> adhocActivities = const {},
 }) {
   return TodayEntryDraft(
     date: date ?? DateTime(2026, 6, 12),
@@ -19,7 +22,9 @@ TodayEntryDraft _draft({
     selectedAreas: areas,
     selectedActivityIds: activities,
     selectedSpecialFlags: flags,
-    note: note,
+    reportNote: reportNote,
+    privateNote: privateNote,
+    adhocActivities: adhocActivities,
   );
 }
 
@@ -69,7 +74,7 @@ void main() {
       }
     });
 
-    test('toEntry trimmt Notiz und erhält Erstellungszeit bei Bearbeitung', () {
+    test('toEntry trimmt Berichtsnotiz und erhält Erstellungszeit', () {
       final date = DateTime(2026, 6, 12);
       final createdAt = DateTime(2026, 6, 12, 8);
       final updatedAt = DateTime(2026, 6, 12, 17);
@@ -80,7 +85,7 @@ void main() {
         areas: const [],
         selectedActivities: const [],
         specialFlags: const [],
-        note: 'Alt',
+        reportNote: 'Alt',
         createdAt: createdAt,
         updatedAt: DateTime(2026, 6, 12, 9),
       );
@@ -91,13 +96,14 @@ void main() {
         areas: {TrainingArea.wareneingang},
         activities: {'wareneingang_01'},
         flags: {SpecialFlag.kontrolle, SpecialFlag.selbststaendig},
-        note: '  Neue Notiz  ',
+        reportNote: '  Neue Notiz  ',
       ).toEntry(timestamp: updatedAt, existingEntry: existing);
 
       expect(entry.id, DailyEntry.idForDate(date));
       expect(entry.createdAt, createdAt);
       expect(entry.updatedAt, updatedAt);
-      expect(entry.note, 'Neue Notiz');
+      expect(entry.reportNote, 'Neue Notiz');
+      expect(entry.privateNote, isNull);
       expect(entry.areas, [TrainingArea.wareneingang]);
       expect(entry.selectedActivities, ['wareneingang_01']);
       expect(
@@ -106,17 +112,48 @@ void main() {
       );
     });
 
+    test('toEntry speichert private Notiz getrennt von Berichtsnotiz', () {
+      final timestamp = DateTime(2026, 6, 12, 17);
+      final entry = _draft(
+        dayType: DayType.betrieb,
+        areas: {TrainingArea.wareneingang},
+        activities: {'wareneingang_01'},
+        reportNote: 'Fürs Berichtsheft',
+        privateNote: '  Nur für mich  ',
+      ).toEntry(timestamp: timestamp);
+
+      expect(entry.reportNote, 'Fürs Berichtsheft');
+      expect(entry.privateNote, 'Nur für mich');
+    });
+
+    test('toEntry übernimmt einmalige Tätigkeiten', () {
+      final timestamp = DateTime(2026, 6, 12, 17);
+      final entry = _draft(
+        dayType: DayType.betrieb,
+        areas: {TrainingArea.wareneingang},
+        activities: {'wareneingang_01', 'adhoc_1'},
+        adhocActivities: const {'adhoc_1': 'Sonderaufgabe'},
+      ).toEntry(timestamp: timestamp);
+
+      expect(
+        entry.adhocActivities,
+        [const AdhocActivity(id: 'adhoc_1', title: 'Sonderaufgabe')],
+      );
+      expect(entry.selectedActivities, contains('adhoc_1'));
+    });
+
     test('toEntry entfernt Bereiche bei Nicht-Betrieb und leere Notiz', () {
       final timestamp = DateTime(2026, 6, 12, 17);
       final entry = _draft(
         dayType: DayType.berufsschule,
         areas: {TrainingArea.wareneingang},
         activities: {'berufsschule_01'},
-        note: '   ',
+        reportNote: '   ',
       ).toEntry(timestamp: timestamp);
 
       expect(entry.areas, isEmpty);
-      expect(entry.note, isNull);
+      expect(entry.reportNote, isNull);
+      expect(entry.privateNote, isNull);
       expect(entry.createdAt, timestamp);
       expect(entry.updatedAt, timestamp);
     });

@@ -12,6 +12,7 @@ class ActivityPickerSection extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onClearSearch;
   final ValueChanged<String> onToggleActivity;
+  final VoidCallback onAddActivity;
   final int? trainingYear;
 
   const ActivityPickerSection({
@@ -24,6 +25,7 @@ class ActivityPickerSection extends StatelessWidget {
     required this.onSearchChanged,
     required this.onClearSearch,
     required this.onToggleActivity,
+    required this.onAddActivity,
     required this.trainingYear,
   });
 
@@ -60,6 +62,13 @@ class ActivityPickerSection extends StatelessWidget {
                   ),
           ),
           onChanged: onSearchChanged,
+        ),
+        const SizedBox(height: 12),
+        FilledButton.tonalIcon(
+          key: const ValueKey('add_activity_button'),
+          onPressed: onAddActivity,
+          icon: const Icon(Icons.add),
+          label: const Text('Eigene Tätigkeit hinzufügen'),
         ),
         const SizedBox(height: 16),
         if (model.frequentActivities.isNotEmpty)

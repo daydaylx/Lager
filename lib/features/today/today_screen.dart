@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
+import '../../core/data/default_activities.dart';
+import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
 import '../../core/enums/training_area.dart';
 import '../../core/models/activity_template.dart';
+import '../../core/models/adhoc_activity.dart';
 import '../../core/models/daily_entry.dart';
+import '../../core/storage/default_activity_state_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/report/daily_report_generator.dart';
@@ -15,7 +19,8 @@ import 'activity_recommender.dart';
 import 'today_entry_draft.dart';
 import 'widgets/activity_section.dart';
 import 'widgets/activity_picker_section.dart';
-import 'widgets/area_carousel.dart';
+import 'widgets/add_activity_sheet.dart';
+import 'widgets/area_grid.dart';
 import 'widgets/day_status_card.dart';
 import 'widgets/day_type_selector.dart';
 import 'widgets/report_card.dart';
@@ -25,6 +30,7 @@ import 'widgets/special_flags_note_section.dart';
 class TodayScreen extends StatefulWidget {
   final DailyEntryStorage storage;
   final ActivityTemplateStorage templateStorage;
+  final DefaultActivityStateStorage defaultActivityStateStorage;
   final DateTime? date;
   final DateTime? currentDate;
   final int? trainingYear;
@@ -35,6 +41,7 @@ class TodayScreen extends StatefulWidget {
     super.key,
     required this.storage,
     required this.templateStorage,
+    this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     this.date,
     this.currentDate,
     this.trainingYear,
@@ -47,12 +54,15 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _reportNoteController = TextEditingController();
+  final TextEditingController _privateNoteController = TextEditingController();
   final TextEditingController _activitySearchController =
       TextEditingController();
   final Set<String> _selectedActivityIds = {};
   final Set<SpecialFlag> _selectedSpecialFlags = {};
+  final Map<String, String> _adhocActivities = {};
   List<ActivityTemplate> _customTemplates = [];
+  Map<String, bool> _defaultOverrides = const {};
   List<String> _frequentActivityIds = [];
   String _activitySearchQuery = '';
 
@@ -83,29 +93,15 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String get _screenTitle => _isToday ? 'Heute' : 'Tageseintrag';
 
-  /// Erster noch offener Schritt („weiche Progression", Phase 22d):
-  /// 'bereich' | 'taetigkeit' | '' (nichts offen). Bestimmt, welcher
-  /// Abschnitts-Header hervorgehoben und welcher als „kommend" ruhiger gezeigt wird.
-  String get _activeStep {
-    switch (_selectedDayType) {
-      case DayType.betrieb:
-        if (_selectedAreas.isEmpty) return 'bereich';
-        if (_selectedActivityIds.isEmpty) return 'taetigkeit';
-        return '';
-      case DayType.berufsschule:
-        return _selectedActivityIds.isEmpty ? 'taetigkeit' : '';
-      default:
-        return '';
-    }
-  }
-
   TodayEntryDraft get _draft => TodayEntryDraft(
         date: _today,
         dayType: _selectedDayType,
         selectedAreas: _selectedAreas,
         selectedActivityIds: _selectedActivityIds,
         selectedSpecialFlags: _selectedSpecialFlags,
-        note: _noteController.text,
+        reportNote: _reportNoteController.text,
+        privateNote: _privateNoteController.text,
+        adhocActivities: _adhocActivities,
       );
 
   bool get _canSave => _draft.canSave;
@@ -119,9 +115,9 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String get _statusLabel {
     if (_savedEntry == null) {
-      return 'Noch nicht abgeschlossen';
+      return 'Noch offen';
     }
-    return _hasUnsavedChanges ? 'Aktualisierung offen' : 'Erledigt';
+    return _hasUnsavedChanges ? 'Änderungen offen' : 'Gespeichert';
   }
 
   List<String> get _missingItems {
@@ -133,9 +129,11 @@ class _TodayScreenState extends State<TodayScreen> {
   void initState() {
     super.initState();
     _activeDate = _widgetDate;
-    _noteController.addListener(_markChanged);
+    _reportNoteController.addListener(_markChanged);
+    _privateNoteController.addListener(_markChanged);
     _loadEntry();
     _loadTemplates();
+    _loadDefaultOverrides();
     _loadFrequentActivities();
   }
 
@@ -144,6 +142,7 @@ class _TodayScreenState extends State<TodayScreen> {
     super.didUpdateWidget(oldWidget);
     if (widget.templateRefreshSignal != oldWidget.templateRefreshSignal) {
       _loadTemplates();
+      _loadDefaultOverrides();
     }
     if (_widgetDate != _activeDate) {
       _handleExternalDateChange(_widgetDate);
@@ -153,7 +152,10 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void dispose() {
     _activitySearchController.dispose();
-    _noteController
+    _reportNoteController
+      ..removeListener(_markChanged)
+      ..dispose();
+    _privateNoteController
       ..removeListener(_markChanged)
       ..dispose();
     super.dispose();
@@ -237,8 +239,8 @@ class _TodayScreenState extends State<TodayScreen> {
                     AppSectionHeader(
                       title: 'Tagestyp',
                       description: _isToday
-                          ? 'Wie war dein Tag?'
-                          : 'Wie war der Tag?',
+                          ? 'Was für ein Tag ist heute?'
+                          : 'Was für ein Tag war das?',
                     ),
                     const SizedBox(height: 12),
                     DayTypeSelector(
@@ -249,16 +251,14 @@ class _TodayScreenState extends State<TodayScreen> {
                       const SizedBox(height: 24),
                       AppSectionHeader(
                         title: 'Bereich',
+                        badge: 'Benötigt',
+                        badgeRequired: true,
                         description: _isToday
                             ? 'Wo hast du heute gearbeitet?'
                             : 'Wo hast du an diesem Tag gearbeitet?',
-                        emphasis: _selectedAreas.isEmpty &&
-                                _activeStep == 'bereich'
-                            ? SectionEmphasis.active
-                            : SectionEmphasis.normal,
                       ),
                       const SizedBox(height: 12),
-                      AreaCarousel(
+                      AreaGrid(
                         areas: TrainingArea.values,
                         selected: _selectedAreas,
                         onToggle: _toggleArea,
@@ -268,16 +268,13 @@ class _TodayScreenState extends State<TodayScreen> {
                       const SizedBox(height: 24),
                       AppSectionHeader(
                         title: 'Tätigkeiten',
+                        badge: 'Benötigt',
+                        badgeRequired: true,
                         description: _isToday
                             ? 'Wähle aus, was du heute gemacht hast.'
                             : 'Wähle aus, was du an diesem Tag gemacht hast.',
                         trailing:
                             SelectionCount(count: _selectedActivityIds.length),
-                        emphasis: _activeStep == 'taetigkeit'
-                            ? SectionEmphasis.active
-                            : _activeStep == 'bereich'
-                                ? SectionEmphasis.upcoming
-                                : SectionEmphasis.normal,
                       ),
                       const SizedBox(height: 12),
                       _buildActivities(context),
@@ -287,7 +284,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       const AppMessage(
                         icon: Icons.edit_note_outlined,
                         title:
-                            'Beschreibe den Tag kurz über Besonderheiten oder Notiz.',
+                            'Beschreibe den Tag kurz unter „Ergänzung für den Bericht".',
                       ),
                     ],
                     if (_selectedDayType.isAbsence) ...[
@@ -309,7 +306,8 @@ class _TodayScreenState extends State<TodayScreen> {
                             setState(() => _optionalSectionExpanded = expanded),
                         selectedSpecialFlags: _selectedSpecialFlags,
                         onToggleSpecialFlag: _toggleSpecialFlag,
-                        noteController: _noteController,
+                        reportNoteController: _reportNoteController,
+                        privateNoteController: _privateNoteController,
                       ),
                     ],
                     if (report != null) ...[
@@ -345,7 +343,8 @@ class _TodayScreenState extends State<TodayScreen> {
     if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
       return const AppMessage(
         icon: Icons.touch_app_outlined,
-        title: 'Wähle zuerst einen Bereich – dann erscheinen passende Tätigkeiten.',
+        title:
+            'Wähle zuerst einen Bereich – dann erscheinen passende Tätigkeiten.',
       );
     }
 
@@ -357,6 +356,10 @@ class _TodayScreenState extends State<TodayScreen> {
       frequentActivityIds: _frequentActivityIds,
       searchQuery: _activitySearchQuery,
       trainingYear: widget.trainingYear,
+      defaultOverrides: _defaultOverrides,
+      adhocActivities: _adhocActivities.entries
+          .map((e) => AdhocActivity(id: e.key, title: e.value))
+          .toList(growable: false),
     );
 
     return ActivityPickerSection(
@@ -368,6 +371,7 @@ class _TodayScreenState extends State<TodayScreen> {
       onSearchChanged: (value) => setState(() => _activitySearchQuery = value),
       onClearSearch: _clearActivitySearch,
       onToggleActivity: _toggleActivity,
+      onAddActivity: _onAddActivity,
       trainingYear: widget.trainingYear,
     );
   }
@@ -384,9 +388,11 @@ class _TodayScreenState extends State<TodayScreen> {
 
     final discardsDetails = _selectedAreas.isNotEmpty ||
         _selectedActivityIds.isNotEmpty ||
+        _adhocActivities.isNotEmpty ||
         (dayType.isAbsence &&
             (_selectedSpecialFlags.isNotEmpty ||
-                _noteController.text.trim().isNotEmpty));
+                _reportNoteController.text.trim().isNotEmpty ||
+                _privateNoteController.text.trim().isNotEmpty));
     if (discardsDetails &&
         !await _confirmDiscard(
           'Tagestyp ändern?',
@@ -399,6 +405,7 @@ class _TodayScreenState extends State<TodayScreen> {
       _selectedDayType = dayType;
       _selectedAreas.clear();
       _selectedActivityIds.clear();
+      _adhocActivities.clear();
       _activitySearchQuery = '';
       if (dayType.isAbsence) {
         _selectedSpecialFlags.clear();
@@ -409,7 +416,8 @@ class _TodayScreenState extends State<TodayScreen> {
     _activitySearchController.clear();
 
     if (dayType.isAbsence) {
-      _noteController.clear();
+      _reportNoteController.clear();
+      _privateNoteController.clear();
     }
   }
 
@@ -449,6 +457,8 @@ class _TodayScreenState extends State<TodayScreen> {
     setState(() {
       if (!_selectedActivityIds.add(activityId)) {
         _selectedActivityIds.remove(activityId);
+        // Einmalige Tätigkeit wird beim Abwählen vollständig entfernt.
+        _adhocActivities.remove(activityId);
       }
       _setChanged();
     });
@@ -461,6 +471,59 @@ class _TodayScreenState extends State<TodayScreen> {
       }
       _setChanged();
     });
+  }
+
+  Future<void> _onAddActivity() async {
+    final initialCategory = _selectedDayType == DayType.berufsschule
+        ? ActivityCategory.berufsschule
+        : (_selectedAreas.isNotEmpty
+            ? _selectedAreas.first.activityCategory
+            : ActivityCategory.values.first);
+    final existingTitles = <String>{
+      for (final a in defaultActivities) a.title,
+      for (final t in _customTemplates) t.title,
+      ..._adhocActivities.values,
+    };
+
+    final result = await showAddActivitySheet(
+      context: context,
+      initialCategory: initialCategory,
+      existingTitles: existingTitles,
+    );
+    if (result == null || !mounted) return;
+
+    if (result.saveAsTemplate) {
+      final template = ActivityTemplate(
+        id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+        title: result.title,
+        category: result.category,
+        isCustom: true,
+      );
+      try {
+        await widget.templateStorage.save(template);
+        if (!mounted) return;
+        setState(() {
+          _customTemplates = [..._customTemplates, template];
+          _selectedActivityIds.add(template.id);
+          _setChanged();
+        });
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Die Tätigkeit konnte nicht gespeichert werden.'),
+            ),
+          );
+        }
+      }
+    } else {
+      final id = 'adhoc_${DateTime.now().millisecondsSinceEpoch}';
+      setState(() {
+        _adhocActivities[id] = result.title;
+        _selectedActivityIds.add(id);
+        _setChanged();
+      });
+    }
   }
 
   void _markChanged() {
@@ -529,6 +592,18 @@ class _TodayScreenState extends State<TodayScreen> {
       if (mounted) {
         setState(() => _templatesLoadFailed = true);
       }
+    }
+  }
+
+  Future<void> _loadDefaultOverrides() async {
+    try {
+      final overrides =
+          await widget.defaultActivityStateStorage.loadOverrides();
+      if (mounted) {
+        setState(() => _defaultOverrides = overrides);
+      }
+    } catch (_) {
+      // Werksvorgabe (isActive aus defaultActivities) bleibt gültig.
     }
   }
 
@@ -604,7 +679,8 @@ class _TodayScreenState extends State<TodayScreen> {
 
   void _applyEntry(DailyEntry? entry) {
     _isApplyingEntry = true;
-    _noteController.text = entry?.note ?? '';
+    _reportNoteController.text = entry?.reportNote ?? '';
+    _privateNoteController.text = entry?.privateNote ?? '';
 
     setState(() {
       _savedEntry = entry;
@@ -618,11 +694,18 @@ class _TodayScreenState extends State<TodayScreen> {
       _selectedSpecialFlags
         ..clear()
         ..addAll(entry?.specialFlags ?? const []);
+      _adhocActivities
+        ..clear()
+        ..addEntries(
+          entry?.adhocActivities.map((a) => MapEntry(a.id, a.title)) ??
+              const [],
+        );
       _hasUnsavedChanges = false;
       _isLoading = false;
       _loadFailed = false;
-      _optionalSectionExpanded =
-          _selectedSpecialFlags.isNotEmpty || _noteController.text.isNotEmpty;
+      _optionalSectionExpanded = _selectedSpecialFlags.isNotEmpty ||
+          _reportNoteController.text.isNotEmpty ||
+          _privateNoteController.text.isNotEmpty;
     });
 
     _isApplyingEntry = false;
@@ -646,7 +729,7 @@ class _TodayScreenState extends State<TodayScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isToday ? 'Tag abgeschlossen.' : 'Tag eingetragen.',
+              _isToday ? 'Heute gespeichert.' : 'Tageseintrag gespeichert.',
             ),
           ),
         );
@@ -671,7 +754,7 @@ class _TodayScreenState extends State<TodayScreen> {
     final entry = _draft.toEntry(timestamp: now, existingEntry: _savedEntry);
     return DailyReportGenerator.generate(
       entry,
-      buildActivityTitlesMap(_customTemplates),
+      activityTitlesForEntry(entry, _customTemplates),
     );
   }
 

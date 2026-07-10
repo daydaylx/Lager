@@ -8,6 +8,7 @@ import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/activity_template.dart';
+import 'package:berichtsheft_merker/core/models/adhoc_activity.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/services/export_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
@@ -37,6 +38,8 @@ void main() {
     List<String> selectedActivities = const [],
     List<SpecialFlag> specialFlags = const [],
     String? note,
+    String? privateNote,
+    List<AdhocActivity> adhocActivities = const [],
   }) {
     final d = date ?? DateTime(2026, 6, 18);
     return DailyEntry(
@@ -46,7 +49,9 @@ void main() {
       areas: areas,
       selectedActivities: selectedActivities,
       specialFlags: specialFlags,
-      note: note,
+      reportNote: note,
+      privateNote: privateNote,
+      adhocActivities: adhocActivities,
       createdAt: DateTime(2026, 6, 18, 8, 0),
       updatedAt: DateTime(2026, 6, 18, 16, 0),
     );
@@ -114,7 +119,9 @@ void main() {
       expect(serialized['selectedActivities'],
           ['Wareneingang prüfen', 'Kommissionieren']);
       expect(serialized['specialFlags'], ['selbststaendig', 'kontrolle']);
-      expect(serialized['note'], 'Reibungloser Ablauf');
+      expect(serialized['reportNote'], 'Reibungloser Ablauf');
+      expect(serialized['privateNote'], isNull);
+      expect(serialized['adhocActivities'], isEmpty);
       expect(serialized['createdAt'], isA<String>());
       expect(serialized['updatedAt'], isA<String>());
     });
@@ -169,6 +176,31 @@ void main() {
       // Inaktive Custom-Tätigkeit wird dennoch exportiert.
       final c = (data['customActivities'] as List).single;
       expect((c as Map<String, dynamic>)['isActive'], isFalse);
+    });
+
+    test('Vollständiger Export enthält Berichts- und Privatnotiz + Adhoc',
+        () async {
+      final e = entry(
+        areas: [TrainingArea.lager],
+        selectedActivities: ['adhoc_1'],
+        note: 'Fürs Berichtsheft',
+        privateNote: 'Nur für mich',
+        adhocActivities: const [
+          AdhocActivity(id: 'adhoc_1', title: 'Sonderaufgabe'),
+        ],
+      );
+      final json = await ExportService.generateJson(
+        InMemoryDailyEntryStorage(initialEntries: [e]),
+        InMemoryActivityTemplateStorage(),
+      );
+      final serialized =
+          (jsonDecode(json)['entries'] as List).single as Map<String, dynamic>;
+
+      expect(serialized['reportNote'], 'Fürs Berichtsheft');
+      expect(serialized['privateNote'], 'Nur für mich');
+      expect(serialized['adhocActivities'], [
+        {'id': 'adhoc_1', 'title': 'Sonderaufgabe'},
+      ]);
     });
 
     test('JSON ist mit 2-Leerzeichen-Einrückung formatiert', () async {

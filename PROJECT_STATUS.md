@@ -1,16 +1,16 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-07-02
+Zuletzt aktualisiert: 2026-07-10
 
 ## Aktueller Stand
 
-**Phasen 0–22 im Code abgeschlossen (inkl. Daily-Check-in-Redesign Phase 22). Agenten-Qualität #58–#64 umgesetzt (CI-Quality-Gate, PR-/Handoff-Template, Repo-Hygiene-Checks, Branch Protection, QA-Status-Doku). Phase 19 (Release-QA) ist der einzige offene Punkt: manueller Gerätetest auf echtem Android-Gerät steht nach dem UI-Redesign weiter aus.**
+**Phasen 0–20 im Code abgeschlossen. Phase 21 (Agenten-Qualität) Infrastruktur besteht (CI-Quality-Gate, PR-/Handoff-Template, Repo-Hygiene-Checks, Branch Protection, QA-Status-Doku). Phase 22 (Daily-Check-in-Redesign) wurde am 2026-07-10 rückgängig gemacht. Phase 19 (Release-QA) ist der einzige offene Punkt: manueller Gerätetest auf echtem Android-Gerät steht aus.**
 
 ### Release-QA-Status (eindeutig)
 
 | Aspekt                          | Status                                           |
 | ------------------------------- | ------------------------------------------------ |
-| Code fertig                     | ja (Phase 0–22)                                  |
+| Code fertig                     | ja (Phase 0–20, +Phase 21 Infra)                  |
 | Automatisierte Checks (CI)      | bestanden — analyze 0, test grün, debug-APK baut |
 | Debug-APK gebaut                | ja                                               |
 | Release-APK gebaut/signiert     | ja (v1/v2, lokaler Upload-Keystore)              |

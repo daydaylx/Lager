@@ -4,6 +4,7 @@ import 'package:berichtsheft_merker/core/constants.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
+import 'package:berichtsheft_merker/core/storage/default_activity_state_storage.dart';
 import 'package:berichtsheft_merker/features/onboarding/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +21,7 @@ void main() {
       return BootstrapData(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
         templateStorage: InMemoryActivityTemplateStorage(),
+        defaultActivityStateStorage: const DefaultActivityStateStorage(),
         profile: (
           name: null,
           company: null,
@@ -56,6 +58,7 @@ void main() {
       return BootstrapData(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
         templateStorage: InMemoryActivityTemplateStorage(),
+        defaultActivityStateStorage: const DefaultActivityStateStorage(),
         profile: (
           name: null,
           company: null,

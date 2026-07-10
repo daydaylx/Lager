@@ -10,7 +10,8 @@ class SpecialFlagsAndNoteSection extends StatefulWidget {
   final ValueChanged<bool> onExpansionChanged;
   final Set<SpecialFlag> selectedSpecialFlags;
   final ValueChanged<SpecialFlag> onToggleSpecialFlag;
-  final TextEditingController noteController;
+  final TextEditingController reportNoteController;
+  final TextEditingController privateNoteController;
 
   const SpecialFlagsAndNoteSection({
     super.key,
@@ -20,7 +21,8 @@ class SpecialFlagsAndNoteSection extends StatefulWidget {
     required this.onExpansionChanged,
     required this.selectedSpecialFlags,
     required this.onToggleSpecialFlag,
-    required this.noteController,
+    required this.reportNoteController,
+    required this.privateNoteController,
   });
 
   @override
@@ -45,7 +47,7 @@ class _SpecialFlagsAndNoteSectionState
       initiallyExpanded: widget.isExpanded,
       onExpansionChanged: widget.onExpansionChanged,
       title: Text(
-        'Besonderheiten & Notiz',
+        'Besonderheiten & Notizen',
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -68,24 +70,72 @@ class _SpecialFlagsAndNoteSectionState
         _buildSpecialFlags(),
         const SizedBox(height: 24),
         const AppSectionHeader(
-          title: 'Notiz',
+          title: 'Ergänzung für den Bericht',
           badge: 'Optional',
           badgeRequired: false,
-          description: 'Kurze Ergänzung, falls etwas Besonderes war.',
+          description: 'Erscheint im Berichtshefttext.',
         ),
         const SizedBox(height: 12),
         TextField(
-          key: const ValueKey('daily_note_field'),
-          controller: widget.noteController,
+          key: const ValueKey('daily_report_note_field'),
+          controller: widget.reportNoteController,
           minLines: 2,
           maxLines: 4,
           textCapitalization: TextCapitalization.sentences,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            hintText: 'Kurze Notiz, falls etwas Besonderes war ...',
+            hintText: 'Kurze Ergänzung fürs Berichtsheft …',
           ),
         ),
+        const SizedBox(height: 24),
+        _buildPrivateNote(context),
         const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildPrivateNote(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.lock_outline,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Private Notiz',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Private Notiz – wird nicht ins Berichtsheft übernommen',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          key: const ValueKey('daily_private_note_field'),
+          controller: widget.privateNoteController,
+          minLines: 2,
+          maxLines: 4,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHighest,
+            hintText: 'Nur für dich – bleibt in der App …',
+          ),
+        ),
       ],
     );
   }
@@ -95,8 +145,9 @@ class _SpecialFlagsAndNoteSectionState
     const allFlags = SpecialFlag.values;
     final selectedFlags =
         allFlags.where(widget.selectedSpecialFlags.contains).toList();
-    final unselectedFlags =
-        allFlags.where((f) => !widget.selectedSpecialFlags.contains(f)).toList();
+    final unselectedFlags = allFlags
+        .where((f) => !widget.selectedSpecialFlags.contains(f))
+        .toList();
 
     final needsExpand = unselectedFlags.length > maxCollapsedUnselected;
     final showAll = _specialFlagsExpanded || !needsExpand;

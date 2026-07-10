@@ -2,20 +2,12 @@ import 'package:flutter/material.dart';
 
 enum AppMessageTone { neutral, success, warning, error }
 
-/// Visuelle Gewichtung eines [AppSectionHeader] für die „weiche Progression"
-/// (Phase 22d): aktiv = hervorgehoben (Akzentsäule), kommend = dezent
-/// ruhiger, normal = Standard. Text bleibt immer voll kontrastiert — die
-/// Hervorhebung läuft über eine dekorative Säule bzw. eine lesbare
-/// Variant-Farbe, nicht über Opazität.
-enum SectionEmphasis { normal, active, upcoming }
-
 class AppSectionHeader extends StatelessWidget {
   final String title;
   final String? description;
   final String? badge;
   final bool? badgeRequired;
   final Widget? trailing;
-  final SectionEmphasis emphasis;
 
   const AppSectionHeader({
     super.key,
@@ -24,29 +16,14 @@ class AppSectionHeader extends StatelessWidget {
     this.badge,
     this.badgeRequired,
     this.trailing,
-    this.emphasis = SectionEmphasis.normal,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final isUpcoming = emphasis == SectionEmphasis.upcoming;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (emphasis == SectionEmphasis.active) ...[
-          Container(
-            width: 4,
-            height: 20,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: cs.primary,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,16 +35,15 @@ class AppSectionHeader extends StatelessWidget {
                     child: Text(
                       title,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: isUpcoming
-                            ? FontWeight.w600
-                            : FontWeight.w700,
-                        color: isUpcoming ? cs.onSurfaceVariant : null,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                   if (badge case final b?) ...[
                     const SizedBox(width: 8),
-                    _BadgePill(label: b, highlighted: badgeRequired ?? false),
+                    _BadgePill(
+                        label: b,
+                        highlighted: badgeRequired ?? (b == 'Benötigt')),
                   ],
                 ],
               ),
@@ -76,7 +52,7 @@ class AppSectionHeader extends StatelessWidget {
                 Text(
                   description,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

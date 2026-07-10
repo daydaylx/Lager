@@ -5,6 +5,7 @@ import '../core/profile_storage.dart';
 import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
+import '../core/storage/default_activity_state_storage.dart';
 import '../core/storage/reminder_storage.dart';
 import '../core/storage/theme_preset_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -19,6 +20,7 @@ typedef AppClock = DateTime Function();
 class BerichtsheftApp extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final DefaultActivityStateStorage defaultActivityStateStorage;
   final bool initialOnboardingCompleted;
   final String? initialName;
   final String? initialCompany;
@@ -32,6 +34,7 @@ class BerichtsheftApp extends StatefulWidget {
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
+    this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     required this.initialOnboardingCompleted,
     this.initialName,
     this.initialCompany,
@@ -112,6 +115,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     await _notificationScheduler.cancelAll();
     await widget.dailyEntryStorage.clearAll();
     await widget.templateStorage.clearAll();
+    await const DefaultActivityStateStorage().clearAll();
     await ProfileStorage.clearAll();
 
     if (mounted) {
@@ -141,6 +145,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
           ? MainShell(
               dailyEntryStorage: widget.dailyEntryStorage,
               templateStorage: widget.templateStorage,
+              defaultActivityStateStorage: widget.defaultActivityStateStorage,
               onDataCleared: _resetAll,
               notificationScheduler: _notificationScheduler,
               trainingYear: _trainingYear,
@@ -164,6 +169,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
 class MainShell extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final DefaultActivityStateStorage defaultActivityStateStorage;
   final Future<void> Function() onDataCleared;
   final NotificationScheduler notificationScheduler;
   final int? trainingYear;
@@ -176,6 +182,7 @@ class MainShell extends StatefulWidget {
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
+    this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     required this.onDataCleared,
     required this.notificationScheduler,
     this.trainingYear,
@@ -254,7 +261,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Heute noch nicht eingetragen – jetzt kurz?',
+            'Heutiger Eintrag fehlt noch – jetzt kurz eintragen?',
           ),
           action: SnackBarAction(
             label: 'Eintragen',
@@ -291,6 +298,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           TodayScreen(
             storage: widget.dailyEntryStorage,
             templateStorage: widget.templateStorage,
+            defaultActivityStateStorage: widget.defaultActivityStateStorage,
             templateRefreshSignal: _templateRefreshSignal,
             protectBackNavigation: _currentIndex == 0,
             currentDate: _currentDate,
@@ -299,6 +307,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           WeekScreen(
             storage: widget.dailyEntryStorage,
             templateStorage: widget.templateStorage,
+            defaultActivityStateStorage: widget.defaultActivityStateStorage,
             refreshSignal: _weekRefreshSignal,
             templateRefreshSignal: _templateRefreshSignal,
             currentDate: _currentDate,
@@ -306,6 +315,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           ),
           TemplatesScreen(
             storage: widget.templateStorage,
+            defaultActivityStateStorage: widget.defaultActivityStateStorage,
             dailyEntryStorage: widget.dailyEntryStorage,
             onTemplatesChanged: () {
               setState(() => _templateRefreshSignal++);

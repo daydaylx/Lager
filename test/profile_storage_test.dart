@@ -84,10 +84,8 @@ void main() {
 
     test('Gültige Beruf/Jahr-Kombinationen werden akzeptiert', () async {
       // Fachlagerist: 1–2
-      await ProfileStorage.save(
-          occupation: 'fachlagerist', trainingYear: 1);
-      await ProfileStorage.save(
-          occupation: 'fachlagerist', trainingYear: 2);
+      await ProfileStorage.save(occupation: 'fachlagerist', trainingYear: 1);
+      await ProfileStorage.save(occupation: 'fachlagerist', trainingYear: 2);
       // Fachkraft für Lagerlogistik: 1–3
       await ProfileStorage.save(
           occupation: 'fachkraft_lagerlogistik', trainingYear: 1);
@@ -96,13 +94,13 @@ void main() {
       await ProfileStorage.save(
           occupation: 'fachkraft_lagerlogistik', trainingYear: 3);
       // Kein Wurf bis hierher = Test bestanden.
-      expect((await ProfileStorage.load()).occupation, 'fachkraft_lagerlogistik');
+      expect(
+          (await ProfileStorage.load()).occupation, 'fachkraft_lagerlogistik');
     });
 
     test('Fachlagerist mit 3. Jahr wirft ArgumentError', () async {
       expect(
-        () => ProfileStorage.save(
-            occupation: 'fachlagerist', trainingYear: 3),
+        () => ProfileStorage.save(occupation: 'fachlagerist', trainingYear: 3),
         throwsArgumentError,
       );
     });
@@ -154,14 +152,14 @@ void main() {
       );
     }
 
-    test('true bei abgeschlossenem Onboarding mit gültigem Beruf und Jahr',
-        () {
+    test('true bei abgeschlossenem Onboarding mit gültigem Beruf und Jahr', () {
       expect(ProfileStorage.isOnboardingComplete(profile()), isTrue);
     });
 
     test('false, wenn Onboarding noch nicht abgeschlossen', () {
       expect(
-        ProfileStorage.isOnboardingComplete(profile(onboardingCompleted: false)),
+        ProfileStorage.isOnboardingComplete(
+            profile(onboardingCompleted: false)),
         isFalse,
       );
     });

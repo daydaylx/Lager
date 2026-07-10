@@ -169,8 +169,8 @@ void main() {
   ) async {
     await pumpToday(tester);
 
-    await expectStatus(tester, 'Noch nicht abgeschlossen');
-    expect(find.text('Noch 2 Angaben: Bereich und Tätigkeit'), findsOneWidget);
+    await expectStatus(tester, 'Noch offen');
+    expect(find.text('Noch offen: Bereich · Tätigkeit'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(
@@ -179,9 +179,9 @@ void main() {
     );
     await scrollToActivities(tester);
 
-    expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
     expect(find.text('Ware verpackt'), findsNothing);
-    expect(find.text('Noch 1 Angabe: Tätigkeit'), findsOneWidget);
+    expect(find.text('Noch offen: Tätigkeit'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(
@@ -192,9 +192,9 @@ void main() {
     expect(saveButton(tester).onPressed, isNotNull);
     await tapSave(tester);
 
-    expect(find.text('Tag abgeschlossen.'), findsOneWidget);
+    expect(find.text('Heute gespeichert.'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
-    await expectStatus(tester, 'Erledigt');
+    await expectStatus(tester, 'Gespeichert');
   });
 
   testWidgets('Tätigkeitssuche filtert die sichtbare Auswahlliste', (
@@ -210,8 +210,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Wareneingang mit Scanner erfasst'), findsOneWidget);
-    expect(find.text('Ware angenommen'), findsNothing);
+    expect(find.text('Wareneingang im System oder mit Scanner erfasst'),
+        findsOneWidget);
+    expect(find.text('Lieferung angenommen und geprüft'), findsNothing);
   });
 
   testWidgets('Tätigkeiten werden in Untergruppen angezeigt', (
@@ -235,8 +236,9 @@ void main() {
     await scrollToActivities(tester);
 
     expect(find.text('Passend zum 2. Ausbildungsjahr'), findsOneWidget);
-    expect(find.text('Wareneingang mit Scanner erfasst'), findsWidgets);
-    expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Wareneingang im System oder mit Scanner erfasst'),
+        findsWidgets);
+    expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
   });
 
   testWidgets('ausgewählte Tätigkeit bleibt bei Suche als Chip sichtbar', (
@@ -282,7 +284,7 @@ void main() {
           areas: const [TrainingArea.wareneingang],
           selectedActivities: const ['wareneingang_11'],
           specialFlags: const [],
-          note: null,
+          reportNote: null,
           createdAt: dayOne,
           updatedAt: dayOne,
         ),
@@ -293,7 +295,7 @@ void main() {
           areas: const [TrainingArea.wareneingang],
           selectedActivities: const ['wareneingang_11', 'wareneingang_01'],
           specialFlags: const [],
-          note: null,
+          reportNote: null,
           createdAt: dayTwo,
           updatedAt: dayTwo,
         ),
@@ -305,7 +307,8 @@ void main() {
     await scrollToActivities(tester);
 
     expect(find.text('Häufig genutzt'), findsOneWidget);
-    expect(find.text('Wareneingang mit Scanner erfasst'), findsWidgets);
+    expect(find.text('Wareneingang im System oder mit Scanner erfasst'),
+        findsWidgets);
   });
 
   testWidgets('Gespeicherter Eintrag kann bearbeitet werden', (
@@ -320,19 +323,19 @@ void main() {
     );
     await tapSave(tester);
     await tester.pumpAndSettle();
-    await tapVisible(tester, find.text('Besonderheiten & Notiz'));
+    await tapVisible(tester, find.text('Besonderheiten & Notizen'));
     await tapVisible(
       tester,
       find.byKey(const ValueKey('special_selbststaendig')),
     );
 
-    expect(find.text('Änderungen übernehmen'), findsOneWidget);
+    expect(find.text('Änderungen speichern'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNotNull);
-    await expectStatus(tester, 'Aktualisierung offen');
+    await expectStatus(tester, 'Änderungen offen');
 
     await tapSave(tester);
 
-    await expectStatus(tester, 'Erledigt');
+    await expectStatus(tester, 'Gespeichert');
   });
 
   testWidgets('Bereich abwählen entfernt Tätigkeitsauswahl nach Bestätigung', (
@@ -360,7 +363,7 @@ void main() {
     await tester.tap(find.text('Änderungen verwerfen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Ware angenommen'), findsNothing);
+    expect(find.text('Lieferung angenommen und geprüft'), findsNothing);
     expect(saveButton(tester).onPressed, isNull);
   });
 
@@ -375,7 +378,7 @@ void main() {
     );
 
     expect(find.text('Fachunterricht besucht'), findsOneWidget);
-    expect(find.text('Ware angenommen'), findsNothing);
+    expect(find.text('Lieferung angenommen und geprüft'), findsNothing);
     expect(saveButton(tester).onPressed, isNull);
 
     await tapVisible(
@@ -384,7 +387,7 @@ void main() {
     );
     await tapSave(tester);
 
-    await expectStatus(tester, 'Erledigt');
+    await expectStatus(tester, 'Gespeichert');
   });
 
   testWidgets('Abwesenheit verwirft Details und kann direkt speichern', (
@@ -392,13 +395,13 @@ void main() {
   ) async {
     await pumpToday(tester);
 
-    await tapVisible(tester, find.text('Besonderheiten & Notiz'));
+    await tapVisible(tester, find.text('Besonderheiten & Notizen'));
     await tapVisible(
       tester,
       find.byKey(const ValueKey('special_selbststaendig')),
     );
     await tester.enterText(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       'Wird verworfen',
     );
     await tapVisible(
@@ -410,12 +413,12 @@ void main() {
     await tester.tap(find.text('Änderungen verwerfen'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('daily_note_field')), findsNothing);
+    expect(find.byKey(const ValueKey('daily_report_note_field')), findsNothing);
     expect(find.text('Urlaub kann direkt gespeichert werden.'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNotNull);
 
     await tapSave(tester);
-    await expectStatus(tester, 'Erledigt');
+    await expectStatus(tester, 'Gespeichert');
 
     await tapVisible(
       tester,
@@ -427,13 +430,13 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
     final noteField = tester.widget<TextField>(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
     );
     final specialChip = tester.widget<FilterChip>(
       find.byKey(const ValueKey('special_selbststaendig')),
@@ -456,7 +459,7 @@ void main() {
       find.byKey(const ValueKey('special_neuesGelernt')),
     );
     await tester.enterText(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       'Brandschutz-Unterweisung',
     );
     await tester.pumpAndSettle();
@@ -464,7 +467,7 @@ void main() {
     expect(saveButton(tester).onPressed, isNotNull);
     await tapSave(tester);
 
-    await expectStatus(tester, 'Erledigt');
+    await expectStatus(tester, 'Gespeichert');
   });
 
   testWidgets('Bereich abwählen kann ohne Datenverlust abgebrochen werden', (
@@ -487,9 +490,11 @@ void main() {
     await tester.tap(find.text('Weiter bearbeiten'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('area_chip_wareneingang')),
-        findsOneWidget);
-    expect(find.text('Ware angenommen'), findsWidgets);
+    final selectedArea = tester.widget<FilterChip>(
+      find.byKey(const ValueKey('area_wareneingang')),
+    );
+    expect(selectedArea.selected, isTrue);
+    expect(find.text('Lieferung angenommen und geprüft'), findsWidgets);
   });
 
   testWidgets('eigene Tätigkeit kann ausgewählt und gespeichert werden', (
@@ -535,7 +540,7 @@ void main() {
         areas: const [TrainingArea.wareneingang],
         selectedActivities: const ['custom_1'],
         specialFlags: const [],
-        note: null,
+        reportNote: null,
         createdAt: date,
         updatedAt: date,
       ),
@@ -590,7 +595,7 @@ void main() {
       find.textContaining('Eigene Tätigkeiten konnten nicht geladen werden.'),
       findsOneWidget,
     );
-    expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
   });
 
   testWidgets('Heute-Eintrag bleibt beim Tabwechsel im Arbeitsspeicher', (
@@ -607,7 +612,7 @@ void main() {
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
-    await expectStatus(tester, 'Erledigt');
+    await expectStatus(tester, 'Gespeichert');
 
     await tester.tap(find.text(AppStrings.tabWeek));
     await tester.pumpAndSettle();
@@ -615,7 +620,7 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabToday));
     await tester.pumpAndSettle();
-    expect(find.text('Erledigt'), findsOneWidget);
+    expect(find.text('Gespeichert'), findsOneWidget);
   });
 
   testWidgets('sauberer Tageswechsel lädt den neuen Tag', (tester) async {
@@ -640,7 +645,7 @@ void main() {
     await tester.pumpWidget(subject(dayTwo));
     await tester.pumpAndSettle();
     expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
-    expect(find.text('Noch nicht abgeschlossen'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
@@ -665,7 +670,7 @@ void main() {
     await tester.pumpAndSettle();
     await tapVisible(tester, find.byKey(const ValueKey('day_type_sonstiges')));
     await tester.enterText(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       'Offene Notiz',
     );
 
@@ -685,7 +690,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
-    expect(find.text('Noch nicht abgeschlossen'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
   });
 
   testWidgets('Vorhandener Eintrag wird vollständig in das Formular geladen', (
@@ -700,7 +705,7 @@ void main() {
         areas: const [TrainingArea.wareneingang],
         selectedActivities: const ['wareneingang_01'],
         specialFlags: const [SpecialFlag.selbststaendig],
-        note: 'Gespeicherte Notiz',
+        reportNote: 'Gespeicherte Notiz',
         createdAt: DateTime(2026, 6, 12, 8),
         updatedAt: DateTime(2026, 6, 12, 17),
       ),
@@ -708,13 +713,13 @@ void main() {
 
     await pumpToday(tester, storage: storage, date: date);
 
-    expect(find.text('Erledigt'), findsOneWidget);
+    expect(find.text('Gespeichert'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
 
-    expect(
-      find.byKey(const ValueKey('area_chip_wareneingang')),
-      findsOneWidget,
+    final areaChip = tester.widget<FilterChip>(
+      find.byKey(const ValueKey('area_wareneingang')),
     );
+    expect(areaChip.selected, isTrue);
 
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('activity_wareneingang_01')),
@@ -730,12 +735,12 @@ void main() {
     expect(activityCheckbox.value, isTrue);
 
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     final noteField = tester.widget<TextField>(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
     );
     expect(noteField.controller?.text, 'Gespeicherte Notiz');
   });
@@ -768,7 +773,7 @@ void main() {
         areas: const [],
         selectedActivities: const [],
         specialFlags: const [],
-        note: 'Vorher',
+        reportNote: 'Vorher',
         createdAt: createdAt,
         updatedAt: DateTime(2026, 6, 12, 9),
       ),
@@ -776,12 +781,12 @@ void main() {
     await pumpToday(tester, storage: storage, date: date);
 
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       'Nachher',
     );
     await tester.pumpAndSettle();
@@ -791,7 +796,7 @@ void main() {
     expect(storage.lastSavedEntry, isNotNull);
     expect(storage.lastSavedEntry!.createdAt, createdAt);
     expect(storage.lastSavedEntry!.updatedAt.isAfter(createdAt), isTrue);
-    expect(storage.lastSavedEntry!.note, 'Nachher');
+    expect(storage.lastSavedEntry!.reportNote, 'Nachher');
   });
 
   testWidgets('Lesefehler blockiert Formular und Wiederholen lädt erneut', (
@@ -813,7 +818,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(storage.loadCalls, 2);
-    expect(find.text('Noch nicht abgeschlossen'), findsOneWidget);
+    expect(find.text('Noch offen'), findsOneWidget);
   });
 
   testWidgets('Schreibfehler erhält Eingaben und zeigt verständlichen Fehler', (
@@ -826,13 +831,13 @@ void main() {
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_sonstiges')));
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       'Diese Notiz bleibt erhalten',
     );
     await tester.pumpAndSettle();
@@ -845,15 +850,15 @@ void main() {
       ),
       findsOneWidget,
     );
-    await expectStatus(tester, 'Noch nicht abgeschlossen');
+    await expectStatus(tester, 'Noch offen');
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
     final noteField = tester.widget<TextField>(
-      find.byKey(const ValueKey('daily_note_field')),
+      find.byKey(const ValueKey('daily_report_note_field')),
     );
     expect(noteField.controller?.text, 'Diese Notiz bleibt erhalten');
     expect(saveButton(tester).onPressed, isNotNull);

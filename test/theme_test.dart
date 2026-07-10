@@ -8,13 +8,16 @@ void main() {
       test('liefert gültiges M3-Theme für ${preset.name}', () {
         final theme = buildThemeForPreset(preset);
 
-        expect(theme.useMaterial3, isTrue, reason: '${preset.name}: Material 3 erwartet');
+        expect(theme.useMaterial3, isTrue,
+            reason: '${preset.name}: Material 3 erwartet');
         expect(theme.colorScheme.brightness, equals(preset.brightness),
-            reason: '${preset.name}: Brightness sollte ${preset.brightness} sein');
+            reason:
+                '${preset.name}: Brightness sollte ${preset.brightness} sein');
         expect(theme.colorScheme.primary, isNotNull,
             reason: '${preset.name}: primary darf nicht null sein');
         expect(theme.scaffoldBackgroundColor.a, greaterThan(0),
-            reason: '${preset.name}: Scaffold-Hintergrund darf nicht transparent sein');
+            reason:
+                '${preset.name}: Scaffold-Hintergrund darf nicht transparent sein');
       });
     }
 
@@ -22,7 +25,8 @@ void main() {
       for (final preset in ThemePreset.values) {
         final expected =
             preset == ThemePreset.hell ? Brightness.light : Brightness.dark;
-        expect(buildThemeForPreset(preset).colorScheme.brightness, equals(expected),
+        expect(buildThemeForPreset(preset).colorScheme.brightness,
+            equals(expected),
             reason: '${preset.name} sollte $expected sein');
       }
     });
@@ -36,12 +40,15 @@ void main() {
       }
     });
 
-    test('verhält sich zur seedColor konsistent (beide für jedes Preset gesetzt)', () {
+    test(
+        'verhält sich zur seedColor konsistent (beide für jedes Preset gesetzt)',
+        () {
       for (final preset in ThemePreset.values) {
         expect(preset.seedColor.a, equals(1.0),
             reason: '${preset.name}: seedColor muss deckend sein');
         expect(preset.surfaceColor, isNot(equals(preset.seedColor)),
-            reason: '${preset.name}: surfaceColor sollte sich von seedColor unterscheiden');
+            reason:
+                '${preset.name}: surfaceColor sollte sich von seedColor unterscheiden');
       }
     });
   });

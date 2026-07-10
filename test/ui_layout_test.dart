@@ -51,11 +51,13 @@ DailyEntry _entry(
     id: DailyEntry.idForDate(date),
     date: date,
     dayType: dayType,
-    areas: dayType == DayType.betrieb ? const [TrainingArea.wareneingang] : const [],
+    areas: dayType == DayType.betrieb
+        ? const [TrainingArea.wareneingang]
+        : const [],
     selectedActivities:
         dayType == DayType.betrieb ? const ['wareneingang_01'] : const [],
     specialFlags: const [],
-    note: null,
+    reportNote: null,
     createdAt: date,
     updatedAt: date,
   );
@@ -109,34 +111,14 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.pumpAndSettle();
-      // Carousel-Karte liegt im horizontalen PageView; der Default-Tap wird
-      // dort als „missed" markiert -> warnIfMissed:false, damit onTap zuverlässig
-      // feuert (entspricht der Bereichsauswahl per zentrierter Karte).
-      await tester.tap(area, warnIfMissed: false);
+      await tester.tap(area);
       await tester.pumpAndSettle();
 
       final activity = find.byKey(const ValueKey('activity_wareneingang_01'));
-      // Das Carousel bringt einen weiteren (horizontalen) Scrollable mit; daher
-      // die ListView gezielt ansteuern und in Schritten scrollen, bis die lazy
-      // Tätigkeits-Sektion gebaut ist, dann die Tätigkeit ins Blickfeld holen.
-      final listScroll = find
-          .descendant(
-            of: find.byType(ListView),
-            matching: find.byType(Scrollable),
-          )
-          .first;
-      for (var i = 0; i < 12; i++) {
-        if (activity.evaluate().isNotEmpty) {
-          break;
-        }
-        await tester.drag(listScroll, const Offset(0, -250));
-        await tester.pumpAndSettle();
-      }
       await tester.scrollUntilVisible(
         activity,
         200,
-        scrollable: listScroll,
+        scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
       expect(tester.getSize(activity).height, greaterThanOrEqualTo(48));
@@ -192,7 +174,7 @@ void main() {
       await tester.pumpAndSettle();
       // After selecting sonstiges the optional section auto-expands;
       // scroll to the note field which is now in the expanded tile
-      final note = find.byKey(const ValueKey('daily_note_field'));
+      final note = find.byKey(const ValueKey('daily_report_note_field'));
       await tester.scrollUntilVisible(
         note,
         200,
@@ -381,8 +363,7 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets(
-        'Heute-Screen (helles Preset) erfüllt Text-Kontrastrichtlinie',
+    testWidgets('Heute-Screen (helles Preset) erfüllt Text-Kontrastrichtlinie',
         (tester) async {
       final handle = tester.ensureSemantics();
       await _setSize(tester, _phoneSize);

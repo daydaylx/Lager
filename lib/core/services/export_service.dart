@@ -34,7 +34,11 @@ class ExportService {
                 'areas': e.areas.map((a) => a.name).toList(),
                 'selectedActivities': e.selectedActivities,
                 'specialFlags': e.specialFlags.map((f) => f.name).toList(),
-                'note': e.note,
+                'reportNote': e.reportNote,
+                'privateNote': e.privateNote,
+                'adhocActivities': e.adhocActivities
+                    .map((a) => {'id': a.id, 'title': a.title})
+                    .toList(),
                 'createdAt': e.createdAt.toIso8601String(),
                 'updatedAt': e.updatedAt.toIso8601String(),
               })

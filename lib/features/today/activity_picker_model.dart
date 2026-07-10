@@ -3,6 +3,7 @@ import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/training_area.dart';
 import '../../core/models/activity_template.dart';
+import '../../core/models/adhoc_activity.dart';
 import 'activity_recommender.dart';
 
 class ActivityPickerGroup {
@@ -48,11 +49,30 @@ class ActivityPickerModel {
     required List<String> frequentActivityIds,
     required String searchQuery,
     required int? trainingYear,
+    required Map<String, bool> defaultOverrides,
+    required List<AdhocActivity> adhocActivities,
   }) {
     final categories = _categoriesFor(dayType, selectedAreas);
+    final effectiveDefaults = [
+      for (final activity in defaultActivities)
+        _applyOverride(activity, defaultOverrides),
+    ];
+    final adhocTemplates = [
+      for (final adhoc in adhocActivities)
+        ActivityTemplate(
+          id: adhoc.id,
+          title: adhoc.title,
+          category: categories.isNotEmpty
+              ? categories.first
+              : ActivityCategory.sicherheit,
+          isCustom: true,
+          isActive: true,
+        ),
+    ];
     final activitiesById = {
-      for (final activity in defaultActivities) activity.id: activity,
+      for (final activity in effectiveDefaults) activity.id: activity,
       for (final activity in customTemplates) activity.id: activity,
+      for (final activity in adhocTemplates) activity.id: activity,
     };
     final knownActivityIds = activitiesById.keys.toSet();
     final unavailableSelectedIds = selectedActivityIds
@@ -89,12 +109,33 @@ class ActivityPickerModel {
     var visibleActivityCount =
         frequentActivities.length + recommendedActivities.length;
     final groups = <ActivityPickerGroup>[];
+
+    // Einmalige Tätigkeiten dieses Tages in einer eigenen Gruppe zeigen.
+    final visibleAdhoc = _sortSelectedFirst(
+      adhocTemplates
+          .where((activity) => _matchesActivitySearch(activity, searchQuery))
+          .toList(growable: false),
+      selectedActivityIds,
+    );
+    visibleActivityCount += visibleAdhoc.length;
+    if (visibleAdhoc.isNotEmpty) {
+      groups.add(
+        ActivityPickerGroup(
+          title: 'Nur heute hinzugefügt',
+          activities: visibleAdhoc,
+          markAsCustom: true,
+        ),
+      );
+    }
+
     for (final category in categories) {
       final defaults = _sortSelectedFirst(
-        defaultActivities
+        effectiveDefaults
             .where(
               (activity) =>
                   activity.category == category &&
+                  (activity.isActive ||
+                      selectedActivityIds.contains(activity.id)) &&
                   _showInCategoryGroup(
                     activity,
                     hiddenQuickAccessIds,
@@ -154,6 +195,15 @@ class ActivityPickerModel {
       unavailableSelectedIds: unavailableSelectedIds,
       visibleActivityCount: visibleActivityCount,
     );
+  }
+
+  static ActivityTemplate _applyOverride(
+    ActivityTemplate activity,
+    Map<String, bool> overrides,
+  ) {
+    final override = overrides[activity.id];
+    if (override == null || override == activity.isActive) return activity;
+    return activity.copyWith(isActive: override);
   }
 
   static List<ActivityCategory> _categoriesFor(

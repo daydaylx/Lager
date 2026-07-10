@@ -3,6 +3,7 @@ import '../../core/data/activity_subcategories.dart';
 import '../../core/data/default_activities.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/models/activity_template.dart';
+import '../../core/storage/default_activity_state_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../shared/widgets/app_ui.dart';
@@ -10,12 +11,14 @@ import '../today/activity_recommender.dart';
 
 class TemplatesScreen extends StatefulWidget {
   final ActivityTemplateStorage storage;
+  final DefaultActivityStateStorage defaultActivityStateStorage;
   final DailyEntryStorage? dailyEntryStorage;
   final VoidCallback? onTemplatesChanged;
 
   const TemplatesScreen({
     super.key,
     required this.storage,
+    this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     this.dailyEntryStorage,
     this.onTemplatesChanged,
   });
@@ -31,6 +34,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   ActivityCategory? _selectedCategory;
   String _searchQuery = '';
   List<ActivityTemplate> _customTemplates = [];
+  Map<String, bool> _defaultOverrides = const {};
   List<ActivityTemplate> _frequentActivities = [];
   bool _isLoading = true;
   bool _loadFailed = false;
@@ -51,9 +55,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   Future<void> _loadCustom() async {
     try {
       final templates = await widget.storage.loadCustom();
+      final overrides =
+          await widget.defaultActivityStateStorage.loadOverrides();
       if (mounted) {
         setState(() {
           _customTemplates = templates;
+          _defaultOverrides = overrides;
           _isLoading = false;
           _loadFailed = false;
         });
@@ -95,10 +102,36 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     }
   }
 
-  List<ActivityTemplate> get _filteredDefaults {
-    return defaultActivities
+  bool _isDefaultActive(ActivityTemplate template) {
+    return _defaultOverrides[template.id] ?? template.isActive;
+  }
+
+  List<ActivityTemplate> get _effectiveDefaults {
+    return [
+      for (final template in defaultActivities)
+        _isDefaultActive(template) == template.isActive
+            ? template
+            : template.copyWith(isActive: _isDefaultActive(template)),
+    ];
+  }
+
+  List<ActivityTemplate> get _filteredActiveDefaults {
+    return _effectiveDefaults
         .where(
           (template) =>
+              template.isActive &&
+              (_selectedCategory == null ||
+                  template.category == _selectedCategory) &&
+              _matchesSearch(template),
+        )
+        .toList();
+  }
+
+  List<ActivityTemplate> get _filteredInactiveDefaults {
+    return _effectiveDefaults
+        .where(
+          (template) =>
+              !template.isActive &&
               (_selectedCategory == null ||
                   template.category == _selectedCategory) &&
               _matchesSearch(template),
@@ -162,6 +195,33 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   ? 'Die Tätigkeit konnte nicht deaktiviert werden.'
                   : 'Die Tätigkeit konnte nicht aktiviert werden.',
             ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleDefault(ActivityTemplate template) async {
+    final currentlyActive = _isDefaultActive(template);
+    try {
+      await widget.defaultActivityStateStorage.setActive(
+        template.id,
+        !currentlyActive,
+      );
+      if (mounted) {
+        setState(() {
+          _defaultOverrides = {
+            ..._defaultOverrides,
+            template.id: !currentlyActive,
+          };
+        });
+        widget.onTemplatesChanged?.call();
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Die Tätigkeit konnte nicht geändert werden.'),
           ),
         );
       }
@@ -307,9 +367,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredDefaults = _filteredDefaults;
+    final filteredActiveDefaults = _filteredActiveDefaults;
+    final filteredInactiveDefaults = _filteredInactiveDefaults;
     final filteredCustom = _filteredCustom;
-    final isEmpty = filteredDefaults.isEmpty && filteredCustom.isEmpty;
+    final isEmpty = filteredActiveDefaults.isEmpty &&
+        filteredInactiveDefaults.isEmpty &&
+        filteredCustom.isEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vorlagen')),
@@ -402,9 +465,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                                 'Passe Suche oder Kategorie an, um weitere Tätigkeiten zu sehen.',
                           )
                         : _TemplateList(
-                            defaults: filteredDefaults,
+                            activeDefaults: filteredActiveDefaults,
+                            inactiveDefaults: filteredInactiveDefaults,
                             custom: filteredCustom,
                             onToggleCustom: _toggleCustom,
+                            onToggleDefault: _toggleDefault,
                           ),
           ),
         ],
@@ -414,84 +479,170 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 }
 
 class _TemplateList extends StatelessWidget {
-  final List<ActivityTemplate> defaults;
+  final List<ActivityTemplate> activeDefaults;
+  final List<ActivityTemplate> inactiveDefaults;
   final List<ActivityTemplate> custom;
   final ValueChanged<ActivityTemplate> onToggleCustom;
+  final ValueChanged<ActivityTemplate> onToggleDefault;
 
   const _TemplateList({
-    required this.defaults,
+    required this.activeDefaults,
+    required this.inactiveDefaults,
     required this.custom,
     required this.onToggleCustom,
+    required this.onToggleDefault,
   });
 
   @override
   Widget build(BuildContext context) {
-    final customLength = custom.isEmpty ? 0 : custom.length + 1;
-    final defaultLength = defaults.isEmpty ? 0 : defaults.length + 1;
-
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.only(bottom: 88),
-      itemCount: customLength + defaultLength,
-      itemBuilder: (context, index) {
-        if (custom.isNotEmpty) {
-          if (index == 0) {
-            return _SectionHeader('Eigene (${custom.length})');
-          }
-          if (index <= custom.length) {
-            final template = custom[index - 1];
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-              child: Material(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(14),
-                child: ListTile(
-                  title: Text(template.title),
-                  subtitle: Text(
-                    _templateSubtitle(template),
-                  ),
-                  leading: Icon(
-                    template.isActive
-                        ? Icons.check_circle_outline
-                        : Icons.pause_circle_outline,
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(
-                      template.isActive
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    tooltip: template.isActive ? 'Deaktivieren' : 'Aktivieren',
-                    onPressed: () => onToggleCustom(template),
-                  ),
-                ),
-              ),
-            );
-          }
-          index -= customLength;
-        }
-
-        if (index == 0) {
-          return _SectionHeader('Vordefiniert (${defaults.length})');
-        }
-        final template = defaults[index - 1];
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: ListTile(
-            title: Text(template.title),
-            subtitle: Text(_templateSubtitle(template)),
-            leading: const Icon(Icons.checklist_outlined, size: 20),
+      children: [
+        if (custom.isNotEmpty) ...[
+          _SectionHeader('Eigene (${custom.length})'),
+          ...custom.map(
+            (template) => _TemplateRow(
+              template: template,
+              subtitleOverride: null,
+              onToggle: () => onToggleCustom(template),
+            ),
           ),
-        );
-      },
+          const SizedBox(height: 8),
+        ],
+        _SectionHeader('Vordefiniert (${activeDefaults.length})'),
+        if (activeDefaults.isEmpty)
+          const _EmptyHint(
+            'Keine aktiven Standardtätigkeiten in dieser Auswahl. '
+            'Mehr weiter unten unter „Weitere Standardtätigkeiten".',
+          )
+        else
+          ...activeDefaults.map(
+            (template) => _TemplateRow(
+              template: template,
+              subtitleOverride: null,
+              onToggle: () => onToggleDefault(template),
+            ),
+          ),
+        if (inactiveDefaults.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _InactiveDefaultsSection(
+            inactiveDefaults: inactiveDefaults,
+            onToggleDefault: onToggleDefault,
+          ),
+        ],
+      ],
     );
   }
+}
 
-  String _templateSubtitle(ActivityTemplate template) {
+class _InactiveDefaultsSection extends StatefulWidget {
+  final List<ActivityTemplate> inactiveDefaults;
+  final ValueChanged<ActivityTemplate> onToggleDefault;
+
+  const _InactiveDefaultsSection({
+    required this.inactiveDefaults,
+    required this.onToggleDefault,
+  });
+
+  @override
+  State<_InactiveDefaultsSection> createState() =>
+      _InactiveDefaultsSectionState();
+}
+
+class _InactiveDefaultsSectionState extends State<_InactiveDefaultsSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      key: const ValueKey('inactive_defaults_section'),
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+      initiallyExpanded: _expanded,
+      onExpansionChanged: (value) => setState(() => _expanded = value),
+      title: Text(
+        'Weitere Standardtätigkeiten (deaktiviert) · ${widget.inactiveDefaults.length}',
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+      children: widget.inactiveDefaults
+          .map(
+            (template) => _TemplateRow(
+              template: template,
+              subtitleOverride: null,
+              onToggle: () => widget.onToggleDefault(template),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _TemplateRow extends StatelessWidget {
+  final ActivityTemplate template;
+  final String? subtitleOverride;
+  final VoidCallback onToggle;
+
+  const _TemplateRow({
+    required this.template,
+    required this.subtitleOverride,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final subcategory = activitySubcategory(template);
     final base = subcategory == null
         ? template.category.label
         : '${template.category.label} · $subcategory';
-    return template.isActive ? base : '$base · Deaktiviert';
+    final subtitle = subtitleOverride ??
+        (template.isActive
+            ? (template.isCustom ? '$base · Eigene' : base)
+            : '$base · Deaktiviert');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        child: ListTile(
+          title: Text(template.title),
+          subtitle: Text(subtitle),
+          leading: Icon(
+            template.isActive
+                ? Icons.check_circle_outline
+                : Icons.pause_circle_outline,
+          ),
+          trailing: IconButton(
+            icon: Icon(
+              template.isActive
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+            ),
+            tooltip: template.isActive ? 'Deaktivieren' : 'Aktivieren',
+            onPressed: onToggle,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyHint extends StatelessWidget {
+  final String text;
+
+  const _EmptyHint(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
+    );
   }
 }
 

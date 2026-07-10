@@ -2,6 +2,7 @@ import 'package:hive_ce/hive.dart';
 import '../enums/day_type.dart';
 import '../enums/special_flag.dart';
 import '../enums/training_area.dart';
+import '../models/adhoc_activity.dart';
 import '../models/daily_entry.dart';
 import 'persisted_enum.dart';
 
@@ -50,16 +51,36 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
         (fields[5] as List).cast<String>(),
         'DailyEntry.specialFlags',
       ),
-      note: fields[6] as String?,
+      reportNote: fields[6] as String?,
+      privateNote: fields[9] as String?,
+      adhocActivities: _readAdhocActivities(fields[10]),
       createdAt: fields[7] as DateTime,
       updatedAt: fields[8] as DateTime,
     );
   }
 
+  /// Einmalige Tätigkeiten werden als `List<List<String>>`-Paare (`[id, title]`)
+  /// gespeichert. Fehlt das Feld (alte Einträge) oder ist es fehlerhaft, wird
+  /// eine leere Liste geliefert, damit der Eintrag trotzdem lesbar bleibt.
+  static List<AdhocActivity> _readAdhocActivities(dynamic raw) {
+    if (raw is! List) return const [];
+    final result = <AdhocActivity>[];
+    for (final entry in raw) {
+      if (entry is List && entry.length >= 2) {
+        final id = entry[0];
+        final title = entry[1];
+        if (id is String && title is String) {
+          result.add(AdhocActivity(id: id, title: title));
+        }
+      }
+    }
+    return result;
+  }
+
   @override
   void write(BinaryWriter writer, DailyEntry entry) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(entry.id)
       ..writeByte(1)
@@ -73,10 +94,18 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
       ..writeByte(5)
       ..write(entry.specialFlags.map((flag) => flag.name).toList())
       ..writeByte(6)
-      ..write(entry.note)
+      ..write(entry.reportNote)
       ..writeByte(7)
       ..write(entry.createdAt)
       ..writeByte(8)
-      ..write(entry.updatedAt);
+      ..write(entry.updatedAt)
+      ..writeByte(9)
+      ..write(entry.privateNote)
+      ..writeByte(10)
+      ..write(
+        entry.adhocActivities
+            .map((a) => <String>[a.id, a.title])
+            .toList(growable: false),
+      );
   }
 }

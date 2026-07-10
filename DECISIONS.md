@@ -54,17 +54,10 @@ App weniger nach Kontrolle/Pflicht, ohne die Zustandsunterscheidbarkeit zu schw�
 **IndexedStack für Tab-Persistence**
 Scroll-Position und Screen-State bleiben beim Tab-Wechsel erhalten. Bessere UX als Navigator-Pop/Push für jeden Tab.
 
-**Phase 22: Daily-Check-in statt Arbeitsformular**
-Der Heute-Screen wird als kurzer Daily Check-in geführt: Statussprache nutzt
-„Erledigt", der Save-Button heißt „Tag abschließen" und Pflicht-Badges entfallen.
-Die Bereichsauswahl ist ein `PageView`-Snap-Carousel mit Chips für ausgewählte
-Bereiche; Multi-Select bleibt, `DailyEntry.areas` bleibt unverändert. Interaktion:
-Wischen = browsen, zentrierte Karte tippen = toggeln, Chips entfernen die Auswahl,
-Start = Wareneingang. Ein echtes Kreisrad und neue Packages wurden verworfen.
-Die Woche zeigt Fortschritt über eine Mo–So-Punktleiste statt Prozentbalken; der
-Banner ist neutral („X Tage warten noch"). Speichern bleibt ein schlanker Sticky-
-Button, kein FAB. Weiche Progression erfolgt über kontrastsichere Header-Emphasis
-statt Opacity-Dimmen. Farben bleiben seriös; `lagerTeal` wurde nur minimal wärmer.
+**Phase 22: Daily-Check-in statt Arbeitsformular** ❌ (rückgängig gemacht 2026-07-10)
+Die UI-Experimente aus Phase 22 (AreaCarousel, WeekDotStrip, SectionEmphasis,
+wärmeres lagerTeal) wurden selektiv revertiert. Der UI-Stand entspricht Phase 20.
+Phase-21-Infrastruktur bleibt bestehen.
 
 ---
 

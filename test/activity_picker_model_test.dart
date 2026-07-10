@@ -2,6 +2,7 @@ import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/activity_template.dart';
+import 'package:berichtsheft_merker/core/models/adhoc_activity.dart';
 import 'package:berichtsheft_merker/features/today/activity_picker_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,6 +14,8 @@ ActivityPickerModel _model({
   List<String> frequentIds = const [],
   String search = '',
   int? trainingYear,
+  Map<String, bool> defaultOverrides = const {},
+  List<AdhocActivity> adhocActivities = const [],
 }) {
   return ActivityPickerModel.build(
     dayType: dayType,
@@ -22,6 +25,8 @@ ActivityPickerModel _model({
     frequentActivityIds: frequentIds,
     searchQuery: search,
     trainingYear: trainingYear,
+    defaultOverrides: defaultOverrides,
+    adhocActivities: adhocActivities,
   );
 }
 

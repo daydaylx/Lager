@@ -238,17 +238,12 @@ Bereiche:
 - Retoure
 - Inventur
 
-Darstellung (Phase 22c — Snap-Carousel):
+Darstellung (zweispaltiges FilterChip-Grid):
 
-- horizontales Snap-Carousel (PageView, keine Fremd-Dependency); zentrale Karte
-  groß mit Icon + Titel + Unterzeile, Nachbarn kleiner/abgesetzt
-- **Wischen** = blättern, **Tippen auf die zentrierte Karte** = Bereich
-  ein-/ausschalten, ausgewählte Bereiche erscheinen darunter als Chips
-  (Chip-Tap entfernt den Bereich)
-- startet zentriert auf dem häufigsten Bereich (Wareneingang)
-- mehrere Bereiche auswählbar (Multi-Select bleibt erhalten)
-- ausgewählte Bereiche deutlich markiert (Akzent-Hintergrund + Chip)
-- große Touchflächen; Fallback auf 2-spaltiges Grid bei sehr schmalen Displays
+- zweispaltiges Grid aus `FilterChip`-Kacheln mit Icon, Titel und Unterzeile
+- Antippen schaltet den Bereich ein/aus (Multi-Select)
+- ausgewählte Bereiche deutlich markiert (Primary-Farben)
+- große Touchflächen für mobile Bedienung
 
 ---
 

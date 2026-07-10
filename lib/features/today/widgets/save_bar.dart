@@ -27,17 +27,15 @@ class SaveBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: theme.colorScheme.surfaceContainerLow, // #22e: leichtere Fläche
+      color: theme.colorScheme.surfaceContainer,
       child: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+        minimum: const EdgeInsets.fromLTRB(16, 10, 16, 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (missingItems.isNotEmpty) ...[
               Text(
-                'Noch ${missingItems.length} '
-                '${missingItems.length == 1 ? 'Angabe' : 'Angaben'}: '
-                '${missingItems.join(' und ')}',
+                'Noch offen: ${missingItems.join(' · ')}',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -70,9 +68,9 @@ class SaveBar extends StatelessWidget {
                     label: Text(
                       isNewEntry
                           ? isToday
-                              ? 'Tag abschließen'
-                              : 'Tag eintragen'
-                          : 'Änderungen übernehmen',
+                              ? 'Heute speichern'
+                              : 'Tag speichern'
+                          : 'Änderungen speichern',
                     ),
                   ),
                 ),

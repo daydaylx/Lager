@@ -16,10 +16,16 @@ void main() {
       );
     }
 
+    // Werksvorgabe: kompakter, gröberer Katalog mit 38 aktiven Tätigkeiten;
+    // die übrigen sind deaktiviert, aber im Vorlagen-Screen reaktivierbar.
+    final activeCount =
+        defaultActivities.where((activity) => activity.isActive).length;
+    expect(activeCount, 38);
+
     expect(
       defaultActivities.map((activity) => activity.title),
       containsAll([
-        'Wareneingang mit Scanner erfasst',
+        'Lieferung angenommen und geprüft',
         'Lieferdaten im Warenwirtschaftssystem nachvollzogen',
         '5S-Regeln am Arbeitsplatz angewendet',
         'Unterweisung zur Arbeitssicherheit erhalten',

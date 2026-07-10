@@ -1,6 +1,7 @@
 import '../enums/day_type.dart';
 import '../enums/special_flag.dart';
 import '../enums/training_area.dart';
+import 'adhoc_activity.dart';
 
 class DailyEntry {
   final String id;
@@ -9,7 +10,18 @@ class DailyEntry {
   final List<TrainingArea> areas;
   final List<String> selectedActivities;
   final List<SpecialFlag> specialFlags;
-  final String? note;
+
+  /// Ergänzung für das Berichtsheft. Darf vom Berichtsgenerator verwendet
+  /// und in kopierten Berichten angezeigt werden.
+  final String? reportNote;
+
+  /// Private Notiz — nur für den Nutzer innerhalb der App. Darf niemals in
+  /// einen generierten oder kopierten Berichtstext gelangen.
+  final String? privateNote;
+
+  /// Einmalige Freitext-Tätigkeiten, die nur für diesen Tag gelten.
+  final List<AdhocActivity> adhocActivities;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -20,7 +32,9 @@ class DailyEntry {
     required this.areas,
     required this.selectedActivities,
     required this.specialFlags,
-    required this.note,
+    required this.reportNote,
+    this.privateNote,
+    this.adhocActivities = const [],
     required this.createdAt,
     required this.updatedAt,
   });

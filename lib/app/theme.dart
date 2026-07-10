@@ -26,7 +26,7 @@ extension ThemePresetDetails on ThemePreset {
       };
 
   Color get seedColor => switch (this) {
-        ThemePreset.lagerTeal => const Color(0xFF347A63), // #22f: minimal wärmer/grüner
+        ThemePreset.lagerTeal => const Color(0xFF2E7D6B),
         ThemePreset.nachtGruen => const Color(0xFF1A5C40),
         ThemePreset.warmSand => const Color(0xFF8B6914),
         ThemePreset.blauGrau => const Color(0xFF3A5B8C),
@@ -78,11 +78,6 @@ ThemeData _buildTheme(
   );
   final roundedShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(16),
-    side: BorderSide(
-      color: colorScheme.outlineVariant.withValues(
-        alpha: brightness == Brightness.dark ? 0.34 : 0.55,
-      ),
-    ),
   );
 
   // Slightly lifted secondary text for dark themes (#27)
@@ -103,9 +98,9 @@ ThemeData _buildTheme(
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      height: 72, // #22e: leichtere Bottom-Leiste (vorher 80)
-      backgroundColor: colorScheme.surfaceContainerLow,
-      indicatorColor: colorScheme.surfaceContainerHighest, // dezenter Pillenhintergrund
+      height: 80,
+      backgroundColor: colorScheme.surfaceContainer,
+      indicatorColor: colorScheme.secondaryContainer,
       elevation: 0,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         return base.textTheme.labelMedium?.copyWith(
@@ -122,7 +117,7 @@ ThemeData _buildTheme(
       margin: EdgeInsets.zero,
       elevation: 0,
       color: colorScheme.surfaceContainerLow,
-      surfaceTintColor: colorScheme.primary.withValues(alpha: 0.05),
+      surfaceTintColor: Colors.transparent,
       shape: roundedShape,
     ),
     dividerTheme: DividerThemeData(
@@ -148,16 +143,14 @@ ThemeData _buildTheme(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: colorScheme.primary, width: 2),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(48, 52),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        disabledForegroundColor:
-            colorScheme.onSurface.withValues(alpha: 0.45), // #27: readable disabled text
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        disabledForegroundColor: colorScheme.onSurface
+            .withValues(alpha: 0.45), // #27: readable disabled text
         textStyle: base.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w700,
         ),
@@ -166,8 +159,7 @@ ThemeData _buildTheme(
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 52),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         side: BorderSide(color: colorScheme.outline),
         textStyle: base.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w700,
@@ -188,16 +180,14 @@ ThemeData _buildTheme(
     ),
     listTileTheme: ListTileThemeData(
       minTileHeight: 56,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       iconColor: colorScheme.onSurfaceVariant,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
@@ -219,8 +209,7 @@ ThemeData _buildTheme(
       contentTextStyle: base.textTheme.bodyMedium?.copyWith(
         color: colorScheme.onInverseSurface,
       ),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
 }

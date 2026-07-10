@@ -30,7 +30,7 @@ class DailyReportGenerator {
       DayType.urlaub => 'Heute hatte ich Urlaub.',
       DayType.krank => 'Heute war ich krank.',
       DayType.feiertag => 'Heute war Feiertag.',
-      DayType.sonstiges => entry.note ?? 'Sonstiger Tag.',
+      DayType.sonstiges => entry.reportNote ?? 'Sonstiger Tag.',
     };
   }
 
@@ -71,7 +71,8 @@ class DailyReportGenerator {
       final topics = _formatList(known);
       return switch (entry.date.day % 3) {
         0 => 'Heute war Berufsschule. Themen waren: $topics.',
-        1 => 'In der Berufsschule habe ich folgende Themen bearbeitet: $topics.',
+        1 =>
+          'In der Berufsschule habe ich folgende Themen bearbeitet: $topics.',
         _ => 'Die heutigen Themen in der Berufsschule waren: $topics.',
       };
     }
@@ -134,7 +135,7 @@ class DailyReportGenerator {
   static String _detailText(DailyEntry entry) {
     final isSchule = entry.dayType == DayType.berufsschule;
     final sentences = <String>[];
-    final note = _normalizedNote(entry.note);
+    final note = _normalizedNote(entry.reportNote);
     for (final flag in entry.specialFlags) {
       switch (flag) {
         case SpecialFlag.selbststaendig:

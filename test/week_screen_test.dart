@@ -32,7 +32,7 @@ DailyEntry entryFor(
     areas: dayType == DayType.betrieb ? areas : const [],
     selectedActivities: dayType.supportsActivities ? activities : const [],
     specialFlags: specialFlags,
-    note: note,
+    reportNote: note,
     createdAt: date,
     updatedAt: date,
   );
@@ -111,7 +111,8 @@ void main() {
     await pumpWeek(tester, storage: storage, initialDate: today);
 
     expect(
-      find.text('${entries.length} / $dueDays Tage erledigt'),
+      find.text(
+          '${entries.length} von $dueDays fälligen Werktagen eingetragen'),
       findsOneWidget,
     );
 
@@ -129,10 +130,10 @@ void main() {
       final expectedStatus = entries.any((entry) => entry.date == date)
           ? entries.firstWhere((entry) => entry.date == date).dayType.isAbsence
               ? 'Urlaub'
-              : 'Erledigt'
+              : 'Gespeichert'
           : date.weekday <= DateTime.friday && !date.isAfter(today)
               ? 'Offen'
-              : 'Nicht fällig';
+              : 'Kein Eintrag';
       expect(
         find.descendant(of: dayCard, matching: find.text(expectedStatus)),
         findsOneWidget,
@@ -264,11 +265,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Wochenzusammenfassung'), findsOneWidget);
-    expect(find.text('Ware angenommen'), findsOneWidget);
+    expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
     expect(find.text('Besonderheiten: Selbstständig'), findsOneWidget);
     expect(find.text('Notiz: Neue Warenannahme'), findsOneWidget);
     if (today.weekday >= DateTime.tuesday) {
-      expect(find.text('Noch nichts erfasst'), findsWidgets);
+      expect(find.text('Kein Eintrag – offen'), findsWidgets);
     }
   });
 
@@ -344,8 +345,8 @@ void main() {
 
     expect(find.text('Frei'), findsWidgets);
     expect(
-      find.text(
-          '1 / ${today.weekday > 5 ? 5 : today.weekday} Tage erledigt'),
+      find.text('1 von ${today.weekday > 5 ? 5 : today.weekday} '
+          'fälligen Werktagen eingetragen'),
       findsOneWidget,
     );
   });
@@ -444,7 +445,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('show_week_summary')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ware angenommen'), findsOneWidget);
+      expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
       expect(find.text('Vorschlag fürs Berichtsheft'), findsOneWidget);
     });
 

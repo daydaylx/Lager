@@ -11,6 +11,7 @@ DailyEntry _entry({
   List<String> activities = const [],
   List<SpecialFlag> flags = const [],
   String? note,
+  String? privateNote,
 }) {
   final date = DateTime(2024, 6, 3);
   return DailyEntry(
@@ -20,7 +21,8 @@ DailyEntry _entry({
     areas: dayType == DayType.betrieb ? areas : const [],
     selectedActivities: activities,
     specialFlags: flags,
-    note: note,
+    reportNote: note,
+    privateNote: privateNote,
     createdAt: date,
     updatedAt: date,
   );
@@ -403,10 +405,37 @@ void main() {
     });
   });
 
+  group('DailyReportGenerator — private Notiz', () {
+    test('private Notiz erscheint nie im Betriebstbericht', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          activities: ['wareneingang_01'],
+          privateNote: 'Streng geheim',
+        ),
+        _titles,
+      );
+      expect(result, isNot(contains('Streng geheim')));
+    });
+
+    test('DayType.sonstiges nutzt reportNote, nicht privateNote', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          dayType: DayType.sonstiges,
+          note: 'Sichtbarer Berichtstext',
+          privateNote: 'Streng geheim',
+        ),
+        _titles,
+      );
+      expect(result, 'Sichtbarer Berichtstext');
+      expect(result, isNot(contains('Streng geheim')));
+    });
+  });
+
   group('DailyReportGenerator — datumsbasierte Satzmuster', () {
     DailyEntry entryOnDay(int day, {int activityCount = 1}) {
       final date = DateTime(2026, 6, day);
-      final activities = List.generate(activityCount, (i) => 'wareneingang_0${i + 1}');
+      final activities =
+          List.generate(activityCount, (i) => 'wareneingang_0${i + 1}');
       return DailyEntry(
         id: DailyEntry.idForDate(date),
         date: date,
@@ -414,13 +443,15 @@ void main() {
         areas: const [TrainingArea.wareneingang],
         selectedActivities: activities,
         specialFlags: const [],
-        note: null,
+        reportNote: null,
         createdAt: date,
         updatedAt: date,
       );
     }
 
-    test('gleiche Auswahl an zwei aufeinanderfolgenden Tagen erzeugt verschiedene Satzmuster', () {
+    test(
+        'gleiche Auswahl an zwei aufeinanderfolgenden Tagen erzeugt verschiedene Satzmuster',
+        () {
       final result17 = DailyReportGenerator.generate(entryOnDay(17), _titles);
       final result18 = DailyReportGenerator.generate(entryOnDay(18), _titles);
       expect(result17, isNot(equals(result18)));
@@ -445,7 +476,7 @@ void main() {
           'wareneingang_01',
         ],
         specialFlags: const [],
-        note: null,
+        reportNote: null,
         createdAt: date,
         updatedAt: date,
       );
@@ -470,7 +501,7 @@ void main() {
           'wareneingang_01',
         ],
         specialFlags: const [],
-        note: null,
+        reportNote: null,
         createdAt: date,
         updatedAt: date,
       );
@@ -479,7 +510,8 @@ void main() {
         'wareneingang_01': 'Lagerwirtschaft Praxis',
       };
       final result = DailyReportGenerator.generate(entry, titles);
-      expect(result, contains('In der Berufsschule habe ich folgende Themen bearbeitet:'));
+      expect(result,
+          contains('In der Berufsschule habe ich folgende Themen bearbeitet:'));
     });
 
     test('Berufsschule 3 Themen: Tag 20 erzeugt Variante 2', () {
@@ -495,7 +527,7 @@ void main() {
           'wareneingang_01',
         ],
         specialFlags: const [],
-        note: null,
+        reportNote: null,
         createdAt: date,
         updatedAt: date,
       );
@@ -504,7 +536,8 @@ void main() {
         'wareneingang_01': 'Lagerwirtschaft Praxis',
       };
       final result = DailyReportGenerator.generate(entry, titles);
-      expect(result, contains('Die heutigen Themen in der Berufsschule waren:'));
+      expect(
+          result, contains('Die heutigen Themen in der Berufsschule waren:'));
     });
   });
 }
