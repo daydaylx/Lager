@@ -1,24 +1,22 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-10 (Tätigkeitserfassungs-Überarbeitung + private Notizen abgeschlossen)
+Stand: 2026-07-11 (Speicher-Witz-Sheet und Review-Fixes)
 
 ---
 
-## Letzte Änderung: Tätigkeitserfassung + private Notiz
+## Letzte Änderung: Speicher-Witz-Sheet
 
-- Tätigkeitskatalog von 132 auf 38 aktive grobe Tätigkeiten reduziert (die
-  übrigen 94 sind deaktiviert, im Vorlagen-Screen reaktivierbar & persistent).
-- Eigene Tätigkeiten direkt im Tagesformular („+ Eigene Tätigkeit hinzufügen")
-  mit einmaliger (Adhoc) oder dauerhafter (Template) Speicherung.
-- `DailyEntry.note` in `reportNote` (berichtsrelevant) und `privateNote`
-  (nie im Bericht) getrennt; alte `note`-Werte automatisch nach `reportNote`
-  migriert (Feldindex 6, rückwärtskompatibel).
-- `AdhocActivity` (einmalige Tätigkeit) als `List<List<String>>` im
-  `DailyEntryAdapter` persistiert (kein neuer Hive-Type-ID).
-- `DefaultActivityStateStorage` (SharedPreferences) für Overrides.
-- Template-Screen: aktive Defaults oben, deaktivierte in einklappbarem
-  „Weitere Standardtätigkeiten (deaktiviert)"-Abschnitt.
-- `flutter analyze` 0 Issues, `flutter test` 256/256 bestanden.
+- Nach dem ersten erfolgreichen Speichern eines neuen Tageseintrags erscheint ein
+  ruhiges Material-3-Bottom-Sheet mit lokalem Lagerlogistik-Witz des Tages.
+- Die Witze liegen statisch in `lib/core/data/lager_jokes.dart`; Auswahl ist
+  deterministisch pro Kalendertag und robust gegen Uhrzeit-/Sommerzeit-Effekte.
+- Bestehende Einträge zeigen beim Speichern von Änderungen nur eine kurze
+  SnackBar-Bestätigung („Änderungen gespeichert."), damit der Flow nicht bei
+  jedem Nachbearbeiten unterbrochen wird.
+- Sheet ist SafeArea-/Scroll-gesichert und nutzt stabile Test-Keys.
+- Witztexte wurden auf Nutzerwunsch unverändert gelassen.
+- `flutter analyze` 0 Issues; gezielte Tests `lager_jokes`, `today_screen` und
+  `week_screen` grün; voller `flutter test` 269/269 bestanden; Repo-Hygiene OK.
 
 ---
 
@@ -213,12 +211,12 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Phase-22-Revert (2026-07-10):
+Aktuell nach Speicher-Witz-Fix (2026-07-11):
 
 ```
 bash scripts/check_repo_hygiene.sh  →  OK
 flutter analyze          →  0 Issues
-flutter test             →  249/249 bestanden
+flutter test             →  269/269 bestanden
 flutter build apk --debug  →  erfolgreich (nicht erneut gebaut)
 flutter build apk --release  →  erfolgreich (18.06.2026)
 CI (Job flutter-checks)    →  Required-Check für main (Branch Protection)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
 import '../../core/data/default_activities.dart';
+import '../../core/data/lager_jokes.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
@@ -715,6 +716,7 @@ class _TodayScreenState extends State<TodayScreen> {
     final now = DateTime.now();
     final entry = _draft.toEntry(timestamp: now, existingEntry: _savedEntry);
 
+    final wasNewEntry = _savedEntry == null;
     setState(() => _isSaving = true);
 
     try {
@@ -726,13 +728,13 @@ class _TodayScreenState extends State<TodayScreen> {
           _isSaving = false;
         });
         _loadFrequentActivities();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isToday ? 'Heute gespeichert.' : 'Tageseintrag gespeichert.',
-            ),
-          ),
-        );
+        if (wasNewEntry) {
+          _showJokeSheet();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Änderungen gespeichert.')),
+          );
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -746,6 +748,64 @@ class _TodayScreenState extends State<TodayScreen> {
         );
       }
     }
+  }
+
+  void _showJokeSheet() {
+    if (!mounted) return;
+
+    final joke = jokeForDate(_today);
+    final theme = Theme.of(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (ctx) {
+        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.7;
+        return Semantics(
+          liveRegion: true,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Tag erledigt',
+                    key: const ValueKey('joke_sheet_title'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Lagerlogistik-Witz des Tages',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    joke,
+                    key: const ValueKey('joke_text'),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    key: const ValueKey('close_joke_sheet'),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Schließen'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   String? _currentReport() {

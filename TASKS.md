@@ -407,6 +407,14 @@ erhalten; nur UX/UI. Pro Unterphase ein eigener Analyze/Test/Doku-Zyklus.
 - [x] Golden `profile_overview.png` & `ui_layout_test.dart` Key (`edit_profile` → `profile_header`) aktualisiert
 - [x] `flutter analyze` — 0 Issues; `flutter test` — alle Tests grün
 
+### Phase 20i: Speicher-Witz-Sheet (kein Issue) ✅
+
+- [x] Nach dem **ersten** Speichern eines neuen Tageseintrags erscheint ein ruhiges Material-3-Bottom-Sheet mit lokalem Lagerlogistik-Witz des Tages
+- [x] 300 statische Witze in `lib/core/data/lager_jokes.dart`; Auswahl deterministisch pro Kalendertag, robust gegen Uhrzeit/Sommerzeit
+- [x] Bestehende Einträge: SnackBar „Änderungen gespeichert." statt Sheet
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 270/270 bestanden
+- [x] `flutter build apk --debug` — erfolgreich
+
 ---
 
 ## Phase 21: Agenten-Qualität und Repo-Härtung (#58–#64) ✅

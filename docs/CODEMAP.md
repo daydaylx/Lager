@@ -89,6 +89,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                          |
 | `core/data/default_activities.dart`     | 132 vordefinierte Tätigkeiten mit stabilen IDs     |
 | `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten        |
+| `core/data/lager_jokes.dart`            | 300 lokale Lagerlogistik-Witze, deterministisch pro Kalendertag |
 | `core/ui/day_status_colors.dart`        | Zentrale Statusfarben (saved/open/absence/neutral) |
 
 ---
@@ -190,6 +191,7 @@ App-Start:
 | `theme_preset_storage_test.dart`           | Theme-Preset-Roundtrip und Fallback auf `lagerTeal`                |
 | `theme_test.dart`                          | `buildThemeForPreset` pro Preset: M3, Brightness, primary          |
 | `profile_theme_grid_test.dart`             | Farbkachel-Grid: alle Presets gerendert, eins markiert             |
+| `lager_jokes_test.dart`                    | Witzliste und deterministische Kalendertag-Auswahl                 |
 
 Letzten verifizierten Lauf siehe `docs/CURRENT_STATUS.md`.
 

@@ -12,6 +12,8 @@ import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_sto
 import 'package:berichtsheft_merker/core/week_utils.dart';
 import 'package:berichtsheft_merker/features/week/week_screen.dart';
 
+import 'test_helpers.dart';
+
 DateTime normalizedToday() {
   final now = DateTime.now();
   return DateTime(now.year, now.month, now.day);
@@ -340,6 +342,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
     await tester.pumpAndSettle();
+    await dismissJokeSheetIfPresent(tester);
     await tester.pageBack();
     await tester.pumpAndSettle();
 

@@ -7,6 +7,7 @@ import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
+import 'package:berichtsheft_merker/core/data/lager_jokes.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/models/activity_template.dart';
 import 'package:berichtsheft_merker/core/storage/daily_entry_storage.dart';
@@ -15,6 +16,8 @@ import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_sto
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/core/week_utils.dart';
 import 'package:berichtsheft_merker/features/today/today_screen.dart';
+
+import 'test_helpers.dart';
 
 Future<void> tapVisible(
   WidgetTester tester,
@@ -44,7 +47,7 @@ Future<void> scrollToActivities(WidgetTester tester) async {
 
 Future<void> tapSave(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
-  await tester.pump();
+  await tester.pumpAndSettle();
 }
 
 Future<void> expectStatus(WidgetTester tester, String status) async {
@@ -191,8 +194,8 @@ void main() {
 
     expect(saveButton(tester).onPressed, isNotNull);
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
 
-    expect(find.text('Heute gespeichert.'), findsOneWidget);
     expect(saveButton(tester).onPressed, isNull);
     await expectStatus(tester, 'Gespeichert');
   });
@@ -322,6 +325,7 @@ void main() {
       find.byKey(const ValueKey('activity_einlagerung_01')),
     );
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
     await tapVisible(tester, find.text('Besonderheiten & Notizen'));
     await tapVisible(
@@ -334,6 +338,7 @@ void main() {
     await expectStatus(tester, 'Änderungen offen');
 
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
 
     await expectStatus(tester, 'Gespeichert');
   });
@@ -386,6 +391,7 @@ void main() {
       find.byKey(const ValueKey('activity_berufsschule_01')),
     );
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
 
     await expectStatus(tester, 'Gespeichert');
   });
@@ -418,6 +424,7 @@ void main() {
     expect(saveButton(tester).onPressed, isNotNull);
 
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await expectStatus(tester, 'Gespeichert');
 
     await tapVisible(
@@ -466,6 +473,7 @@ void main() {
 
     expect(saveButton(tester).onPressed, isNotNull);
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
 
     await expectStatus(tester, 'Gespeichert');
   });
@@ -523,6 +531,7 @@ void main() {
       find.byKey(const ValueKey('activity_custom_1')),
     );
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
 
     expect(storage.lastSavedEntry?.selectedActivities, ['custom_1']);
@@ -612,6 +621,7 @@ void main() {
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await expectStatus(tester, 'Gespeichert');
 
     await tester.tap(find.text(AppStrings.tabWeek));
@@ -640,6 +650,7 @@ void main() {
     await tester.pumpAndSettle();
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
 
     await tester.pumpWidget(subject(dayTwo));
@@ -649,6 +660,7 @@ void main() {
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     expect(await storage.loadByDate(dayOne), isNotNull);
     expect(await storage.loadByDate(dayTwo), isNotNull);
   });
@@ -753,6 +765,7 @@ void main() {
 
     await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
 
     expect(storage.lastSavedEntry, isNotNull);
@@ -791,6 +804,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
 
     expect(storage.lastSavedEntry, isNotNull);
@@ -842,6 +856,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tapSave(tester);
+    await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
 
     expect(
@@ -862,6 +877,100 @@ void main() {
     );
     expect(noteField.controller?.text, 'Diese Notiz bleibt erhalten');
     expect(saveButton(tester).onPressed, isNotNull);
+  });
+
+  group('Witz-Sheet nach dem Speichern', () {
+    testWidgets('zeigt Bottom Sheet mit Titel und Witz', (
+      WidgetTester tester,
+    ) async {
+      await pumpToday(tester);
+
+      await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+      await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('joke_sheet_title')), findsOneWidget);
+      expect(find.text('Lagerlogistik-Witz des Tages'), findsOneWidget);
+      expect(find.byKey(const ValueKey('close_joke_sheet')), findsOneWidget);
+
+      final jokeText = tester.widget<Text>(
+        find.byKey(const ValueKey('joke_text')),
+      );
+      expect(kLagerJokes, contains(jokeText.data));
+    });
+
+    testWidgets('Schließen-Button schließt das Sheet', (
+      WidgetTester tester,
+    ) async {
+      await pumpToday(tester);
+
+      await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+      await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('close_joke_sheet')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('joke_sheet_title')), findsNothing);
+      await expectStatus(tester, 'Gespeichert');
+    });
+
+    testWidgets('Fehler zeigt keine Sheet, sondern SnackBar', (
+      WidgetTester tester,
+    ) async {
+      final storage = ControlledDailyEntryStorage(
+        saveError: StateError('Schreibfehler'),
+      );
+      await pumpToday(tester, storage: storage);
+
+      await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+      await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('joke_sheet_title')), findsNothing);
+      expect(
+        find.text(
+          'Der Eintrag konnte nicht gespeichert werden. Bitte versuche es erneut.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('erscheint nicht beim Speichern von Änderungen', (
+      WidgetTester tester,
+    ) async {
+      final date = DateTime(2026, 6, 12);
+      final storage = ControlledDailyEntryStorage(
+        entry: DailyEntry(
+          id: DailyEntry.idForDate(date),
+          date: date,
+          dayType: DayType.sonstiges,
+          areas: const [],
+          selectedActivities: const [],
+          specialFlags: const [],
+          reportNote: 'Vorher',
+          createdAt: date,
+          updatedAt: date,
+        ),
+      );
+      await pumpToday(tester, storage: storage, date: date);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('daily_report_note_field')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('daily_report_note_field')),
+        'Nachher',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('joke_sheet_title')), findsNothing);
+      expect(find.text('Änderungen gespeichert.'), findsOneWidget);
+    });
   });
 
   group('Berichtskarte', () {

@@ -103,6 +103,14 @@ Der lokale `DailyReportGenerator` erzeugt aus Tagestyp, Bereich, Tätigkeiten un
 ausgewählten Besonderheiten einen kopierbaren Berichtsvorschlag. Er verwendet
 keine externe API, kein Sprachmodell und verändert keine gespeicherten Daten.
 
+**Lokaler Speicher-Witz statt Gamification-System**
+Nach dem ersten erfolgreichen Speichern eines neuen Tageseintrags zeigt die App
+einen kurzen lokalen Lagerlogistik-Witz als ruhiges Material-3-Bottom-Sheet. Die
+Auswahl ist deterministisch pro Kalendertag (`lib/core/data/lager_jokes.dart`),
+benötigt keine Persistenz, keine neue Dependency, kein Backend und kein Punkte-,
+Streak- oder Achievement-System. Spätere Änderungen an bestehenden Einträgen
+nutzen nur eine kurze SnackBar-Bestätigung.
+
 **Manueller JSON-Export via System-Share-Sheet**
 Der Nutzer kann alle lokalen Daten (Tageseinträge, eigene Tätigkeiten, Profil)
 als JSON-Datei exportieren und über das Android-Share-Sheet selbst sichern.
