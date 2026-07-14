@@ -18,15 +18,16 @@ import '../../shared/widgets/app_ui.dart';
 import 'activity_picker_model.dart';
 import 'activity_recommender.dart';
 import 'today_entry_draft.dart';
+import 'widgets/absence_sheet.dart';
 import 'widgets/activity_section.dart';
 import 'widgets/activity_picker_section.dart';
 import 'widgets/add_activity_sheet.dart';
 import 'widgets/area_grid.dart';
-import 'widgets/day_status_card.dart';
-import 'widgets/day_type_selector.dart';
+import 'widgets/day_type_row.dart';
 import 'widgets/report_card.dart';
 import 'widgets/save_bar.dart';
 import 'widgets/special_flags_note_section.dart';
+import 'widgets/today_header.dart';
 
 class TodayScreen extends StatefulWidget {
   final DailyEntryStorage storage;
@@ -114,11 +115,18 @@ class _TodayScreenState extends State<TodayScreen> {
         (_savedEntry == null || _hasUnsavedChanges);
   }
 
-  String get _statusLabel {
-    if (_savedEntry == null) {
-      return 'Noch offen';
+  TodayEntryStatus get _entryStatus {
+    if (_selectedDayType.isAbsence &&
+        _savedEntry != null &&
+        !_hasUnsavedChanges) {
+      return TodayEntryStatus.absence;
     }
-    return _hasUnsavedChanges ? 'Änderungen offen' : 'Gespeichert';
+    if (_savedEntry == null) {
+      return TodayEntryStatus.open;
+    }
+    return _hasUnsavedChanges
+        ? TodayEntryStatus.unsavedChanges
+        : TodayEntryStatus.saved;
   }
 
   List<String> get _missingItems {
@@ -206,12 +214,11 @@ class _TodayScreenState extends State<TodayScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: DayStatusCard(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TodayHeader(
+                  title: _screenTitle,
                   date: _today,
-                  statusLabel: _statusLabel,
-                  isSaved: _savedEntry != null && !_hasUnsavedChanges,
-                  hasUnsavedChanges: _hasUnsavedChanges,
+                  status: _entryStatus,
                   missingItems: _missingItems,
                 ),
               ),
@@ -238,15 +245,17 @@ class _TodayScreenState extends State<TodayScreen> {
                     ],
                     const SizedBox(height: 24),
                     AppSectionHeader(
-                      title: 'Tagestyp',
+                      title: 'Wie war dein Tag?',
                       description: _isToday
                           ? 'Was für ein Tag ist heute?'
                           : 'Was für ein Tag war das?',
                     ),
                     const SizedBox(height: 12),
-                    DayTypeSelector(
+                    DayTypeRow(
                       selectedDayType: _selectedDayType,
-                      onSelect: _confirmAndSelectDayType,
+                      onSelectBetrieb: _confirmAndSelectDayType,
+                      onSelectBerufsschule: _confirmAndSelectDayType,
+                      onOpenAbsenceSheet: _onOpenAbsenceSheet,
                     ),
                     if (_selectedDayType == DayType.betrieb) ...[
                       const SizedBox(height: 24),
@@ -419,6 +428,16 @@ class _TodayScreenState extends State<TodayScreen> {
     if (dayType.isAbsence) {
       _reportNoteController.clear();
       _privateNoteController.clear();
+    }
+  }
+
+  Future<void> _onOpenAbsenceSheet() async {
+    final result = await showAbsenceSheet(
+      context: context,
+      currentSelection: _selectedDayType,
+    );
+    if (result != null) {
+      await _confirmAndSelectDayType(result);
     }
   }
 

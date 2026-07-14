@@ -30,7 +30,7 @@ class ReminderTime {
 }
 
 class ReminderSettings {
-  static const int maxTimes = 7;
+  static const int maxTimes = 1;
 
   final bool enabled;
   final List<ReminderTime> times;

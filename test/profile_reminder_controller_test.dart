@@ -122,44 +122,21 @@ void main() {
       expect(allowed?.error, isNull);
     });
 
-    test('duplicate time returns visible error without settings change', () {
+    test('changeTime updates the single time', () {
       final controller = ProfileReminderController(
         scheduler: _RecordingScheduler(),
       );
 
-      final edit = controller.addTime(
+      final edit = controller.changeTime(
         ReminderSettings.defaults,
-        const ReminderTime(hour: 20, minute: 0),
+        const ReminderTime(hour: 8, minute: 30),
       );
 
-      expect(edit.settings, isNull);
-      expect(edit.error, ProfileReminderController.duplicateTimeError);
+      expect(edit.settings?.times, const [ReminderTime(hour: 8, minute: 30)]);
+      expect(edit.error, isNull);
     });
 
-    test('max time limit returns visible error without settings change', () {
-      final controller = ProfileReminderController(
-        scheduler: _RecordingScheduler(),
-      );
-      final settings = ReminderSettings.defaults.copyWith(
-        times: List.generate(
-          ReminderSettings.maxTimes,
-          (index) => ReminderTime(hour: index, minute: 0),
-        ),
-      );
-
-      final edit = controller.addTime(
-        settings,
-        const ReminderTime(hour: 22, minute: 0),
-      );
-
-      expect(edit.settings, isNull);
-      expect(
-        edit.error,
-        'Es können höchstens ${ReminderSettings.maxTimes} Uhrzeiten gespeichert werden.',
-      );
-    });
-
-    test('last time and last weekday are protected', () {
+    test('last weekday cannot be deselected', () {
       final controller = ProfileReminderController(
         scheduler: _RecordingScheduler(),
       );
@@ -169,11 +146,8 @@ void main() {
         weekdays: [1],
       );
 
-      final timeEdit = controller.deleteTime(settings, 0);
       final weekdayEdit = controller.toggleWeekday(settings, 1);
 
-      expect(timeEdit.settings, isNull);
-      expect(timeEdit.error, isNull);
       expect(weekdayEdit.settings, isNull);
       expect(weekdayEdit.error, isNull);
     });

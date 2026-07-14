@@ -338,7 +338,7 @@ void main() {
       find.text(monday == today ? 'Heute' : 'Tageseintrag'),
       findsWidgets,
     );
-    await tester.tap(find.byKey(const ValueKey('day_type_frei')));
+    await selectAbsenceType(tester, DayType.frei);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
     await tester.pumpAndSettle();
@@ -365,7 +365,7 @@ void main() {
       find.byKey(ValueKey('week_day_${DailyEntry.idForDate(monday)}')),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('day_type_frei')));
+    await selectAbsenceType(tester, DayType.frei);
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();

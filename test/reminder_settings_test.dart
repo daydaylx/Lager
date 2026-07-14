@@ -74,7 +74,7 @@ void main() {
           equals(ReminderSettings.defaults));
     });
 
-    test('normalized dedupliziert, sortiert und begrenzt Uhrzeiten', () {
+    test('normalized behält nur die früheste Uhrzeit', () {
       final settings = ReminderSettings(
         enabled: true,
         times: [
@@ -87,7 +87,6 @@ void main() {
 
       expect(settings.times.length, ReminderSettings.maxTimes);
       expect(settings.times.first, const ReminderTime(hour: 1, minute: 0));
-      expect(settings.times.last, const ReminderTime(hour: 7, minute: 0));
       expect(settings.weekdays, [1, 5]);
     });
   });

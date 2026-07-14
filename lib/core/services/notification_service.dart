@@ -38,51 +38,16 @@ List<ReminderScheduleSlot> buildReminderSchedule(ReminderSettings settings) {
     return const [];
   }
 
-  final slots = <ReminderScheduleSlot>[];
-  for (final weekdayEntry in normalized.weekdays.indexed) {
-    for (final timeEntry in normalized.times.indexed) {
-      final baseId = weekdayEntry.$1 * ReminderSettings.maxTimes + timeEntry.$1;
-      slots.add(
-        ReminderScheduleSlot(
-          id: baseId,
-          weekday: weekdayEntry.$2,
-          time: timeEntry.$2,
-          kind: ReminderScheduleKind.primary,
-        ),
-      );
-      final shifted = shiftReminderTime(weekdayEntry.$2, timeEntry.$2, 30);
-      slots.add(
-        ReminderScheduleSlot(
-          id: 50 + baseId,
-          weekday: shifted.weekday,
-          time: shifted.time,
-          kind: ReminderScheduleKind.followUp,
-        ),
-      );
-    }
-  }
-  slots.add(
-    const ReminderScheduleSlot(
-      id: 100,
-      weekday: DateTime.friday,
-      time: ReminderTime(hour: 19, minute: 0),
-      kind: ReminderScheduleKind.weeklyCheck,
-    ),
-  );
-  return List.unmodifiable(slots);
-}
-
-({int weekday, ReminderTime time}) shiftReminderTime(
-  int weekday,
-  ReminderTime base,
-  int extraMinutes,
-) {
-  final total = base.hour * 60 + base.minute + extraMinutes;
-  final newWeekday = ((weekday - 1 + total ~/ 1440) % 7) + 1;
-  return (
-    weekday: newWeekday,
-    time: ReminderTime(hour: (total ~/ 60) % 24, minute: total % 60),
-  );
+  final time = normalized.times.first;
+  return List.unmodifiable([
+    for (final weekday in normalized.weekdays)
+      ReminderScheduleSlot(
+        id: weekday,
+        weekday: weekday,
+        time: time,
+        kind: ReminderScheduleKind.primary,
+      ),
+  ]);
 }
 
 abstract interface class NotificationScheduler {
@@ -239,21 +204,10 @@ class FlutterLocalNotificationScheduler implements NotificationScheduler {
     );
     const details = NotificationDetails(android: androidDetails);
 
+    const title = 'Heute schon eingetragen?';
+    const body = 'Tippe, um schnell deinen Tageseintrag zu machen.';
+
     for (final slot in buildReminderSchedule(normalized)) {
-      final (title, body) = switch (slot.kind) {
-        ReminderScheduleKind.primary => (
-            'Berichtsheft nicht vergessen',
-            'Heute kurz Tätigkeiten eintragen – dauert nur 1 Minute.',
-          ),
-        ReminderScheduleKind.followUp => (
-            'Berichtsheft nicht vergessen',
-            'Falls dein Eintrag noch fehlt: jetzt kurz nachtragen.',
-          ),
-        ReminderScheduleKind.weeklyCheck => (
-            'Berichtsheft nicht vergessen',
-            'Schau mal, ob diese Woche alle Tage eingetragen sind.',
-          ),
-      };
       await _plugin.zonedSchedule(
         slot.id,
         title,

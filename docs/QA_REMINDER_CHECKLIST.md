@@ -20,28 +20,31 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] Notification erscheint mit Ton
 - [ ] Notification erscheint mit Vibration
 
-## 3. Notification-Inhalt und Tap (Issue #16)
+## 3. Notification-Inhalt und Tap
 
-- [ ] Titel: "Berichtsheft nicht vergessen"
-- [ ] Text (primär): "Heute kurz Tätigkeiten eintragen – dauert nur 1 Minute."
+- [ ] Titel: "Heute schon eingetragen?"
+- [ ] Text: "Tippe, um schnell deinen Tageseintrag zu machen."
 - [ ] Notification als Banner im Sperrbildschirm sichtbar
 - [ ] Notification im Benachrichtigungsfeld sichtbar
 - [ ] Tap auf Notification → App öffnet sich auf Heute-Tab (Index 0)
 - [ ] Tap bei laufender App im Hintergrund → Heute-Tab wird ausgewählt
 - [ ] App vollständig beenden, dann Notification antippen → Kaltstart öffnet Heute-Tab
 
-## 4. Zweite Erinnerung (Issue #17)
+## 4. Tägliche Erinnerung
 
-- [ ] 30 Minuten nach primärer Uhrzeit erscheint zweite Notification
-- [ ] Text: "Falls dein Eintrag noch fehlt: jetzt kurz nachtragen."
-- [ ] Zweite Erinnerung erscheint nur an konfigurierten Wochentagen
-- [ ] Primärzeit 23:45 → zweite Erinnerung erscheint am Folgetag um 00:15
+- [ ] An jedem gewählten Wochentag erscheint genau eine Notification
+- [ ] Titel: "Heute schon eingetragen?"
+- [ ] Text: "Tippe, um schnell deinen Tageseintrag zu machen."
+- [ ] Notification erscheint unabhängig davon, ob bereits ein Eintrag vorhanden ist
+- [ ] Tap auf Notification → App öffnet sich auf Heute-Tab (Index 0)
+- [ ] Es gibt keine zweite Erinnerung und keinen separaten Wochencheck mehr
 
-## 5. Wochencheck (Issue #17)
+## 5. Einstellungen im Profil
 
-- [ ] Freitags um 19:00 erscheint Wochencheck-Notification
-- [ ] Text: "Schau mal, ob diese Woche alle Tage eingetragen sind."
-- [ ] Tap → App öffnet Heute-Tab
+- [ ] Nur noch eine einzige Uhrzeit kann festgelegt werden
+- [ ] Tippen auf die Uhrzeit öffnet den TimePicker
+- [ ] Wochentage können wie bisher einzeln gewählt werden
+- [ ] Letzter Wochentag kann nicht abgewählt werden
 
 ## 6. App-Start-Banner (Issue #19)
 
@@ -88,7 +91,7 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 ## 12. "Alle Daten löschen"
 
 - [ ] Alle Daten löschen → keine weiteren Notifications bis Reminder neu aktiviert
-- [ ] cancelAll() bricht primäre, zweite und Wochencheck-Notifications ab
+- [ ] cancelAll() bricht alle geplanten Notifications ab
 - [ ] Nach Neustart sind Profil, Einträge, eigene Vorlagen, Reminder und Theme zurückgesetzt
 
 ## 13. Release und Datenschutz

@@ -150,6 +150,14 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
         .toList();
   }
 
+  List<ActivityTemplate> get _filteredActiveCustom {
+    return _filteredCustom.where((template) => template.isActive).toList();
+  }
+
+  List<ActivityTemplate> get _filteredInactiveCustom {
+    return _filteredCustom.where((template) => !template.isActive).toList();
+  }
+
   bool _matchesSearch(ActivityTemplate template) {
     final query = _searchQuery.trim().toLowerCase();
     return query.isEmpty ||
@@ -369,10 +377,12 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   Widget build(BuildContext context) {
     final filteredActiveDefaults = _filteredActiveDefaults;
     final filteredInactiveDefaults = _filteredInactiveDefaults;
-    final filteredCustom = _filteredCustom;
+    final filteredActiveCustom = _filteredActiveCustom;
+    final filteredInactiveCustom = _filteredInactiveCustom;
     final isEmpty = filteredActiveDefaults.isEmpty &&
         filteredInactiveDefaults.isEmpty &&
-        filteredCustom.isEmpty;
+        filteredActiveCustom.isEmpty &&
+        filteredInactiveCustom.isEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vorlagen')),
@@ -467,7 +477,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                         : _TemplateList(
                             activeDefaults: filteredActiveDefaults,
                             inactiveDefaults: filteredInactiveDefaults,
-                            custom: filteredCustom,
+                            activeCustom: filteredActiveCustom,
+                            inactiveCustom: filteredInactiveCustom,
                             onToggleCustom: _toggleCustom,
                             onToggleDefault: _toggleDefault,
                           ),
@@ -481,14 +492,16 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 class _TemplateList extends StatelessWidget {
   final List<ActivityTemplate> activeDefaults;
   final List<ActivityTemplate> inactiveDefaults;
-  final List<ActivityTemplate> custom;
+  final List<ActivityTemplate> activeCustom;
+  final List<ActivityTemplate> inactiveCustom;
   final ValueChanged<ActivityTemplate> onToggleCustom;
   final ValueChanged<ActivityTemplate> onToggleDefault;
 
   const _TemplateList({
     required this.activeDefaults,
     required this.inactiveDefaults,
-    required this.custom,
+    required this.activeCustom,
+    required this.inactiveCustom,
     required this.onToggleCustom,
     required this.onToggleDefault,
   });
@@ -496,38 +509,62 @@ class _TemplateList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      key: const ValueKey('template_list'),
       padding: const EdgeInsets.only(bottom: 88),
       children: [
-        if (custom.isNotEmpty) ...[
-          _SectionHeader('Eigene (${custom.length})'),
-          ...custom.map(
-            (template) => _TemplateRow(
-              template: template,
-              subtitleOverride: null,
-              onToggle: () => onToggleCustom(template),
+        if (activeCustom.isNotEmpty || inactiveCustom.isNotEmpty) ...[
+          const _SectionHeader('Eigene Tätigkeiten'),
+          if (activeCustom.isEmpty && inactiveCustom.isNotEmpty)
+            const _EmptyHint(
+              'Alle eigenen Tätigkeiten sind derzeit deaktiviert.',
+            )
+          else
+            ...activeCustom.map(
+              (template) => _TemplateRow(
+                template: template,
+                onToggle: () => onToggleCustom(template),
+              ),
             ),
-          ),
+          if (inactiveCustom.isNotEmpty) ...[
+            _SectionHeader(
+              'Eigene Tätigkeiten (deaktiviert) · ${inactiveCustom.length}',
+              isSubsection: true,
+            ),
+            ...inactiveCustom.map(
+              (template) => _TemplateRow(
+                template: template,
+                onToggle: () => onToggleCustom(template),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
         ],
-        _SectionHeader('Vordefiniert (${activeDefaults.length})'),
-        if (activeDefaults.isEmpty)
+        const _SectionHeader('Vordefinierte Tätigkeiten'),
+        if (activeDefaults.isEmpty && inactiveDefaults.isEmpty)
           const _EmptyHint(
-            'Keine aktiven Standardtätigkeiten in dieser Auswahl. '
-            'Mehr weiter unten unter „Weitere Standardtätigkeiten".',
+            'Keine Standardtätigkeiten in dieser Auswahl.',
+          )
+        else if (activeDefaults.isEmpty)
+          const _EmptyHint(
+            'Alle Standardtätigkeiten in dieser Auswahl sind deaktiviert.',
           )
         else
           ...activeDefaults.map(
             (template) => _TemplateRow(
               template: template,
-              subtitleOverride: null,
               onToggle: () => onToggleDefault(template),
             ),
           ),
         if (inactiveDefaults.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _InactiveDefaultsSection(
-            inactiveDefaults: inactiveDefaults,
-            onToggleDefault: onToggleDefault,
+          _SectionHeader(
+            'Vordefinierte Tätigkeiten (deaktiviert) · ${inactiveDefaults.length}',
+            isSubsection: true,
+          ),
+          ...inactiveDefaults.map(
+            (template) => _TemplateRow(
+              template: template,
+              onToggle: () => onToggleDefault(template),
+            ),
           ),
         ],
       ],
@@ -535,92 +572,53 @@ class _TemplateList extends StatelessWidget {
   }
 }
 
-class _InactiveDefaultsSection extends StatefulWidget {
-  final List<ActivityTemplate> inactiveDefaults;
-  final ValueChanged<ActivityTemplate> onToggleDefault;
-
-  const _InactiveDefaultsSection({
-    required this.inactiveDefaults,
-    required this.onToggleDefault,
-  });
-
-  @override
-  State<_InactiveDefaultsSection> createState() =>
-      _InactiveDefaultsSectionState();
-}
-
-class _InactiveDefaultsSectionState extends State<_InactiveDefaultsSection> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      key: const ValueKey('inactive_defaults_section'),
-      tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-      initiallyExpanded: _expanded,
-      onExpansionChanged: (value) => setState(() => _expanded = value),
-      title: Text(
-        'Weitere Standardtätigkeiten (deaktiviert) · ${widget.inactiveDefaults.length}',
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-      ),
-      children: widget.inactiveDefaults
-          .map(
-            (template) => _TemplateRow(
-              template: template,
-              subtitleOverride: null,
-              onToggle: () => widget.onToggleDefault(template),
-            ),
-          )
-          .toList(),
-    );
-  }
-}
-
 class _TemplateRow extends StatelessWidget {
   final ActivityTemplate template;
-  final String? subtitleOverride;
   final VoidCallback onToggle;
 
   const _TemplateRow({
     required this.template,
-    required this.subtitleOverride,
     required this.onToggle,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final subcategory = activitySubcategory(template);
     final base = subcategory == null
         ? template.category.label
         : '${template.category.label} · $subcategory';
-    final subtitle = subtitleOverride ??
-        (template.isActive
-            ? (template.isCustom ? '$base · Eigene' : base)
-            : '$base · Deaktiviert');
+    final subtitle = template.isActive
+        ? (template.isCustom ? '$base · Eigene' : base)
+        : '$base · Deaktiviert';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
         child: ListTile(
-          title: Text(template.title),
-          subtitle: Text(subtitle),
-          leading: Icon(
-            template.isActive
-                ? Icons.check_circle_outline
-                : Icons.pause_circle_outline,
-          ),
-          trailing: IconButton(
-            icon: Icon(
-              template.isActive
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
+          title: Text(
+            template.title,
+            style: TextStyle(
+              color: template.isActive
+                  ? colorScheme.onSurface
+                  : colorScheme.onSurfaceVariant,
             ),
-            tooltip: template.isActive ? 'Deaktivieren' : 'Aktivieren',
-            onPressed: onToggle,
           ),
+          subtitle: Text(
+            subtitle,
+            style: TextStyle(
+              color: template.isActive
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.onSurfaceVariant.withAlpha(153),
+            ),
+          ),
+          trailing: Switch(
+            value: template.isActive,
+            onChanged: (_) => onToggle(),
+          ),
+          onTap: onToggle,
         ),
       ),
     );
@@ -685,18 +683,23 @@ class _CategoryFilter extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String text;
+  final bool isSubsection;
 
-  const _SectionHeader(this.text);
+  const _SectionHeader(this.text, {this.isSubsection = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      padding: isSubsection
+          ? const EdgeInsets.fromLTRB(16, 12, 16, 4)
+          : const EdgeInsets.fromLTRB(16, 20, 16, 8),
       child: Text(
         text,
         style: theme.textTheme.titleSmall?.copyWith(
-          color: theme.colorScheme.onSurface,
+          color: isSubsection
+              ? theme.colorScheme.onSurfaceVariant
+              : theme.colorScheme.onSurface,
           fontWeight: FontWeight.w700,
         ),
       ),

@@ -79,57 +79,20 @@ void main() {
     testWidgets('Standard-Zeit 20:00 ist nach Aktivieren sichtbar',
         (tester) async {
       await pumpScreen(tester, prefs: {'reminder_enabled': true});
-      await scrollTo(tester, 'reminder_time_0');
+      await scrollTo(tester, 'reminder_time');
       expect(find.text('20:00'), findsOneWidget);
     });
 
-    testWidgets('Zeit löschen entfernt sie aus der Liste', (tester) async {
-      // Two times required: deletion is blocked when only 1 remains (Fix 2).
-      await pumpScreen(tester, prefs: {
-        'reminder_enabled': true,
-        'reminder_times': '["20:00","08:00"]',
-      });
-      await scrollTo(tester, 'reminder_time_0');
-      await tester.tap(
-        find.descendant(
-          of: find.byKey(const ValueKey('reminder_time_0')),
-          matching: find.byIcon(Icons.delete_outline),
-        ),
+    testWidgets('Uhrzeit kann durch Tippen geändert werden', (tester) async {
+      await pumpScreen(
+        tester,
+        prefs: {'reminder_enabled': true},
       );
+      await scrollTo(tester, 'reminder_time');
+      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('reminder_time')));
       await tester.pumpAndSettle();
-      expect(find.text('08:00'), findsNothing);
-      expect(find.text('20:00'), findsOneWidget);
-    });
-
-    testWidgets('Zeit-hinzufügen-Button ist vorhanden wenn aktiviert',
-        (tester) async {
-      await pumpScreen(tester, prefs: {'reminder_enabled': true});
-      await scrollTo(tester, 'reminder_add_time');
-      expect(find.byKey(const ValueKey('reminder_add_time')), findsOneWidget);
-    });
-
-    testWidgets('letzte Uhrzeit kann nicht entfernt werden', (tester) async {
-      await pumpScreen(tester, prefs: {'reminder_enabled': true});
-      await scrollTo(tester, 'reminder_time_0');
-      final button = tester.widget<IconButton>(
-        find.descendant(
-          of: find.byKey(const ValueKey('reminder_time_0')),
-          matching: find.byType(IconButton),
-        ),
-      );
-      expect(button.onPressed, isNull);
-    });
-
-    testWidgets('doppelte Uhrzeit zeigt verständlichen Fehler', (tester) async {
-      await pumpScreen(tester, prefs: {'reminder_enabled': true});
-      await scrollTo(tester, 'reminder_add_time');
-      await tester.tap(find.byKey(const ValueKey('reminder_add_time')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.text('Diese Uhrzeit ist bereits eingetragen.'), findsOneWidget);
+      expect(find.byType(TimePickerDialog), findsOneWidget);
     });
 
     testWidgets('Mo–Fr Chips sind standardmäßig ausgewählt', (tester) async {

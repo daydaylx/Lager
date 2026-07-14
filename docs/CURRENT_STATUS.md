@@ -1,10 +1,49 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-11 (Speicher-Witz-Sheet und Review-Fixes)
+Stand: 2026-07-11 (Phase-23 Heute-Screen Tagestyp-Redesign)
 
 ---
 
-## Letzte Änderung: Speicher-Witz-Sheet
+## Letzte Änderung: Phase 23 – Tagestyp-Auswahl im Heute-Screen
+
+- Die Tagestyp-Auswahl wurde auf eine kompakte 3-Chip-Zeile reduziert
+  (`DayTypeRow`): Betrieb, Berufsschule, Abwesend. Abwesenheitstage
+  (Frei/Urlaub/Krank/Feiertag) und Sonstiges werden über ein Bottom-Sheet
+  (`AbsenceSheet`) gewählt.
+- `DayStatusCard` wurde durch einen kompakten `TodayHeader` ersetzt
+  (Titel, Datum, Status-Chip in einer Zeile). Gespeicherte Abwesenheitstage
+  zeigen den Status „Abwesenheit" statt „Gespeichert".
+- Neue Dateien: `lib/features/today/widgets/today_header.dart`,
+  `lib/features/today/widgets/day_type_row.dart`,
+  `lib/features/today/widgets/absence_sheet.dart`.
+- Tests an die neue Auswahl angepasst (geteilter Helper
+  `selectAbsenceType` in `test/test_helpers.dart`); Golden
+  `test/goldens/today_empty.png` regeneriert.
+- `flutter analyze` — 0 Issues; `flutter test` — 272/272 bestanden;
+  `flutter build apk --debug` — erfolgreich.
+- **Hinweis:** Phase 23 ist nun in `TASKS.md` aufgenommen (UI-Stand Phase 23).
+  Sie steht nicht im ursprünglichen Projektplan, sondern wurde als in-progress
+  Redesign im Arbeitsverzeichnis vervollständigt. Aktive Phase bleibt 19
+  (Gerätetest).
+
+## Letzte Änderung: Reminder-Überarbeitung
+
+- Die Benachrichtigungsfunktion wurde auf eine einfache tägliche Erinnerung
+  reduziert: einmal pro ausgewähltem Wochentag zur festen Uhrzeit.
+- Titel: "Heute schon eingetragen?" / Text: "Tippe, um schnell deinen
+  Tageseintrag zu machen."
+- Die Erinnerung kommt unabhängig vom aktuellen Eintragsstatus, da der Nutzer
+  sich dafür entschieden hat.
+- Folgeerinnerung (30 Min) und Wochencheck (Freitag 19:00) wurden entfernt.
+- Im Profil kann nur noch eine einzige Uhrzeit festgelegt werden; sie wird per
+  TimePicker geändert.
+- `ReminderSettings.maxTimes` ist auf 1 reduziert; gespeicherte mehrere Zeiten
+  werden beim Laden auf die früheste normalisiert.
+- `docs/QA_REMINDER_CHECKLIST.md` wurde an das neue Verhalten angepasst.
+- `flutter analyze` 0 Issues; `flutter test` 267/267 bestanden;
+  `flutter build apk --debug` erfolgreich.
+
+## Vorherige Änderung: Speicher-Witz-Sheet
 
 - Nach dem ersten erfolgreichen Speichern eines neuen Tageseintrags erscheint ein
   ruhiges Material-3-Bottom-Sheet mit lokalem Lagerlogistik-Witz des Tages.
@@ -13,10 +52,6 @@ Stand: 2026-07-11 (Speicher-Witz-Sheet und Review-Fixes)
 - Bestehende Einträge zeigen beim Speichern von Änderungen nur eine kurze
   SnackBar-Bestätigung („Änderungen gespeichert."), damit der Flow nicht bei
   jedem Nachbearbeiten unterbrochen wird.
-- Sheet ist SafeArea-/Scroll-gesichert und nutzt stabile Test-Keys.
-- Witztexte wurden auf Nutzerwunsch unverändert gelassen.
-- `flutter analyze` 0 Issues; gezielte Tests `lager_jokes`, `today_screen` und
-  `week_screen` grün; voller `flutter test` 269/269 bestanden; Repo-Hygiene OK.
 
 ---
 
@@ -185,8 +220,8 @@ Neu in Phase 13:
 - Sichtbarer Bootstrap-Fehler mit Retry statt stiller oder destruktiver Wiederherstellung
 - Tageswechsel bei Resume; offene Heute-Eingaben bleiben dem bisherigen Datum zugeordnet
 - Notification-Taps inklusive Kaltstart öffnen zuverlässig den Heute-Tab
-- Deterministischer Reminder-Plan mit eindeutigen IDs, Mitternachtswechsel und maximal 7 Uhrzeiten
-- Ehrliche Folgeerinnerung, Permission-Neuprüfung und Rollback bei Speicher-/Planungsfehlern
+- Deterministischer Reminder-Plan mit eindeutigen IDs und maximal 1 Uhrzeit
+- Permission-Neuprüfung und Rollback bei Speicher-/Planungsfehlern
 - SharedPreferences-Schreibfehler werden geprüft; Hive wird nach Komplettlöschung komprimiert
 - Android-Backup und Gerätetransfer sind für alle lokalen Daten deaktiviert
 - Application ID `com.daydaylx.berichtsheftmerker`; Release nutzt keinen Debug-Schlüssel
