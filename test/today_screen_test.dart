@@ -410,11 +410,7 @@ void main() {
       find.byKey(const ValueKey('daily_report_note_field')),
       'Wird verworfen',
     );
-    await tapVisible(
-      tester,
-      find.byKey(const ValueKey('day_type_urlaub')),
-      scrollDelta: -300,
-    );
+    await selectAbsenceType(tester, DayType.urlaub);
     expect(find.text('Tagestyp ändern?'), findsOneWidget);
     await tester.tap(find.text('Änderungen verwerfen'));
     await tester.pumpAndSettle();
@@ -425,12 +421,9 @@ void main() {
 
     await tapSave(tester);
     await dismissJokeSheetIfPresent(tester);
-    await expectStatus(tester, 'Gespeichert');
+    await expectStatus(tester, 'Abwesenheit');
 
-    await tapVisible(
-      tester,
-      find.byKey(const ValueKey('day_type_sonstiges')),
-    );
+    await selectAbsenceType(tester, DayType.sonstiges);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('special_selbststaendig')),
       300,
@@ -457,10 +450,7 @@ void main() {
   ) async {
     await pumpToday(tester);
 
-    await tapVisible(
-      tester,
-      find.byKey(const ValueKey('day_type_sonstiges')),
-    );
+    await selectAbsenceType(tester, DayType.sonstiges);
     await tapVisible(
       tester,
       find.byKey(const ValueKey('special_neuesGelernt')),
@@ -619,10 +609,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+    await selectAbsenceType(tester, DayType.frei);
     await tapSave(tester);
     await dismissJokeSheetIfPresent(tester);
-    await expectStatus(tester, 'Gespeichert');
+    await expectStatus(tester, 'Abwesenheit');
 
     await tester.tap(find.text(AppStrings.tabWeek));
     await tester.pumpAndSettle();
@@ -630,7 +620,7 @@ void main() {
 
     await tester.tap(find.text(AppStrings.tabToday));
     await tester.pumpAndSettle();
-    expect(find.text('Gespeichert'), findsOneWidget);
+    expect(find.text('Abwesenheit'), findsOneWidget);
   });
 
   testWidgets('sauberer Tageswechsel lädt den neuen Tag', (tester) async {
@@ -648,7 +638,7 @@ void main() {
 
     await tester.pumpWidget(subject(dayOne));
     await tester.pumpAndSettle();
-    await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+    await selectAbsenceType(tester, DayType.frei);
     await tapSave(tester);
     await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
@@ -658,7 +648,7 @@ void main() {
     expect(find.text(formatDayDate(dayTwo)), findsOneWidget);
     expect(find.text('Noch offen'), findsOneWidget);
 
-    await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+    await selectAbsenceType(tester, DayType.frei);
     await tapSave(tester);
     await dismissJokeSheetIfPresent(tester);
     expect(await storage.loadByDate(dayOne), isNotNull);
@@ -680,7 +670,7 @@ void main() {
 
     await tester.pumpWidget(subject(dayOne));
     await tester.pumpAndSettle();
-    await tapVisible(tester, find.byKey(const ValueKey('day_type_sonstiges')));
+    await selectAbsenceType(tester, DayType.sonstiges);
     await tester.enterText(
       find.byKey(const ValueKey('daily_report_note_field')),
       'Offene Notiz',
@@ -763,7 +753,7 @@ void main() {
     final storage = ControlledDailyEntryStorage();
     await pumpToday(tester, storage: storage);
 
-    await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+    await selectAbsenceType(tester, DayType.frei);
     await tapSave(tester);
     await dismissJokeSheetIfPresent(tester);
     await tester.pumpAndSettle();
@@ -843,7 +833,7 @@ void main() {
     );
     await pumpToday(tester, storage: storage);
 
-    await tapVisible(tester, find.byKey(const ValueKey('day_type_sonstiges')));
+    await selectAbsenceType(tester, DayType.sonstiges);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('daily_report_note_field')),
       300,
@@ -885,7 +875,7 @@ void main() {
     ) async {
       await pumpToday(tester);
 
-      await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+      await selectAbsenceType(tester, DayType.frei);
       await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
       await tester.pumpAndSettle();
 
@@ -904,7 +894,7 @@ void main() {
     ) async {
       await pumpToday(tester);
 
-      await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+      await selectAbsenceType(tester, DayType.frei);
       await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
       await tester.pumpAndSettle();
 
@@ -912,7 +902,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('joke_sheet_title')), findsNothing);
-      await expectStatus(tester, 'Gespeichert');
+      await expectStatus(tester, 'Abwesenheit');
     });
 
     testWidgets('Fehler zeigt keine Sheet, sondern SnackBar', (
@@ -923,7 +913,7 @@ void main() {
       );
       await pumpToday(tester, storage: storage);
 
-      await tapVisible(tester, find.byKey(const ValueKey('day_type_frei')));
+      await selectAbsenceType(tester, DayType.frei);
       await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
       await tester.pumpAndSettle();
 

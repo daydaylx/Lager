@@ -12,8 +12,7 @@ class ReminderSection extends StatelessWidget {
   final bool isPermissionBlocked;
   final VoidCallback? onOpenSettings;
   final ValueChanged<bool> onToggle;
-  final ValueChanged<TimeOfDay> onAddTime;
-  final ValueChanged<int> onDeleteTime;
+  final ValueChanged<TimeOfDay> onChangeTime;
   final ValueChanged<int> onToggleWeekday;
 
   const ReminderSection({
@@ -24,8 +23,7 @@ class ReminderSection extends StatelessWidget {
     required this.isPermissionBlocked,
     required this.onOpenSettings,
     required this.onToggle,
-    required this.onAddTime,
-    required this.onDeleteTime,
+    required this.onChangeTime,
     required this.onToggleWeekday,
   });
 
@@ -77,43 +75,31 @@ class ReminderSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Text(
-              'Uhrzeiten',
+              'Uhrzeit',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
             ),
           ),
-          ...settings.times.asMap().entries.map((entry) {
-            final index = entry.key;
-            final time = entry.value;
-            return ListTile(
-              key: ValueKey('reminder_time_$index'),
-              leading: const Icon(Icons.schedule_outlined),
-              title: Text(time.toDisplayString()),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: settings.times.length <= 1
-                    ? 'Mindestens eine Uhrzeit ist erforderlich'
-                    : 'Uhrzeit entfernen',
-                onPressed: isSaving || settings.times.length <= 1
-                    ? null
-                    : () => onDeleteTime(index),
-              ),
-            );
-          }),
-          TextButton.icon(
-            key: const ValueKey('reminder_add_time'),
-            onPressed: isSaving
+          ListTile(
+            key: const ValueKey('reminder_time'),
+            leading: const Icon(Icons.schedule_outlined),
+            title: Text(settings.times.first.toDisplayString()),
+            trailing: const Icon(Icons.edit_outlined),
+            enabled: !isSaving,
+            onTap: isSaving
                 ? null
                 : () async {
+                    final time = settings.times.first;
                     final picked = await showTimePicker(
                       context: context,
-                      initialTime: const TimeOfDay(hour: 20, minute: 0),
+                      initialTime: TimeOfDay(
+                        hour: time.hour,
+                        minute: time.minute,
+                      ),
                     );
-                    if (picked != null) onAddTime(picked);
+                    if (picked != null) onChangeTime(picked);
                   },
-            icon: const Icon(Icons.add),
-            label: const Text('Zeit hinzufügen'),
           ),
           const Divider(),
           Padding(

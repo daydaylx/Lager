@@ -201,17 +201,16 @@ Darunter:
 
 ## 8. Tagestyp-Auswahl
 
-Darstellung als große Chips oder segmentierte Auswahl.
-
-Optionen:
+Kompakte, sofort sichtbare Auswahl aus drei Chips:
 
 - Betrieb
 - Berufsschule
-- Frei
-- Urlaub
-- Krank
-- Feiertag
-- Sonstiges
+- Abwesend (öffnet ein Bottom-Sheet mit Frei, Urlaub, Krank, Feiertag, Sonstiges)
+
+Abwesenheits- und Sonstiges-Tage werden über das „Abwesend"-Sheet gewählt,
+damit die Hauptauswahl ruhig und auf die zwei Haupttypen fokussiert bleibt.
+Gespeicherte Abwesenheitstage zeigen im Statuskopf „Abwesenheit" (statt
+„Gespeichert").
 
 Die Auswahl muss sofort sichtbar sein.
 
@@ -219,7 +218,9 @@ Kein Dropdown, wenn es vermeidbar ist.
 
 Begründung:
 
-Dropdowns sind auf dem Handy oft unnötig langsam. Für sieben Optionen sind Chips besser.
+Dropdowns sind auf dem Handy oft unnötig langsam. Für die zwei Haupttypen
+sind Chips besser; die seltener gewählten Abwesenheitstypen sind gut in einem
+Sheet aufgehoben.
 
 ---
 

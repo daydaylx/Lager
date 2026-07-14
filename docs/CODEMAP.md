@@ -25,7 +25,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `today/activity_picker_model.dart`         | ✅ fertig | Tätigkeitsauswahl-Logik: Suche, Gruppen, häufig genutzt, Empfehlungen und historische IDs                                                  |
 | `today/today_entry_draft.dart`             | ✅ fertig | DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau                                                                         |
 | `today/activity_recommender.dart`          | ✅ fertig | Häufig-genutzt-Sortierung und Ausbildungsjahr-Empfehlungen                                                                                 |
-| `today/widgets/`                           | ✅ fertig | Extrahierte UI-Bausteine: `DayStatusCard`, `SaveBar`, `AreaGrid`, `DayTypeSelector`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
+| `today/widgets/`                           | ✅ fertig | Extrahierte UI-Bausteine: `TodayHeader` (kompakter Statuskopf), `DayTypeRow` (3-Chip-Auswahl + Abwesenheits-Sheet), `AbsenceSheet`, `SaveBar`, `AreaGrid`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
 | `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Entwurf/Erledigt-Chip und Kopier-Button                                                                       |
 | `week/week_screen.dart`                    | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                                  |
 | `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |

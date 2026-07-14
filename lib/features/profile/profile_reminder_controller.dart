@@ -14,7 +14,6 @@ class ProfileReminderController {
       'Erinnerungseinstellungen konnten nicht geladen werden.';
   static const saveError =
       'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.';
-  static const duplicateTimeError = 'Diese Uhrzeit ist bereits eingetragen.';
 
   final NotificationScheduler _scheduler;
   final ReminderSettingsLoader _loadSettings;
@@ -96,30 +95,8 @@ class ProfileReminderController {
     return ReminderSettingsEdit(settings: settings.copyWith(enabled: enabled));
   }
 
-  ReminderSettingsEdit deleteTime(ReminderSettings settings, int index) {
-    if (settings.times.length <= 1 ||
-        index < 0 ||
-        index >= settings.times.length) {
-      return const ReminderSettingsEdit();
-    }
-    final times = [...settings.times]..removeAt(index);
-    return ReminderSettingsEdit(settings: settings.copyWith(times: times));
-  }
-
-  ReminderSettingsEdit addTime(ReminderSettings settings, ReminderTime time) {
-    if (settings.times.contains(time)) {
-      return const ReminderSettingsEdit(error: duplicateTimeError);
-    }
-    if (settings.times.length >= ReminderSettings.maxTimes) {
-      return const ReminderSettingsEdit(
-        error:
-            'Es können höchstens ${ReminderSettings.maxTimes} Uhrzeiten gespeichert werden.',
-      );
-    }
-    final times = [...settings.times, time]..sort((a, b) => a.hour == b.hour
-        ? a.minute.compareTo(b.minute)
-        : a.hour.compareTo(b.hour));
-    return ReminderSettingsEdit(settings: settings.copyWith(times: times));
+  ReminderSettingsEdit changeTime(ReminderSettings settings, ReminderTime time) {
+    return ReminderSettingsEdit(settings: settings.copyWith(times: [time]));
   }
 
   ReminderSettingsEdit toggleWeekday(ReminderSettings settings, int weekday) {

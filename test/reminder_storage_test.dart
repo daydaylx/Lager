@@ -30,7 +30,17 @@ void main() {
       expect(loaded.enabled, isFalse);
     });
 
-    test('Mehrere Zeiten werden korrekt gespeichert', () async {
+    test('Eine Zeit wird korrekt gespeichert', () async {
+      const times = [ReminderTime(hour: 8, minute: 30)];
+      await ReminderStorage.save(
+        ReminderSettings.defaults.copyWith(times: times),
+      );
+      final loaded = await ReminderStorage.load();
+      expect(loaded.times, equals(times));
+    });
+
+    test('Mehrere gespeicherte Zeiten werden auf die früheste reduziert',
+        () async {
       const times = [
         ReminderTime(hour: 8, minute: 0),
         ReminderTime(hour: 12, minute: 30),
@@ -40,7 +50,7 @@ void main() {
         ReminderSettings.defaults.copyWith(times: times),
       );
       final loaded = await ReminderStorage.load();
-      expect(loaded.times, equals(times));
+      expect(loaded.times, const [ReminderTime(hour: 8, minute: 0)]);
     });
 
     test('Wochentagauswahl wird korrekt gespeichert', () async {
@@ -84,10 +94,7 @@ void main() {
     test('Vollständiger Roundtrip bleibt erhalten', () async {
       const original = ReminderSettings(
         enabled: true,
-        times: [
-          ReminderTime(hour: 7, minute: 15),
-          ReminderTime(hour: 21, minute: 45),
-        ],
+        times: [ReminderTime(hour: 7, minute: 15)],
         weekdays: [1, 3, 5],
       );
       await ReminderStorage.save(original);
@@ -151,10 +158,7 @@ void main() {
       final loaded = await ReminderStorage.load();
       expect(
         loaded.times,
-        const [
-          ReminderTime(hour: 8, minute: 0),
-          ReminderTime(hour: 20, minute: 0),
-        ],
+        const [ReminderTime(hour: 8, minute: 0)],
       );
     });
 

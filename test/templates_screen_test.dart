@@ -30,7 +30,7 @@ void main() {
 
     expect(find.text('Alle'), findsOneWidget);
     expect(find.text('Wareneingang'), findsWidgets);
-    expect(find.text('Vordefiniert (38)'), findsOneWidget);
+    expect(find.text('Vordefinierte Tätigkeiten'), findsOneWidget);
   });
 
   testWidgets('Kategorie-Filter zeigt nur passende aktive Tätigkeiten', (
@@ -42,7 +42,7 @@ void main() {
     await tester.tap(find.text('Wareneingang').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Vordefiniert (4)'), findsOneWidget);
+    expect(find.text('Vordefinierte Tätigkeiten'), findsOneWidget);
     expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
     expect(find.text('Wareneingang · Annahme'), findsWidgets);
   });
@@ -53,11 +53,11 @@ void main() {
 
     await tester.tap(find.text('Wareneingang').first);
     await tester.pumpAndSettle();
-    expect(find.text('Vordefiniert (4)'), findsOneWidget);
+    expect(find.text('Vordefinierte Tätigkeiten'), findsOneWidget);
 
     await tester.tap(find.text('Wareneingang').first);
     await tester.pumpAndSettle();
-    expect(find.text('Vordefiniert (38)'), findsOneWidget);
+    expect(find.text('Vordefinierte Tätigkeiten'), findsOneWidget);
   });
 
   testWidgets('Suche filtert Tätigkeiten lokal', (tester) async {
@@ -70,7 +70,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Vordefiniert (1)'), findsOneWidget);
+    expect(find.text('Vordefinierte Tätigkeiten'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(ListTile),
@@ -97,7 +97,7 @@ void main() {
     await tester.tap(find.text('Hinzufügen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Eigene (1)'), findsOneWidget);
+    expect(find.text('Eigene Tätigkeiten'), findsOneWidget);
     expect(find.text('Meine Testroutine'), findsOneWidget);
   });
 
@@ -190,7 +190,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Zu löschende Tätigkeit'), findsOneWidget);
-    expect(find.text('Eigene (1)'), findsOneWidget);
+    expect(find.text('Eigene Tätigkeiten'), findsOneWidget);
 
     final customRow = find.ancestor(
       of: find.text('Zu löschende Tätigkeit'),
@@ -199,22 +199,29 @@ void main() {
     await tester.ensureVisible(customRow);
     await tester.pumpAndSettle();
     await tester.tap(
-      find.descendant(of: customRow, matching: find.byType(IconButton)),
+      find.descendant(of: customRow, matching: find.byType(Switch)),
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Eigene Tätigkeiten (deaktiviert) · 1'), findsOneWidget);
     expect(find.text('Wareneingang · Deaktiviert'), findsOneWidget);
     expect((await storage.loadCustom()).single.isActive, isFalse);
 
+    final inactiveRow = find.ancestor(
+      of: find.text('Zu löschende Tätigkeit'),
+      matching: find.byType(ListTile),
+    );
+    await tester.ensureVisible(inactiveRow);
+    await tester.pumpAndSettle();
     await tester.tap(
-      find.descendant(of: customRow, matching: find.byType(IconButton)),
+      find.descendant(of: inactiveRow, matching: find.byType(Switch)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Wareneingang · Deaktiviert'), findsNothing);
+    expect(find.text('Eigene Tätigkeiten (deaktiviert) · 1'), findsNothing);
     expect((await storage.loadCustom()).single.isActive, isTrue);
   });
 
-  testWidgets('Standardtätigkeit kann deaktiviert werden (Override)', (
+  testWidgets('Standardtätigkeit kann deaktiviert und reaktiviert werden', (
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
@@ -223,19 +230,53 @@ void main() {
     await tester.tap(find.text('Wareneingang').first);
     await tester.pumpAndSettle();
 
-    final row = find.ancestor(
-      of: find.text('Lieferung angenommen und geprüft'),
-      matching: find.byType(ListTile),
+    const targetTitle = 'Lieferung angenommen und geprüft';
+    final targetText = find.text(targetTitle);
+
+    Switch switchFor(Finder textFinder) {
+      final row = find.ancestor(
+        of: textFinder,
+        matching: find.byType(ListTile),
+      );
+      return tester.widget(
+        find.descendant(of: row, matching: find.byType(Switch)),
+      ) as Switch;
+    }
+
+    final list = find.descendant(
+      of: find.byKey(const ValueKey('template_list')),
+      matching: find.byType(Scrollable),
     );
-    await tester.ensureVisible(row);
-    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(targetText, 80, scrollable: list);
+    expect(switchFor(targetText).value, isTrue);
+
     await tester.tap(
-      find.descendant(of: row, matching: find.byType(IconButton)),
+      find.descendant(
+        of: find.ancestor(of: targetText, matching: find.byType(ListTile)),
+        matching: find.byType(Switch),
+      ),
     );
     await tester.pumpAndSettle();
 
-    // Die Tätigkeit wird deaktiviert und aus der aktiven Sektion entfernt.
-    // Persistenz des Overrides wird separat in einem Unit-Test geprüft.
+    expect(
+      find.textContaining('Vordefinierte Tätigkeiten (deaktiviert)'),
+      findsOneWidget,
+    );
+
+    await tester.scrollUntilVisible(targetText, 80, scrollable: list);
+    expect(switchFor(targetText).value, isFalse);
+
+    await tester.tap(
+      find.descendant(
+        of: find.ancestor(of: targetText, matching: find.byType(ListTile)),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(targetText, -80, scrollable: list);
+    expect(switchFor(targetText).value, isTrue);
   });
 
   testWidgets('Kategorie-Filter zeigt nur eigene Tätigkeit der Kategorie', (

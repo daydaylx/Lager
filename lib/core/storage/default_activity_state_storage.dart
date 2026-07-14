@@ -20,17 +20,17 @@ class DefaultActivityStateStorage {
   Future<Map<String, bool>> loadOverrides() async {
     final preferences = await SharedPreferences.getInstance();
     final raw = preferences.getString(PreferenceKeys.defaultActivityOverrides);
-    if (raw == null || raw.isEmpty) return const {};
+    if (raw == null || raw.isEmpty) return <String, bool>{};
     try {
       final decoded = jsonDecode(raw);
-      if (decoded is! Map) return const {};
+      if (decoded is! Map) return <String, bool>{};
       return {
         for (final entry in decoded.entries)
           if (entry.key is String && entry.value is bool)
             entry.key as String: entry.value as bool,
       };
     } catch (_) {
-      return const {};
+      return <String, bool>{};
     }
   }
 

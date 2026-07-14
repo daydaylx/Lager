@@ -13,6 +13,7 @@ import 'package:berichtsheft_merker/features/week/week_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'test_helpers.dart';
 
 const _phoneSize = Size(400, 800);
 final _fixedToday = DateTime(2026, 6, 10);
@@ -163,15 +164,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final sonstiges = find.byKey(const ValueKey('day_type_sonstiges'));
-      await tester.scrollUntilVisible(
-        sonstiges,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(sonstiges);
-      await tester.pumpAndSettle();
+      await selectAbsenceType(tester, DayType.sonstiges);
       // After selecting sonstiges the optional section auto-expands;
       // scroll to the note field which is now in the expanded tile
       final note = find.byKey(const ValueKey('daily_report_note_field'));

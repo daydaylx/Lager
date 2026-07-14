@@ -193,15 +193,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Future<void> _deleteTime(int index) async {
+  Future<void> _changeTime(TimeOfDay picked) async {
     await _applyReminderEdit(
-      _reminderController.deleteTime(_reminderSettings, index),
-    );
-  }
-
-  Future<void> _addTime(TimeOfDay picked) async {
-    await _applyReminderEdit(
-      _reminderController.addTime(
+      _reminderController.changeTime(
         _reminderSettings,
         ReminderTime(hour: picked.hour, minute: picked.minute),
       ),
@@ -335,8 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           isPermissionBlocked: _notificationsBlockedBySystem,
           onOpenSettings: _openNotificationSettings,
           onToggle: _toggleReminder,
-          onAddTime: _addTime,
-          onDeleteTime: _deleteTime,
+          onChangeTime: _changeTime,
           onToggleWeekday: _toggleWeekday,
         ),
         const SizedBox(height: 24),

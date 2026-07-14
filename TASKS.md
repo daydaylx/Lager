@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — UI-Stand: Phase 20 (Freundlichere UX). Phase 22 (Daily-Check-in-Redesign) wurde rückgängig gemacht. Phase 21 (Agenten-Qualität) bleibt bestehen. Manueller Gerätetest bleibt ausstehend.
+**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — UI-Stand: Phase 23 (Tagestyp-Redesign). Phase 22 (Daily-Check-in-Redesign) wurde rückgängig gemacht. Phase 21 (Agenten-Qualität) bleibt bestehen. Manueller Gerätetest bleibt ausstehend.
 
 ---
 
@@ -455,6 +455,20 @@ absichern. Keine Produkt-/UI-Änderung, nur Tooling, CI, Doku und Tests.
 Die UI-Änderungen aus Phase 22 wurden selektiv rückgängig gemacht. Die
 App ist nun zurück auf dem UI-Stand von Phase 20 (Freundlichere UX).
 Phase-21-Infrastruktur (CI, PR-Template, Hygiene-Skript) bleibt bestehen.
+
+## Phase 23: Heute-Screen Tagestyp-Auswahl redesigned ✅
+
+Ziel: Tagestyp-Auswahl kompakter und ruhiger — 3-Chip-Zeile plus
+Abwesenheits-Sheet statt sieben direkter Chips.
+
+- [x] `DayTypeRow`: 3 immer sichtbare Chips (Betrieb, Berufsschule, Abwesend)
+- [x] `AbsenceSheet`: Auswahl von Frei/Urlaub/Krank/Feiertag/Sonstiges in einem Bottom-Sheet
+- [x] `today_screen.dart` nutzt `DayTypeRow` + `AbsenceSheet` statt `DayTypeSelector`
+- [x] `DayStatusCard` durch kompakten `TodayHeader` ersetzt (Titel, Datum, Status-Chip)
+- [x] Gespeicherte Abwesenheitstage zeigen Status „Abwesenheit" (statt „Gespeichert")
+- [x] `TodayEntryStatus`-Enum für den Header-Status
+- [x] Tests an die neue Auswahl angepasst (Helper `selectAbsenceType`); Golden `today_empty` regeneriert
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 272/272; `flutter build apk --debug` erfolgreich
 
 ---
 
