@@ -7,5 +7,7 @@ abstract interface class DailyEntryStorage {
 
   Future<void> save(DailyEntry entry);
 
+  Future<void> delete(String id);
+
   Future<void> clearAll();
 }

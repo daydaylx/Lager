@@ -71,6 +71,7 @@ class _TodayScreenState extends State<TodayScreen> {
   DayType _selectedDayType = DayType.betrieb;
   final Set<TrainingArea> _selectedAreas = {};
   DailyEntry? _savedEntry;
+  DailyEntry? _yesterdayEntry;
   bool _hasUnsavedChanges = false;
   bool _isLoading = true;
   bool _loadFailed = false;
@@ -257,6 +258,15 @@ class _TodayScreenState extends State<TodayScreen> {
                       onSelectBerufsschule: _confirmAndSelectDayType,
                       onOpenAbsenceSheet: _onOpenAbsenceSheet,
                     ),
+                    if (_isToday && _savedEntry == null && _yesterdayEntry != null) ...[
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        key: const ValueKey('duplicate_yesterday'),
+                        onPressed: _showDuplicateYesterdaySheet,
+                        icon: const Icon(Icons.copy),
+                        label: const Text('Wie gestern übernehmen'),
+                      ),
+                    ],
                     if (_selectedDayType == DayType.betrieb) ...[
                       const SizedBox(height: 24),
                       AppSectionHeader(
@@ -653,6 +663,7 @@ class _TodayScreenState extends State<TodayScreen> {
         return;
       }
       _applyEntry(entry);
+      await _loadYesterdayEntry();
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -660,6 +671,22 @@ class _TodayScreenState extends State<TodayScreen> {
           _loadFailed = true;
         });
       }
+    }
+  }
+
+  Future<void> _loadYesterdayEntry() async {
+    if (!_isToday) return;
+
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    final yesterdayDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
+
+    try {
+      final entry = await widget.storage.loadByDate(yesterdayDate);
+      if (mounted && _savedEntry == null && entry != null) {
+        setState(() => _yesterdayEntry = entry);
+      }
+    } catch (_) {
+      // Ignorieren - gestern ist kein Eintrag vorhanden
     }
   }
 
@@ -741,6 +768,7 @@ class _TodayScreenState extends State<TodayScreen> {
     try {
       await widget.storage.save(entry);
       if (mounted) {
+        HapticFeedback.mediumImpact();
         setState(() {
           _savedEntry = entry;
           _hasUnsavedChanges = false;
@@ -749,6 +777,7 @@ class _TodayScreenState extends State<TodayScreen> {
         _loadFrequentActivities();
         if (wasNewEntry) {
           _showJokeSheet();
+          _showUndoSnackBar(entry.id);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Änderungen gespeichert.')),
@@ -757,11 +786,51 @@ class _TodayScreenState extends State<TodayScreen> {
       }
     } catch (_) {
       if (mounted) {
+        HapticFeedback.heavyImpact();
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
               'Der Eintrag konnte nicht gespeichert werden. Bitte versuche es erneut.',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showUndoSnackBar(String entryId) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Eintrag gespeichert.'),
+        action: SnackBarAction(
+          label: 'Rückgängig',
+          onPressed: () => _undoEntry(entryId),
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
+  Future<void> _undoEntry(String entryId) async {
+    try {
+      await widget.storage.delete(entryId);
+      if (mounted) {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _savedEntry = null;
+          _hasUnsavedChanges = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Eintrag rückgängig gemacht.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Rückgängig fehlgeschlagen. Bitte versuche es erneut.',
             ),
           ),
         );
@@ -844,5 +913,67 @@ class _TodayScreenState extends State<TodayScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Tagesbericht kopiert.')),
     );
+  }
+
+  /// Zeigt Dialog zum Übernehmen der Tätigkeiten von gestern
+  Future<void> _showDuplicateYesterdaySheet() async {
+    if (!mounted || _yesterdayEntry == null) return;
+
+    final yesterday = _yesterdayEntry!;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Tätigkeiten von gestern übernehmen?'),
+          content: Text(
+            'Tagtyp, Bereich und Tätigkeiten von ${_formatDate(yesterday.date)} übernehmen. '
+            'Notizen und Besonderheiten bleiben leer.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Übernehmen'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _selectedDayType = yesterday.dayType;
+        _selectedAreas
+          ..clear()
+          ..addAll(yesterday.areas);
+        _selectedActivityIds
+          ..clear()
+          ..addAll(yesterday.selectedActivities);
+        _adhocActivities
+          ..clear()
+          ..addEntries(
+            yesterday.adhocActivities
+                .map((a) => MapEntry(a.id, a.title))
+                .toList(growable: false),
+          );
+        _hasUnsavedChanges = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tätigkeiten übernommen.')),
+      );
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
+    ];
+    return '${date.day}. ${months[date.month - 1]}';
   }
 }

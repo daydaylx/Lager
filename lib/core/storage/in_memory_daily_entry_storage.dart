@@ -27,6 +27,11 @@ class InMemoryDailyEntryStorage implements DailyEntryStorage {
   }
 
   @override
+  Future<void> delete(String id) async {
+    _entries.remove(id);
+  }
+
+  @override
   Future<void> clearAll() async {
     _entries.clear();
   }

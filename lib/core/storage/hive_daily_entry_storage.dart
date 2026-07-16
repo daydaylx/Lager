@@ -61,6 +61,11 @@ class HiveDailyEntryStorage implements DailyEntryStorage {
   }
 
   @override
+  Future<void> delete(String id) async {
+    await _box.delete(id);
+  }
+
+  @override
   Future<void> clearAll() async {
     await _box.clear();
     await _box.compact();

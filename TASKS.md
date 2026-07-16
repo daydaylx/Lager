@@ -472,6 +472,60 @@ Abwesenheits-Sheet statt sieben direkter Chips.
 
 ---
 
+## Phase 24: UX-Upgrade 🔨
+
+### Phase 24a: Sektions-Trenner im Heute-Screen ✅
+
+- [x] Neues `AppSectionDivider`-Widget in `lib/shared/widgets/app_ui.dart` erstellt
+- [x] Dezente visuelle Trenner zwischen Hauptsektionen in `today_screen.dart` eingefügt
+- [x] Trenner zwischen: Tagtyp → Bereich → Tätigkeiten → Besonderheiten → Berichtskarte
+- [x] Golden `today_empty` regeneriert
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 272/272 bestanden
+
+### Phase 24b: Visueller Eingabe-Fortschritt & Live-Report-Preview ✅
+
+- [x] `EntryProgress`-Klasse in `save_bar.dart` erstellt (Tagtyp, Bereich, Tätigkeiten)
+- [x] `_ProgressDots`-Widget in `SaveBar` zeigt drei visuelle Fortschritts-Punkte
+- [x] `_ReportPreview`-Widget in `today_screen.dart` zeigt Live-Vorschau bei teilweiser Eingabe
+- [x] Preview erscheint wenn Tagtyp + Bereich (falls Betrieb) + mindestens 1 Tätigkeit gewählt
+- [x] Preview zeigt generierten Berichtstext mit "Vorschau"-Label und Hinweis
+- [x] Golden `today_empty` regeneriert
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 272/272 bestanden
+
+### Phase 24c: Wochen-Screen: Swipe & Heute-Hervorhebung ✅
+
+- [x] Horizontale Swipe-Gesten auf WeekHeader für Wochen-Navigation
+- [x] Heute-Tag in Tagesliste visuell hervorheben (Primary-Rahmen oder Badge)
+- [x] Wochenstatistik-Typ-Übersicht im WeekHeader (z. B. „3× Betrieb, 1× offen")
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — alle Tests grün
+- [x] Golden `week_mixed.png` regenerieren
+
+### Phase 24d: Animationen, Haptic Feedback, Pull-to-Refresh ✅
+
+- [x] Haptic Feedback bei Tagtyp-Chip-Auswahl (lightImpact)
+- [x] Haptic Feedback bei Speichern (mediumImpact bei Erfolg, heavyImpact bei Fehler)
+- [x] RefreshIndicator auf Heute-Screen für Pull-to-Refresh
+- [x] Success-Animation in SaveBar nach Speichern (Icon-Wechsel zu Check für 1s)
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — alle Tests grün
+- [x] `flutter build apk --debug` — erfolgreich
+
+### Phase 24e: Undo & Tages-Duplikation ✅
+
+- [x] Undo-SnackBar nach erstem Speichern („Eintrag gespeichert. [Rückgängig]")
+- [x] Undo löscht den gerade erstellten Eintrag via `storage.delete(id)`
+- [x] „Wie gestern übernehmen"-Button im Heute-Screen (nur wenn heute leer und gestern vorhanden)
+- [x] Duplikation kopiert Tagtyp + Bereiche + Tätigkeiten; Notizen/Besonderheiten bleiben leer
+- [x] Klare Kommunikation: „Tätigkeiten von gestern übernehmen?"
+- [x] `delete`-Methode in DailyEntryStorage-Schnittstelle hinzugefügt
+- [x] `delete`-Implementierung in HiveDailyEntryStorage und InMemoryDailyEntryStorage
+- [x] `flutter analyze` — 0 Issues
+- [x] `flutter test` — alle Tests grün (272/272)
+- [x] `flutter build apk --debug` — erfolgreich
+
+---
+
 ## Spätere Phase: Toolchain- und Dependency-Modernisierung
 
 - [ ] Flutter, Android Gradle Plugin, Kotlin und Dependencies gemeinsam aktualisieren

@@ -107,6 +107,13 @@ class ControlledDailyEntryStorage implements DailyEntryStorage {
   }
 
   @override
+  Future<void> delete(String id) async {
+    if (entry?.id == id) {
+      entry = null;
+    }
+  }
+
+  @override
   Future<void> clearAll() async {
     entry = null;
   }
@@ -618,7 +625,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('week_number')), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.tabToday));
+    await tester.tap(find.byKey(const ValueKey('tab_today')));
     await tester.pumpAndSettle();
     expect(find.text('Abwesenheit'), findsOneWidget);
   });
@@ -821,7 +828,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('retry_daily_entry_load')));
     await tester.pumpAndSettle();
 
-    expect(storage.loadCalls, 2);
+    expect(storage.loadCalls, 3);
     expect(find.text('Noch offen'), findsOneWidget);
   });
 

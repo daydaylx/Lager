@@ -80,7 +80,9 @@ class DailyEntry {
   final List<TrainingArea> areas;         // nur wenn dayType == betrieb
   final List<String> selectedActivities;  // IDs aus ActivityTemplate
   final List<SpecialFlag> specialFlags;   // Besonderheiten
-  final String? note;                     // optionale Freitext-Notiz
+  final String? reportNote;               // Ergänzung für das Berichtsheft
+  final String? privateNote;              // Private Notiz (niemals im Bericht)
+  final List<AdhocActivity> adhocActivities; // Einmalige Freitext-Tätigkeiten
   final DateTime createdAt;
   final DateTime updatedAt;
 }
@@ -162,6 +164,12 @@ Hive-CE-Boxen:
 |---|---|---|
 | `'entries'` | `Box<DailyEntry>` | Alle Tageseinträge, Schlüssel = Datum als String `'yyyy-MM-dd'` |
 | `'custom_templates'` | `Box<ActivityTemplate>` | Eigene Tätigkeiten mit stabilem Schlüssel und Aktivstatus |
+
+**DailyEntryStorage-Schnittstelle:**
+- `loadByDate(DateTime date)` — Lädt Eintrag für ein bestimmtes Datum
+- `loadAll()` — Lädt alle Einträge (für Häufigkeit-Berechnung)
+- `save(DailyEntry entry)` — Speichert/aktualisiert einen Eintrag
+- `delete(String id)` — Löscht einen Eintrag (wird für Undo-Funktionalität verwendet)
 
 `DailyEntry` verwendet einen handgeschriebenen Adapter mit dauerhaft reserviertem
 `typeId: 0`. Enum-Werte werden als Namen gespeichert, damit keine zusätzlichen

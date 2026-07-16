@@ -1,6 +1,62 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-11 (Phase-23 Heute-Screen Tagestyp-Redesign)
+Stand: 2026-07-15 (Phase 24d UX-Upgrade Animationen/Haptic/Pull-to-Refresh abgeschlossen; Debug-APK gebaut)
+
+---
+
+## Phase 24: UX-Upgrade (in Arbeit)
+
+### Abgeschlossen:
+- **24a:** `AppSectionDivider`-Widget für dezente Sektions-Trenner im Heute-Screen
+- **24b:** `EntryProgress` mit visuellen Fortschritts-Punkten + `_ReportPreview` für Live-Berichtsvorschau
+- **24c:** Wochen-Screen Swipe-Gesten, Heute-Badge, Wochenstatistik-Übersicht
+- **24d:** Haptic Feedback, Pull-to-Refresh, Success-Animation in SaveBar
+- `flutter analyze`: 0 Issues ✅
+- `flutter test`: 272/272 bestanden ✅
+- `flutter build apk --debug`: erfolgreich ✅
+
+### Nächste Schritte:
+- **24e:** Undo-SnackBar & Tages-Duplikation
+
+---
+
+## Letzte Änderung: Phase 24e – Undo & Tages-Duplikation
+
+- **Undo-SnackBar nach Speichern:** Nach erfolgreichem Speichern eines neuen Eintrags erscheint eine SnackBar mit "Eintrag gespeichert." und einem "Rückgängig"-Button (5 Sekunden sichtbar)
+- **"Wie gestern übernehmen"-Button:** Wenn heute noch kein Eintrag vorhanden ist, aber einer von gestern, erscheint ein Button mit Copy-Icon zum Übernehmen der Tätigkeiten
+- **Duplikations-Dialog:** Bestätigungsdialog fragt nach, bevor Tagtyp, Bereiche und Tätigkeiten von gestern übernommen werden (Notizen und Besonderheiten bleiben leer)
+- **Storage-Vorbereitung:** `delete(String id)` Methode zur DailyEntryStorage-Schnittstelle hinzugefügt für Undo-Funktionalität
+- **Tests:** Alle 272 Tests bestanden, Golden `today_empty.png` regeneriert
+- `flutter analyze` — 0 Issues; `flutter test` — 272/272 bestanden; `flutter build apk --debug` — erfolgreich.
+
+- **Haptic Feedback bei Tagtyp-Auswahl:** `HapticFeedback.lightImpact()` bei jedem Chip-Tap in `day_type_row.dart`
+- **Haptic Feedback bei Speichern:** `HapticFeedback.mediumImpact()` bei Erfolg, `HapticFeedback.heavyImpact()` bei Fehler in `today_screen.dart`
+- **Pull-to-Refresh:** `RefreshIndicator` um ListView in Heute-Screen, ruft `_loadEntry()` auf
+- **Success-Animation in SaveBar:** Nach erfolgreichem Speichern zeigt Button 1s lang ✓-Icon + "Gespeichert!"-Text, dann Rückkehr zum Normalzustand
+- `flutter analyze` — 0 Issues; `flutter test` — 272/272 bestanden;
+  `flutter build apk --debug` — erfolgreich.
+
+---
+
+## Letzte Änderung: Phase 24c – Wochen-Screen UX-Upgrade
+
+- **Swipe-Gesten:** Horizontale Swipe-Gesten auf dem WeekHeader für Wochen-Navigation (links/rechts)
+- **Heute-Hervorhebung:** Der heutige Tag wird in der Tagesliste mit einem Primary-Rahmen und "Heute"-Badge visuell hervorgehoben
+- **Wochenstatistik:** Kompakte Typ-Übersicht im WeekHeader (z.B. "3× Betrieb, 1× Berufsschule, 1× offen")
+- **Test-Fix:** Overflow-Fehler in `_DayCard` behoben (Row-Layout mit Flexible/Expanded optimiert)
+- Golden `test/goldens/week_mixed.png` regeneriert
+- `flutter analyze` — 0 Issues; `flutter test` — 272/272 bestanden;
+  `flutter build apk --debug` — erfolgreich.
+
+---
+
+## Letzte Änderung: Phase 24a/b – Heute-Screen UX-Upgrade
+
+- **24a:** `AppSectionDivider`-Widget für dezente Sektions-Trenner im Heute-Screen
+- **24b:** `EntryProgress` mit visuellen Fortschritts-Punkten + `_ReportPreview` für Live-Berichtsvorschau
+- `flutter analyze`: 0 Issues ✅
+- `flutter test`: 272/272 bestanden ✅
+- `flutter build apk --debug`: erfolgreich ✅
 
 ---
 
@@ -246,14 +302,14 @@ Weitere akzeptierte aktuelle Funktionen:
 
 ## Letzte erfolgreiche Verifikation
 
-Aktuell nach Speicher-Witz-Fix (2026-07-11):
+Aktuell nach Neu-Build des Release-APK (2026-07-15):
 
 ```
 bash scripts/check_repo_hygiene.sh  →  OK
 flutter analyze          →  0 Issues
-flutter test             →  269/269 bestanden
-flutter build apk --debug  →  erfolgreich (nicht erneut gebaut)
-flutter build apk --release  →  erfolgreich (18.06.2026)
+flutter test             →  272/272 bestanden
+flutter build apk --debug  →  erfolgreich (Jul 15)
+flutter build apk --release  →  erfolgreich (2026-07-15, 24.4 MB, signiert)
 CI (Job flutter-checks)    →  Required-Check für main (Branch Protection)
 ```
 
@@ -265,8 +321,9 @@ adb install -r app-release.apk auf Samsung SM-S931B  →  erfolgreich
 
 Das zusammengeführte Release-Manifest bestätigt
 `com.daydaylx.berichtsheftmerker`, `allowBackup=false` und die
-Backup-/Transfer-Regeln. `apksigner` bestätigt v1/v2-Signatur mit lokalem
-Release-Zertifikat; der installierte Build meldet `apkSigningVersion=2`.
+Backup-/Transfer-Regeln. `apksigner verify` bestätigt v1/v2-Signatur mit dem
+lokalen Release-Zertifikat (CN=Berichtsheft-Merker, SHA-256
+0e26d264b2bb6dc27a67a1820fa72474f5a4cb4f861b8da77ad3c7819eaff1c9); der installierte Build meldet `apkSigningVersion=2`.
 
 ---
 

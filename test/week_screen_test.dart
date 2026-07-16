@@ -88,6 +88,11 @@ class ControlledWeekStorage implements DailyEntryStorage {
   }
 
   @override
+  Future<void> delete(String id) async {
+    entries.remove(id);
+  }
+
+  @override
   Future<void> clearAll() async {
     entries.clear();
   }
