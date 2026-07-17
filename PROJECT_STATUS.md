@@ -19,6 +19,12 @@ Zuletzt aktualisiert: 2026-07-10
 
 Der offene Punkt ist manuelles Testen, kein Code-Mangel.
 
+Neu in Phase 25: Der TodayScreen ist ein geführter Check-in (Tagtyp → Bereich
+bei Betrieb → vollflächige Tätigkeitsauswahl → Prüfen & Speichern). Gespeicherte
+Tage erscheinen als kompakte Übersicht mit gezielten Bearbeiten-Aktionen und
+kopierbarem Bericht. `flutter analyze`, 248 Tests, Repo-Hygiene und Debug-APK-Build
+waren nach dem Umbau erfolgreich.
+
 ---
 
 ## Was existiert

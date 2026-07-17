@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/enums/day_type.dart';
 
 // #Phase23: Reduced to 3 always-visible options; absence/sonstiges values
 // are picked in a separate bottom sheet (see absence_sheet.dart) and shown
 // on the third chip once chosen.
 class DayTypeRow extends StatelessWidget {
-  final DayType selectedDayType;
+  final DayType? selectedDayType;
   final ValueChanged<DayType> onSelectBetrieb;
   final ValueChanged<DayType> onSelectBerufsschule;
   final VoidCallback onOpenAbsenceSheet;
@@ -19,7 +20,8 @@ class DayTypeRow extends StatelessWidget {
   });
 
   bool get _isAbsenceOrOther =>
-      selectedDayType.isAbsence || selectedDayType == DayType.sonstiges;
+      selectedDayType?.isAbsence == true ||
+      selectedDayType == DayType.sonstiges;
 
   @override
   Widget build(BuildContext context) {
@@ -31,26 +33,35 @@ class DayTypeRow extends StatelessWidget {
           key: const ValueKey('day_type_betrieb'),
           label: const Text('Betrieb'),
           selected: selectedDayType == DayType.betrieb,
-          onSelected: (_) => onSelectBetrieb(DayType.betrieb),
+          onSelected: (_) {
+            HapticFeedback.lightImpact();
+            onSelectBetrieb(DayType.betrieb);
+          },
         ),
         ChoiceChip(
           key: const ValueKey('day_type_berufsschule'),
           label: const Text('Berufsschule'),
           selected: selectedDayType == DayType.berufsschule,
-          onSelected: (_) => onSelectBerufsschule(DayType.berufsschule),
+          onSelected: (_) {
+            HapticFeedback.lightImpact();
+            onSelectBerufsschule(DayType.berufsschule);
+          },
         ),
         ChoiceChip(
           key: const ValueKey('day_type_absence_chip'),
           label: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_isAbsenceOrOther ? selectedDayType.label : 'Abwesend'),
+              Text(_isAbsenceOrOther ? selectedDayType!.label : 'Abwesend'),
               const SizedBox(width: 2),
               const Icon(Icons.expand_more, size: 18),
             ],
           ),
           selected: _isAbsenceOrOther,
-          onSelected: (_) => onOpenAbsenceSheet(),
+          onSelected: (_) {
+            HapticFeedback.lightImpact();
+            onOpenAbsenceSheet();
+          },
         ),
       ],
     );

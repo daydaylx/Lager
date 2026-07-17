@@ -1,6 +1,19 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-15 (Phase 24d UX-Upgrade Animationen/Haptic/Pull-to-Refresh abgeschlossen; Debug-APK gebaut)
+Stand: 2026-07-15 (Phase 25: geführter Today-Check-in abgeschlossen; Debug-APK gebaut)
+
+---
+
+## Letzte Änderung: Phase 25 – Geführter Today-Check-in
+
+- TodayScreen als bedingter Ablauf neu aufgebaut: Tagtyp → Bereich (nur Betrieb) → vollflächige Tätigkeitsauswahl → Prüfen & Speichern.
+- Die Tätigkeitsauswahl arbeitet bis „Auswahl übernehmen“ mit einer Arbeitsauswahl; Abbrechen verwirft nur diese noch nicht übernommenen Änderungen.
+- Gespeicherte Einträge zeigen eine kompakte Tagesübersicht mit Bericht sowie gezielten Aktionen für Tagtyp, Tätigkeiten und Ergänzungen.
+- „Wie gestern starten“ bleibt als bestätigter kontextueller Schnellzugriff erhalten.
+- Tests und Golden-Referenz `today_empty.png` auf den neuen Flow umgestellt.
+- `flutter analyze` — 0 Issues; `flutter test` — 248 bestanden; Repo-Hygiene OK; `flutter build apk --debug` erfolgreich.
+
+---
 
 ---
 

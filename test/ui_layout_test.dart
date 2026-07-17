@@ -106,13 +106,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final area = find.byKey(const ValueKey('area_wareneingang'));
-      await tester.scrollUntilVisible(
-        area,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(area);
+      await tester.tap(find.byKey(const ValueKey('day_type_betrieb')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('area_wareneingang')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('today_flow_continue')));
       await tester.pumpAndSettle();
 
       final activity = find.byKey(const ValueKey('activity_wareneingang_01'));
@@ -124,7 +122,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getSize(activity).height, greaterThanOrEqualTo(48));
       expect(
-        tester.getSize(find.byKey(const ValueKey('save_daily_entry'))).height,
+        tester.getSize(find.byKey(const ValueKey('today_flow_continue'))).height,
         greaterThanOrEqualTo(48),
       );
       expect(tester.takeException(), isNull);

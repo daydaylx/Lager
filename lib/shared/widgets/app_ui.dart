@@ -278,3 +278,22 @@ class AppSettingsSection extends StatelessWidget {
     );
   }
 }
+
+/// Dezente Sektions-Trennung für den Heute-Screen (#24a): eine dünne Linie
+/// mit vertikalem Abstand, die Hauptsektionen visuell voneinander abgrenzt,
+/// ohne die ruhige Optik zu stören.
+class AppSectionDivider extends StatelessWidget {
+  const AppSectionDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: Theme.of(context).colorScheme.outlineVariant.withAlpha(128),
+      ),
+    );
+  }
+}

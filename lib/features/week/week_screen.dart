@@ -142,18 +142,30 @@ class _WeekScreenState extends State<WeekScreen> {
     final hasEntries = _entries.isNotEmpty;
     final isCurrentWeek = _selectedWeekStart == _currentWeekStart;
     final missingCount = dueWeekDays.length - enteredDueDays;
+    final weekStats = _calculateWeekStats();
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: _WeekHeader(
-            weekStart: _selectedWeekStart,
-            enteredDays: enteredDueDays,
-            dueDays: dueWeekDays.length,
-            canGoForward: _selectedWeekStart.isBefore(_currentWeekStart),
-            onPrevious: () => _changeWeek(-7),
-            onNext: () => _changeWeek(7),
+        GestureDetector(
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity > 300 && _selectedWeekStart.isBefore(_currentWeekStart)) {
+              _changeWeek(7); // Swipe right → nächste Woche
+            } else if (velocity < -300) {
+              _changeWeek(-7); // Swipe left → vorherige Woche
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: _WeekHeader(
+              weekStart: _selectedWeekStart,
+              enteredDays: enteredDueDays,
+              dueDays: dueWeekDays.length,
+              canGoForward: _selectedWeekStart.isBefore(_currentWeekStart),
+              onPrevious: () => _changeWeek(-7),
+              onNext: () => _changeWeek(7),
+              stats: weekStats,
+            ),
           ),
         ),
         Expanded(
@@ -185,6 +197,9 @@ class _WeekScreenState extends State<WeekScreen> {
                       final index = entry.$1;
                       final date = entry.$2;
                       final dailyEntry = _entryFor(date);
+                      final isToday = date.year == _today.year &&
+                          date.month == _today.month &&
+                          date.day == _today.day;
                       return _DayCard(
                         date: date,
                         entry: dailyEntry,
@@ -193,6 +208,7 @@ class _WeekScreenState extends State<WeekScreen> {
                         onTap:
                             date.isAfter(_today) ? null : () => _openDay(date),
                         showDivider: index < weekDays.length - 1,
+                        isToday: isToday,
                       );
                     }).toList(growable: false),
                   ),
@@ -202,6 +218,36 @@ class _WeekScreenState extends State<WeekScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  _WeekStats _calculateWeekStats() {
+    var betrieb = 0;
+    var berufsschule = 0;
+    var abwesenheit = 0;
+    var offen = 0;
+
+    for (final date in _weekDays) {
+      if (date.isAfter(_today)) continue;
+      if (date.weekday > DateTime.friday) continue;
+
+      final entry = _entryFor(date);
+      if (entry == null) {
+        offen++;
+      } else if (entry.dayType == DayType.betrieb) {
+        betrieb++;
+      } else if (entry.dayType == DayType.berufsschule) {
+        berufsschule++;
+      } else if (entry.dayType.isAbsence) {
+        abwesenheit++;
+      }
+    }
+
+    return _WeekStats(
+      betrieb: betrieb,
+      berufsschule: berufsschule,
+      abwesenheit: abwesenheit,
+      offen: offen,
     );
   }
 
@@ -352,6 +398,7 @@ class _WeekScreenState extends State<WeekScreen> {
           templateStorage: widget.templateStorage,
           defaultActivityStateStorage: widget.defaultActivityStateStorage,
           date: date,
+          protectBackNavigation: false,
         ),
       ),
     );
@@ -373,6 +420,29 @@ class _WeekScreenState extends State<WeekScreen> {
   }
 }
 
+class _WeekStats {
+  final int betrieb;
+  final int berufsschule;
+  final int abwesenheit;
+  final int offen;
+
+  const _WeekStats({
+    required this.betrieb,
+    required this.berufsschule,
+    required this.abwesenheit,
+    required this.offen,
+  });
+
+  String toSummary() {
+    final parts = <String>[];
+    if (betrieb > 0) parts.add('$betrieb× Betrieb');
+    if (berufsschule > 0) parts.add('$berufsschule× Berufsschule');
+    if (abwesenheit > 0) parts.add('$abwesenheit× Abwesenheit');
+    if (offen > 0) parts.add('$offen× offen');
+    return parts.isEmpty ? 'Keine Einträge' : parts.join(', ');
+  }
+}
+
 class _WeekHeader extends StatelessWidget {
   final DateTime weekStart;
   final int enteredDays;
@@ -380,6 +450,7 @@ class _WeekHeader extends StatelessWidget {
   final bool canGoForward;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final _WeekStats stats;
 
   const _WeekHeader({
     required this.weekStart,
@@ -388,6 +459,7 @@ class _WeekHeader extends StatelessWidget {
     required this.canGoForward,
     required this.onPrevious,
     required this.onNext,
+    required this.stats,
   });
 
   @override
@@ -466,6 +538,13 @@ class _WeekHeader extends StatelessWidget {
           child: LinearProgressIndicator(
             value: dueDays == 0 ? 0 : enteredDays / dueDays,
             borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          stats.toSummary(),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -553,6 +632,7 @@ class _DayCard extends StatelessWidget {
   final String summary;
   final VoidCallback? onTap;
   final bool showDivider;
+  final bool isToday;
 
   const _DayCard({
     required this.date,
@@ -561,6 +641,7 @@ class _DayCard extends StatelessWidget {
     required this.summary,
     required this.onTap,
     required this.showDivider,
+    this.isToday = false,
   });
 
   @override
@@ -571,64 +652,106 @@ class _DayCard extends StatelessWidget {
 
     return Column(
       children: [
-        InkWell(
-          key: ValueKey('week_day_${DailyEntry.idForDate(date)}'),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 76),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: containerColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(status.icon, color: color, size: 20),
+        Container(
+          decoration: isToday
+              ? BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.primary,
+                    width: 2,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                formatDayDate(date),
-                                style: theme.textTheme.titleSmall?.copyWith(
+                  borderRadius: BorderRadius.circular(8),
+                )
+              : null,
+          child: InkWell(
+            key: ValueKey('week_day_${DailyEntry.idForDate(date)}'),
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 76),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: containerColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(status.icon, color: color, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        formatDayDate(date),
+                                        style: theme.textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isToday) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        key: const ValueKey('today_badge'),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          'Heute',
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            color: theme.colorScheme.onPrimaryContainer,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                status.label,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: color,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            ),
-                            Text(
-                              status.label,
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: color,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          entry == null
-                              ? summary
-                              : '${entry!.dayType.label} · $summary',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 3),
+                          Text(
+                            entry == null
+                                ? summary
+                                : '${entry!.dayType.label} · $summary',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (onTap != null) const Icon(Icons.chevron_right, size: 20),
-                ],
+                    if (onTap != null) const Icon(Icons.chevron_right, size: 20),
+                  ],
+                ),
               ),
             ),
           ),

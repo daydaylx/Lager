@@ -94,7 +94,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 | `lib/app/theme.dart`                             | Farben, Theme-Tokens                      |
 | `lib/core/storage/theme_preset_storage.dart`     | Bei Theme-Auswahl oder Persistenz         |
 | `lib/shared/widgets/app_ui.dart`                 | Gemeinsame visuelle Bausteine             |
-| Relevante Screen-Widgets (z. B. `area_grid.dart`) | Direkte UI-Abhängigkeiten |
+| Relevante Screen-Widgets (für Heute insbesondere `today_flow.dart`, `area_grid.dart`, `activity_picker_section.dart`) | Direkte UI-Abhängigkeiten |
 | Relevanter Test (z. B. `today_screen_test.dart`) | Was darf sich nicht ändern                |
 | `test/ui_layout_test.dart`                       | Mobile Layout- und Golden-Verträge        |
 

@@ -59,6 +59,14 @@ Die UI-Experimente aus Phase 22 (AreaCarousel, WeekDotStrip, SectionEmphasis,
 wärmeres lagerTeal) wurden selektiv revertiert. Der UI-Stand entspricht Phase 20.
 Phase-21-Infrastruktur bleibt bestehen.
 
+**Phase 25: Geführter Today-Check-in statt langem Scroll-Formular**
+Der tägliche Kernflow führt abhängig vom Tagtyp durch Tagtyp, Bereich,
+Tätigkeitsauswahl und Prüfung. Die umfangreiche Tätigkeitsliste läuft in einer
+vollflächigen Ansicht mit explizitem Übernehmen; Abbrechen verwirft nur die noch
+nicht übernommene Auswahl. Gespeicherte Tage zeigen eine kompakte Übersicht mit
+gezieltem Bearbeiten. Das bleibt lokaler `setState`-UI-State und verändert weder
+`DailyEntry` noch die Bottom Navigation.
+
 ---
 
 ## State Management

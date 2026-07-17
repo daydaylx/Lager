@@ -526,6 +526,16 @@ Abwesenheits-Sheet statt sieben direkter Chips.
 
 ---
 
+## Phase 25: Geführter Today-Check-in ✅
+
+- [x] TodayScreen als klaren Ablauf für Tagtyp, Bereich, Tätigkeiten und Prüfung neu aufgebaut.
+- [x] Tätigkeitsauswahl in einen vollflächigen Schritt mit explizitem Übernehmen überführt.
+- [x] Gespeicherte Tage als kompakte Übersicht mit gezieltem Bearbeiten umgesetzt.
+- [x] Kontextuelle Aktion „Wie gestern starten“ beibehalten.
+- [x] Widget-, Layout- und Golden-Tests auf den neuen Flow angepasst.
+
+---
+
 ## Spätere Phase: Toolchain- und Dependency-Modernisierung
 
 - [ ] Flutter, Android Gradle Plugin, Kotlin und Dependencies gemeinsam aktualisieren

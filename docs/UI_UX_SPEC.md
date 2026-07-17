@@ -188,14 +188,14 @@ Dienstag, 16. Juni
 Noch nicht abgeschlossen
 ```
 
-Darunter:
+Der tägliche Check-in ist geführt statt ein langes Formular:
 
-- Tagestyp-Auswahl
-- Bereichsauswahl
-- Tätigkeiten
-- Besonderheiten
-- Notiz
-- Speichern-Button
+1. Tagtyp wählen
+2. Bei Betrieb: Bereich wählen
+3. Tätigkeiten in einer vollflächigen Auswahl suchen und übernehmen
+4. Auswahl prüfen, optionale Ergänzungen machen und speichern
+
+Nach dem Speichern zeigt die Seite eine kompakte Tagesübersicht mit Bericht und gezielten Bearbeiten-Aktionen.
 
 ---
 
@@ -270,6 +270,7 @@ Anforderungen:
 - Kategorie sichtbar
 - Arbeitsschritt-Untergruppen innerhalb großer Kategorien sichtbar machen
 - lokale Suche innerhalb der aktuell passenden Tätigkeiten
+- vollflächiger Auswahl-Schritt mit fixer Aktion „Auswahl übernehmen“
 - ausgewählte Tätigkeiten als kompakte Chip-Leiste sichtbar halten
 - häufig genutzte Tätigkeiten aus gespeicherten Einträgen oben anbieten
 - passende Tätigkeiten zum Ausbildungsjahr als weiche Empfehlung oben anbieten
@@ -279,7 +280,11 @@ Anforderungen:
 Nicht implementiert und nicht ohne neue Entscheidung ergänzen:
 
 - Favoritenbereich
-- Tätigkeiten vom Vortag übernehmen
+
+Kontextuell verfügbar: „Wie gestern starten“ erscheint nur bei einem
+ungespeicherten heutigen Eintrag mit vorhandenem Vortag. Die Übernahme von
+Tagtyp, Bereichen und Tätigkeiten wird bestätigt; Notizen und Besonderheiten
+bleiben leer.
 
 ---
 
@@ -292,7 +297,8 @@ Tätigkeiten passend zur Kategorie im Heute-Screen.
 Offensichtliche Duplikate werden beim Speichern verhindert. Die Prüfung trimmt
 den Titel, normalisiert Mehrfachspaces und ignoriert Groß-/Kleinschreibung.
 
-Es gibt bewusst keine direkte „nur heute“-Eingabe im Heute-Screen.
+Im Tätigkeitsauswahl-Schritt kann eine Tätigkeit optional nur für den heutigen
+Eintrag oder als eigene Vorlage für spätere Verwendung angelegt werden.
 
 ---
 

@@ -19,15 +19,12 @@ import 'activity_picker_model.dart';
 import 'activity_recommender.dart';
 import 'today_entry_draft.dart';
 import 'widgets/absence_sheet.dart';
-import 'widgets/activity_section.dart';
 import 'widgets/activity_picker_section.dart';
 import 'widgets/add_activity_sheet.dart';
-import 'widgets/area_grid.dart';
-import 'widgets/day_type_row.dart';
 import 'widgets/report_card.dart';
-import 'widgets/save_bar.dart';
 import 'widgets/special_flags_note_section.dart';
 import 'widgets/today_header.dart';
+import 'widgets/today_flow.dart';
 
 class TodayScreen extends StatefulWidget {
   final DailyEntryStorage storage;
@@ -81,6 +78,12 @@ class _TodayScreenState extends State<TodayScreen> {
   bool _optionalSectionExpanded = false;
   late DateTime _activeDate;
   DateTime? _pendingDate;
+  TodayFlowStep _flowStep = TodayFlowStep.dayType;
+  bool _hasChosenDayType = false;
+  Set<String>? _activitySelectionSnapshot;
+  Map<String, String>? _adhocActivitiesSnapshot;
+  bool? _activitySnapshotChanged;
+  TodayFlowStep _activityCancelStep = TodayFlowStep.area;
 
   DateTime get _widgetDate {
     final value = widget.date ?? widget.currentDate ?? DateTime.now();
@@ -93,8 +96,6 @@ class _TodayScreenState extends State<TodayScreen> {
     final now = widget.currentDate ?? DateTime.now();
     return _today == DateTime(now.year, now.month, now.day);
   }
-
-  String get _screenTitle => _isToday ? 'Heute' : 'Tageseintrag';
 
   TodayEntryDraft get _draft => TodayEntryDraft(
         date: _today,
@@ -175,7 +176,6 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     if (_loadFailed) {
       return Scaffold(
-        appBar: AppBar(title: Text(_screenTitle)),
         body: AppEmptyState(
           icon: Icons.error_outline,
           title: 'Eintrag nicht verfügbar',
@@ -193,10 +193,7 @@ class _TodayScreenState extends State<TodayScreen> {
     }
 
     if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: Text(_screenTitle)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final report = _canSave &&
@@ -206,158 +203,271 @@ class _TodayScreenState extends State<TodayScreen> {
         : null;
 
     return PopScope<void>(
-      canPop: !widget.protectBackNavigation || !_hasUnsavedChanges,
+      canPop: !_shouldInterceptPop,
       onPopInvokedWithResult: _handlePop,
       child: Scaffold(
-        appBar: AppBar(title: Text(_screenTitle)),
+        appBar: widget.protectBackNavigation
+            ? null
+            : AppBar(title: const Text('Tageseintrag')),
         body: IgnorePointer(
           ignoring: _isSaving,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: TodayHeader(
-                  title: _screenTitle,
-                  date: _today,
-                  status: _entryStatus,
-                  missingItems: _missingItems,
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  children: [
-                    if (_pendingDate != null) ...[
-                      const SizedBox(height: 16),
-                      AppMessage(
-                        key: const ValueKey('new_day_pending'),
-                        icon: Icons.today_outlined,
-                        title: 'Ein neuer Tag hat begonnen.',
-                        message:
-                            'Deine offenen Änderungen bleiben beim bisherigen Tag.',
-                        tone: AppMessageTone.warning,
-                        action: IconButton(
-                          key: const ValueKey('switch_to_current_day'),
-                          onPressed: _switchToPendingDate,
-                          tooltip: 'Zum heutigen Tag wechseln',
-                          icon: const Icon(Icons.arrow_forward),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    AppSectionHeader(
-                      title: 'Wie war dein Tag?',
-                      description: _isToday
-                          ? 'Was für ein Tag ist heute?'
-                          : 'Was für ein Tag war das?',
-                    ),
-                    const SizedBox(height: 12),
-                    DayTypeRow(
-                      selectedDayType: _selectedDayType,
-                      onSelectBetrieb: _confirmAndSelectDayType,
-                      onSelectBerufsschule: _confirmAndSelectDayType,
-                      onOpenAbsenceSheet: _onOpenAbsenceSheet,
-                    ),
-                    if (_isToday && _savedEntry == null && _yesterdayEntry != null) ...[
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        key: const ValueKey('duplicate_yesterday'),
-                        onPressed: _showDuplicateYesterdaySheet,
-                        icon: const Icon(Icons.copy),
-                        label: const Text('Wie gestern übernehmen'),
-                      ),
-                    ],
-                    if (_selectedDayType == DayType.betrieb) ...[
-                      const SizedBox(height: 24),
-                      AppSectionHeader(
-                        title: 'Bereich',
-                        badge: 'Benötigt',
-                        badgeRequired: true,
-                        description: _isToday
-                            ? 'Wo hast du heute gearbeitet?'
-                            : 'Wo hast du an diesem Tag gearbeitet?',
-                      ),
-                      const SizedBox(height: 12),
-                      AreaGrid(
-                        areas: TrainingArea.values,
-                        selected: _selectedAreas,
-                        onToggle: _toggleArea,
-                      ),
-                    ],
-                    if (_selectedDayType.supportsActivities) ...[
-                      const SizedBox(height: 24),
-                      AppSectionHeader(
-                        title: 'Tätigkeiten',
-                        badge: 'Benötigt',
-                        badgeRequired: true,
-                        description: _isToday
-                            ? 'Wähle aus, was du heute gemacht hast.'
-                            : 'Wähle aus, was du an diesem Tag gemacht hast.',
-                        trailing:
-                            SelectionCount(count: _selectedActivityIds.length),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildActivities(context),
-                    ],
-                    if (_selectedDayType == DayType.sonstiges) ...[
-                      const SizedBox(height: 24),
-                      const AppMessage(
-                        icon: Icons.edit_note_outlined,
-                        title:
-                            'Beschreibe den Tag kurz unter „Ergänzung für den Bericht".',
-                      ),
-                    ],
-                    if (_selectedDayType.isAbsence) ...[
-                      const SizedBox(height: 24),
-                      AppMessage(
-                        icon: Icons.event_available_outlined,
-                        title:
-                            '${_selectedDayType.label} kann direkt gespeichert werden.',
-                        tone: AppMessageTone.success,
-                      ),
-                    ],
-                    if (!_selectedDayType.isAbsence) ...[
-                      const SizedBox(height: 16),
-                      SpecialFlagsAndNoteSection(
-                        selectedDayType: _selectedDayType,
-                        savedEntryId: _savedEntry?.id,
-                        isExpanded: _optionalSectionExpanded,
-                        onExpansionChanged: (expanded) =>
-                            setState(() => _optionalSectionExpanded = expanded),
-                        selectedSpecialFlags: _selectedSpecialFlags,
-                        onToggleSpecialFlag: _toggleSpecialFlag,
-                        reportNoteController: _reportNoteController,
-                        privateNoteController: _privateNoteController,
-                      ),
-                    ],
-                    if (report != null) ...[
-                      const SizedBox(height: 16),
-                      ReportCard(
-                        key: const ValueKey('report_card'),
-                        report: report,
-                        isSaved: _savedEntry != null && !_hasUnsavedChanges,
-                        onCopy: _copyReport,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: SaveBar(
-          missingItems: _missingItems,
-          canSubmit: _canSubmit,
-          isSaving: _isSaving,
-          isNewEntry: _savedEntry == null,
-          isToday: _isToday,
-          onSave: _saveEntry,
-          selectedActivityCount: _selectedActivityIds.length,
-          supportsActivities: _selectedDayType.supportsActivities,
+          child: _buildFlowBody(context, report),
         ),
       ),
     );
   }
+
+  bool get _shouldInterceptPop {
+    if (!widget.protectBackNavigation) return _hasUnsavedChanges;
+    return _flowStep != TodayFlowStep.dayType || _hasUnsavedChanges;
+  }
+
+  Widget _buildFlowBody(BuildContext context, String? report) {
+    if (_flowStep == TodayFlowStep.activities) {
+      return TodayActivityPickerPage(
+        picker: _buildActivities(context),
+        selectedCount: _selectedActivityIds.length,
+        onCancel: _cancelActivitySelection,
+        onConfirm:
+            _selectedActivityIds.isEmpty ? null : _confirmActivitySelection,
+      );
+    }
+
+    if (_flowStep == TodayFlowStep.saved && _savedEntry != null) {
+      final entry = _savedEntry!;
+      final titles = _activityTitlesFor(entry);
+      return TodaySavedOverview(
+        title: _isToday ? 'Heute' : 'Tageseintrag',
+        date: _today,
+        status: _entryStatus,
+        dayType: entry.dayType,
+        areas: entry.areas.map((area) => area.label).toList(growable: false),
+        activities: entry.selectedActivities
+            .map((id) => titles[id] ?? 'Nicht verfügbare Tätigkeit')
+            .toList(growable: false),
+        report: report == null
+            ? null
+            : ReportCard(
+                key: const ValueKey('report_card'),
+                report: report,
+                isSaved: !_hasUnsavedChanges,
+                onCopy: _copyReport,
+              ),
+        onEditDayType: _editDayType,
+        onEditActivities: _editActivities,
+        onEditDetails: _editDetails,
+      );
+    }
+
+    final reviewContent = _flowStep == TodayFlowStep.review
+        ? TodayReviewContent(
+            dayType: _selectedDayType,
+            areas: _selectedAreas
+                .map((area) => area.label)
+                .toList(growable: false),
+            activities: _draft.selectedActivityIds
+                .map((id) =>
+                    _draftActivityTitles[id] ?? 'Nicht verfügbare Tätigkeit')
+                .toList(growable: false),
+            details: SpecialFlagsAndNoteSection(
+              selectedDayType: _selectedDayType,
+              savedEntryId: _savedEntry?.id,
+              isExpanded: _optionalSectionExpanded,
+              onExpansionChanged: (expanded) =>
+                  setState(() => _optionalSectionExpanded = expanded),
+              selectedSpecialFlags: _selectedSpecialFlags,
+              onToggleSpecialFlag: _toggleSpecialFlag,
+              reportNoteController: _reportNoteController,
+              privateNoteController: _privateNoteController,
+            ),
+            report: report == null
+                ? null
+                : ReportCard(
+                    key: const ValueKey('report_card'),
+                    report: report,
+                    isSaved: _savedEntry != null && !_hasUnsavedChanges,
+                    onCopy: _copyReport,
+                  ),
+          )
+        : null;
+
+    final canContinue = switch (_flowStep) {
+      TodayFlowStep.area => _selectedAreas.isNotEmpty,
+      _ => false,
+    };
+    final continueLabel = _flowStep == TodayFlowStep.area
+        ? 'Tätigkeiten auswählen'
+        : 'Wähle einen Tagtyp';
+
+    return TodayCheckInPage(
+      step: _flowStep,
+      title: _isToday ? 'Heute' : 'Tageseintrag',
+      date: _today,
+      status: _entryStatus,
+      missingItems: _flowMissingItems,
+      selectedDayType: _hasChosenDayType ? _selectedDayType : null,
+      selectedAreas: _selectedAreas,
+      showDuplicateYesterday: _flowStep == TodayFlowStep.dayType &&
+          _isToday &&
+          _savedEntry == null &&
+          !_hasUnsavedChanges &&
+          _yesterdayEntry != null,
+      onDuplicateYesterday: _showDuplicateYesterdaySheet,
+      onSelectDayType: _selectDayTypeForFlow,
+      onOpenAbsenceSheet: _onOpenAbsenceSheet,
+      onToggleArea: _toggleArea,
+      onBack: _goBackInFlow,
+      onContinue:
+          _flowStep == TodayFlowStep.area ? _openActivitySelection : null,
+      continueLabel: continueLabel,
+      canContinue: canContinue,
+      reviewContent: reviewContent,
+      notice: _pendingDate == null
+          ? null
+          : AppMessage(
+              key: const ValueKey('new_day_pending'),
+              icon: Icons.today_outlined,
+              title: 'Ein neuer Tag hat begonnen.',
+              message: 'Deine offenen Änderungen bleiben beim bisherigen Tag.',
+              tone: AppMessageTone.warning,
+              action: IconButton(
+                key: const ValueKey('switch_to_current_day'),
+                onPressed: _switchToPendingDate,
+                tooltip: 'Zum heutigen Tag wechseln',
+                icon: const Icon(Icons.arrow_forward),
+              ),
+            ),
+      onSave: _saveEntry,
+      canSave: _canSubmit,
+      isSaving: _isSaving,
+      isNewEntry: _savedEntry == null,
+      isToday: _isToday,
+      selectedActivityCount: _selectedActivityIds.length,
+      supportsActivities: _selectedDayType.supportsActivities,
+    );
+  }
+
+  List<String> get _flowMissingItems {
+    if (!_hasChosenDayType) return const ['Tagtyp'];
+    return _missingItems;
+  }
+
+  Map<String, String> _activityTitlesFor(DailyEntry entry) =>
+      activityTitlesForEntry(entry, _customTemplates);
+
+  Map<String, String> get _draftActivityTitles => {
+        ...buildActivityTitlesMap(_customTemplates),
+        ..._adhocActivities,
+      };
+
+  Future<void> _selectDayTypeForFlow(DayType dayType) async {
+    final wasSelected = _selectedDayType == dayType;
+    await _confirmAndSelectDayType(dayType);
+    if (!mounted || _selectedDayType != dayType) return;
+
+    setState(() {
+      _hasChosenDayType = true;
+      if (wasSelected && !_hasUnsavedChanges) {
+        _setChanged();
+      }
+      _flowStep = switch (dayType) {
+        DayType.betrieb => TodayFlowStep.area,
+        DayType.berufsschule => TodayFlowStep.activities,
+        _ => TodayFlowStep.review,
+      };
+    });
+    if (dayType == DayType.berufsschule) {
+      _beginActivitySnapshot(cancelStep: TodayFlowStep.dayType);
+    }
+  }
+
+  Future<void> _onOpenAbsenceSheet() async {
+    final result = await showAbsenceSheet(
+      context: context,
+      currentSelection: _hasChosenDayType ? _selectedDayType : null,
+    );
+    if (result != null) {
+      await _selectDayTypeForFlow(result);
+    }
+  }
+
+  void _openActivitySelection() {
+    _beginActivitySnapshot(cancelStep: TodayFlowStep.area);
+    setState(() => _flowStep = TodayFlowStep.activities);
+  }
+
+  void _beginActivitySnapshot({required TodayFlowStep cancelStep}) {
+    _activitySelectionSnapshot = {..._selectedActivityIds};
+    _adhocActivitiesSnapshot = {..._adhocActivities};
+    _activitySnapshotChanged = _hasUnsavedChanges;
+    _activityCancelStep = cancelStep;
+  }
+
+  void _confirmActivitySelection() {
+    setState(() {
+      _activitySelectionSnapshot = null;
+      _adhocActivitiesSnapshot = null;
+      _activitySnapshotChanged = null;
+      _flowStep = TodayFlowStep.review;
+      _setChanged();
+    });
+  }
+
+  void _cancelActivitySelection() {
+    final ids = _activitySelectionSnapshot;
+    final adhoc = _adhocActivitiesSnapshot;
+    final changed = _activitySnapshotChanged;
+    setState(() {
+      if (ids != null) {
+        _selectedActivityIds
+          ..clear()
+          ..addAll(ids);
+      }
+      if (adhoc != null) {
+        _adhocActivities
+          ..clear()
+          ..addAll(adhoc);
+      }
+      if (changed != null) _hasUnsavedChanges = changed;
+      _activitySelectionSnapshot = null;
+      _adhocActivitiesSnapshot = null;
+      _activitySnapshotChanged = null;
+      _flowStep = _activityCancelStep;
+    });
+  }
+
+  void _goBackInFlow() {
+    setState(() {
+      _flowStep = switch (_flowStep) {
+        TodayFlowStep.area => TodayFlowStep.dayType,
+        TodayFlowStep.review => _selectedDayType.supportsActivities
+            ? TodayFlowStep.activities
+            : TodayFlowStep.dayType,
+        _ => TodayFlowStep.dayType,
+      };
+    });
+    if (_flowStep == TodayFlowStep.activities) {
+      _beginActivitySnapshot(cancelStep: TodayFlowStep.area);
+    }
+  }
+
+  void _editDayType() {
+    setState(() {
+      _hasChosenDayType = true;
+      _flowStep = TodayFlowStep.dayType;
+    });
+  }
+
+  void _editActivities() {
+    if (_selectedDayType == DayType.betrieb) {
+      setState(() => _flowStep = TodayFlowStep.area);
+      return;
+    }
+    _beginActivitySnapshot(cancelStep: TodayFlowStep.saved);
+    setState(() => _flowStep = TodayFlowStep.activities);
+  }
+
+  void _editDetails() => setState(() => _flowStep = TodayFlowStep.review);
 
   Widget _buildActivities(BuildContext context) {
     if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
@@ -438,16 +548,6 @@ class _TodayScreenState extends State<TodayScreen> {
     if (dayType.isAbsence) {
       _reportNoteController.clear();
       _privateNoteController.clear();
-    }
-  }
-
-  Future<void> _onOpenAbsenceSheet() async {
-    final result = await showAbsenceSheet(
-      context: context,
-      currentSelection: _selectedDayType,
-    );
-    if (result != null) {
-      await _confirmAndSelectDayType(result);
     }
   }
 
@@ -591,16 +691,24 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Future<void> _handlePop(bool didPop, void result) async {
-    if (didPop || !widget.protectBackNavigation || !_hasUnsavedChanges) {
+    if (didPop) return;
+    if (widget.protectBackNavigation && _flowStep == TodayFlowStep.activities) {
+      _cancelActivitySelection();
       return;
     }
+    if (widget.protectBackNavigation &&
+        _flowStep != TodayFlowStep.dayType &&
+        _flowStep != TodayFlowStep.saved) {
+      _goBackInFlow();
+      return;
+    }
+    if (!_hasUnsavedChanges) return;
+
     final discard = await _confirmDiscard(
       'Änderungen verwerfen?',
       'Deine noch nicht gespeicherten Änderungen gehen verloren.',
     );
-    if (!discard || !mounted) {
-      return;
-    }
+    if (!discard || !mounted) return;
     setState(() => _hasUnsavedChanges = false);
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
@@ -677,8 +785,12 @@ class _TodayScreenState extends State<TodayScreen> {
   Future<void> _loadYesterdayEntry() async {
     if (!_isToday) return;
 
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    final yesterdayDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
+    // "Gestern" relativ zum aktiven Tag (_today) berechnen, nicht zur
+    // echten Wanduhr. So ist das Verhalten deterministisch und testbar,
+    // sobald _isToday über currentDate gesteuert wird.
+    final yesterday = _today.subtract(const Duration(days: 1));
+    final yesterdayDate =
+        DateTime(yesterday.year, yesterday.month, yesterday.day);
 
     try {
       final entry = await widget.storage.loadByDate(yesterdayDate);
@@ -753,6 +865,8 @@ class _TodayScreenState extends State<TodayScreen> {
       _optionalSectionExpanded = _selectedSpecialFlags.isNotEmpty ||
           _reportNoteController.text.isNotEmpty ||
           _privateNoteController.text.isNotEmpty;
+      _hasChosenDayType = entry != null;
+      _flowStep = entry == null ? TodayFlowStep.dayType : TodayFlowStep.saved;
     });
 
     _isApplyingEntry = false;
@@ -773,11 +887,19 @@ class _TodayScreenState extends State<TodayScreen> {
           _savedEntry = entry;
           _hasUnsavedChanges = false;
           _isSaving = false;
+          _hasChosenDayType = true;
+          _flowStep = TodayFlowStep.saved;
         });
         _loadFrequentActivities();
         if (wasNewEntry) {
-          _showJokeSheet();
-          _showUndoSnackBar(entry.id);
+          // Witze-Sheet zuerst anzeigen und schließen lassen; erst danach
+          // die Undo-SnackBar zeigen. Sonst wird die SnackBar vom modalen
+          // Sheet verdeckt und die Undo-Action ist nicht nutzbar, während
+          // ihr 5-Sekunden-Timeout abläuft.
+          await _showJokeSheet();
+          if (mounted) {
+            _showUndoSnackBar(entry.id);
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Änderungen gespeichert.')),
@@ -819,8 +941,17 @@ class _TodayScreenState extends State<TodayScreen> {
         HapticFeedback.lightImpact();
         setState(() {
           _savedEntry = null;
-          _hasUnsavedChanges = false;
+          // Die Eingaben bleiben als ungespeicherter Draft erhalten. Damit
+          // PopScope den Draft beim Zurück-Navigieren schützt (canPop false),
+          // muss der Status auf "unge speicherte Änderungen" stehen.
+          _hasUnsavedChanges = true;
+          _hasChosenDayType = true;
+          _flowStep = TodayFlowStep.review;
         });
+        // Nach dem Löschen den Gestern-Eintrag aktualisieren, damit der
+        // "Wie gestern übernehmen"-Button konsistent verfügbar bleibt.
+        await _loadYesterdayEntry();
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Eintrag rückgängig gemacht.')),
         );
@@ -838,13 +969,13 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
-  void _showJokeSheet() {
+  Future<void> _showJokeSheet() async {
     if (!mounted) return;
 
     final joke = jokeForDate(_today);
     final theme = Theme.of(context);
 
-    showModalBottomSheet<void>(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -971,8 +1102,18 @@ class _TodayScreenState extends State<TodayScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
+      'Jan',
+      'Feb',
+      'Mär',
+      'Apr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Dez'
     ];
     return '${date.day}. ${months[date.month - 1]}';
   }

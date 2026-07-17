@@ -345,6 +345,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         },
         destinations: const [
           NavigationDestination(
+            key: ValueKey('tab_today'),
             icon: Icon(Icons.today_outlined),
             selectedIcon: Icon(Icons.today),
             label: AppStrings.tabToday,
