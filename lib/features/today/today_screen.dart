@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
@@ -24,6 +25,7 @@ import 'widgets/add_activity_sheet.dart';
 import 'widgets/report_card.dart';
 import 'widgets/special_flags_note_section.dart';
 import 'widgets/today_header.dart';
+import 'today_flow_steps.dart';
 import 'widgets/today_flow.dart';
 
 class TodayScreen extends StatefulWidget {
@@ -230,6 +232,18 @@ class _TodayScreenState extends State<TodayScreen> {
         onCancel: _cancelActivitySelection,
         onConfirm:
             _selectedActivityIds.isEmpty ? null : _confirmActivitySelection,
+        stepCounter: todayFlowStepCounter(
+          step: _flowStep,
+          dayType: _selectedDayType,
+        ),
+        stepContext: todayFlowStepContext(
+          step: _flowStep,
+          dayType: _selectedDayType,
+          selectedAreaLabels: _selectedAreas
+              .map((area) => area.label)
+              .toList(growable: false),
+        ),
+        onRefresh: _loadEntry,
       );
     }
 
@@ -344,6 +358,7 @@ class _TodayScreenState extends State<TodayScreen> {
       isToday: _isToday,
       selectedActivityCount: _selectedActivityIds.length,
       supportsActivities: _selectedDayType.supportsActivities,
+      onRefresh: _loadEntry,
     );
   }
 
@@ -610,7 +625,7 @@ class _TodayScreenState extends State<TodayScreen> {
             ? _selectedAreas.first.activityCategory
             : ActivityCategory.values.first);
     final existingTitles = <String>{
-      for (final a in defaultActivities) a.title,
+      for (final a in selectableDefaultActivities) a.title,
       for (final t in _customTemplates) t.title,
       ..._adhocActivities.values,
     };
@@ -704,6 +719,20 @@ class _TodayScreenState extends State<TodayScreen> {
     }
     if (!_hasUnsavedChanges) return;
 
+    // Nur strukturelle Änderungen (Tagestyp, Bereiche, Tätigkeiten) lösen
+    // den Verwerfen-Dialog aus. Reine Notiz-/Flag-Änderungen verwerfen wir
+    // still, weil sie die Tageseintrag-Auswahl nicht wirklich verändern.
+    if (!_hasStructuralChanges()) {
+      if (!mounted) return;
+      setState(() => _hasUnsavedChanges = false);
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        await SystemNavigator.pop();
+      }
+      return;
+    }
+
     final discard = await _confirmDiscard(
       'Änderungen verwerfen?',
       'Deine noch nicht gespeicherten Änderungen gehen verloren.',
@@ -715,6 +744,24 @@ class _TodayScreenState extends State<TodayScreen> {
     } else {
       await SystemNavigator.pop();
     }
+  }
+
+  /// Wahr, wenn Tagestyp, Bereiche oder Tätigkeiten vom gespeicherten
+  /// Eintrag abweichen. Reine Notiz-/Flag-Änderungen zählen nicht als
+  /// strukturell.
+  bool _hasStructuralChanges() {
+    final saved = _savedEntry;
+    if (saved == null) return true;
+    if (saved.dayType != _selectedDayType) return true;
+    if (!setEquals(saved.areas.toSet(), _selectedAreas)) return true;
+    if (!setEquals(saved.selectedActivities.toSet(), _selectedActivityIds)) {
+      return true;
+    }
+    if (saved.adhocActivities.length != _adhocActivities.length) return true;
+    for (final adhoc in saved.adhocActivities) {
+      if (_adhocActivities[adhoc.id] != adhoc.title) return true;
+    }
+    return false;
   }
 
   Future<void> _loadTemplates() async {

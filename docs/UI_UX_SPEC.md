@@ -270,6 +270,7 @@ Anforderungen:
 - Kategorie sichtbar
 - Arbeitsschritt-Untergruppen innerhalb großer Kategorien sichtbar machen
 - lokale Suche innerhalb der aktuell passenden Tätigkeiten
+  (Suchfeld-Hint: „Tätigkeiten suchen" — kurz und eindeutig)
 - vollflächiger Auswahl-Schritt mit fixer Aktion „Auswahl übernehmen“
 - ausgewählte Tätigkeiten als kompakte Chip-Leiste sichtbar halten
 - häufig genutzte Tätigkeiten aus gespeicherten Einträgen oben anbieten
@@ -337,6 +338,18 @@ Anforderungen:
 
 Die App darf nicht so wirken, als müsse man jeden Tag einen langen Text schreiben.
 
+Zwei Notizfelder, klar getrennt:
+
+- **Notiz fürs Berichtsheft** (öffentlich) — erscheint im Tagesbericht und kann
+  in das offizielle Berichtsheft übernommen werden.
+- **Private Notiz** (nur lokal) — bleibt nur in der App und wird niemals in
+  den Tagesbericht eingebunden. Visuell durch Schloss-Icon und
+  gefüllten Hintergrund von der öffentlichen Notiz abgesetzt.
+
+Die Klarheit „öffentlich / nur lokal" steht in der Description unter dem
+Titel, nicht im Titel selbst (auf kleinen Displays + Tastatur würde ein
+langer Titel sonst den SaveBar-Bereich verdrängen).
+
 ---
 
 ## 14. Speichern-Button
@@ -391,6 +404,23 @@ KW 25
 Die Punkt-Leiste zeigt at-a-glance den Wochenfortschritt: gefüllter Punkt =
 erledigt, Ring = offen, blasser Punkt = nicht fällig (Wochenende/Zukunft),
 Rahmen = heute. Die genaue Zahl steht als Text daneben („3 / 5 Tage erledigt").
+
+Direkt darunter eine kurze Wochenstatistik in höchstens zwei Bestandteilen,
+zum Beispiel:
+
+```text
+3 eingetragen · 1 offen
+```
+
+Wenn alles erledigt ist:
+
+```text
+Alle 5 Tage eingetragen
+```
+
+Die Verteilung nach Tagestyp (Betrieb / Berufsschule / Abwesenheit) liegt im
+Tooltip der Statistik-Zeile (`… Tagestypen · …`) und bleibt so auf schmalen
+Displays lesbar.
 
 Darunter eine zusammenhängende kompakte Tagesliste:
 
@@ -493,6 +523,9 @@ Funktionen:
 Wichtig:
 
 Vordefinierte Tätigkeiten sollten nicht hart gelöscht werden. Besser deaktivieren.
+Nicht mehr fachlich passende Altvorlagen bleiben mit stabiler ID ausschließlich
+zur Auflösung historischer Einträge erhalten. Sie erscheinen weder in der
+Vorlagenverwaltung noch in Suche, Empfehlungen oder neuer Tagesauswahl.
 
 Eigene Tätigkeitstitel werden aktuell nicht bearbeitet, damit bereits gespeicherte
 Tageseinträge nicht rückwirkend ihre Bedeutung ändern.
@@ -586,6 +619,21 @@ Automatisierte Mindestabsicherung:
 - Tastatur auf Heute-Notiz und Vorlagen-Bottom-Sheet
 - Touchflächen mindestens 48 dp
 - Golden-Referenzen für Onboarding, Heute, Woche und Profil
+
+### Native Patterns
+
+- **App-Shortcuts (Android, Phase 26d #UX-4 B3):** Long-Press auf das
+  App-Icon zeigt statische Shortcuts aus `res/xml/shortcuts.xml`. Aktuell
+  ist „Heute eintragen" verfügbar; der Intent-Schema ist
+  `berichtsheftmerker://shortcut/<id>`, die Auswertung erfolgt in
+  `MainActivity.kt` und wird über den `MethodChannel`
+  `com.daydaylx.berichtsheftmerker/app_shortcuts` an Flutter übermittelt.
+  Verhalten nur auf echtem Gerät verifizierbar.
+
+- **Flow-Übergänge (Phase 26d #UX-4 B5):** Wechsel zwischen den
+  Today-Flow-Schritten sind mit `AnimatedSize` + `AnimatedSwitcher`
+  (FadeTransition, 220 ms, `easeOut`/`easeIn`) animiert. Der Notice
+  bleibt stehen; nur der Schritt-Inhalt fadet ein/aus.
 
 ---
 

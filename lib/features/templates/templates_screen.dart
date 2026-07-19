@@ -86,7 +86,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
       final entries = await storage.loadAll();
       final ids = computeFrequentActivityIds(entries);
       final byId = <String, ActivityTemplate>{
-        for (final template in [...defaultActivities, ..._customTemplates])
+        for (final template in [
+          ...selectableDefaultActivities,
+          ..._customTemplates,
+        ])
           template.id: template,
       };
       final frequent = <ActivityTemplate>[];
@@ -108,7 +111,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   List<ActivityTemplate> get _effectiveDefaults {
     return [
-      for (final template in defaultActivities)
+      for (final template in selectableDefaultActivities)
         _isDefaultActive(template) == template.isActive
             ? template
             : template.copyWith(isActive: _isDefaultActive(template)),
@@ -167,7 +170,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   ActivityTemplate? _findDuplicate(String title) {
     final normalizedTitle = _normalizeActivityTitle(title);
-    final all = [...defaultActivities, ..._customTemplates];
+    final all = [...selectableDefaultActivities, ..._customTemplates];
     final index = all.indexWhere(
       (template) => _normalizeActivityTitle(template.title) == normalizedTitle,
     );
@@ -453,35 +456,46 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             onSelected: (c) => setState(() => _selectedCategory = c),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _loadFailed
-                    ? AppEmptyState(
-                        icon: Icons.error_outline,
-                        title: 'Vorlagen nicht verfügbar',
-                        message:
-                            'Eigene Tätigkeiten konnten nicht geladen werden.',
-                        action: FilledButton.icon(
-                          onPressed: _loadCustom,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Erneut versuchen'),
-                        ),
-                      )
-                    : isEmpty
-                        ? const AppEmptyState(
-                            icon: Icons.search_off_outlined,
-                            title: 'Keine Tätigkeiten gefunden',
-                            message:
-                                'Passe Suche oder Kategorie an, um weitere Tätigkeiten zu sehen.',
-                          )
-                        : _TemplateList(
-                            activeDefaults: filteredActiveDefaults,
-                            inactiveDefaults: filteredInactiveDefaults,
-                            activeCustom: filteredActiveCustom,
-                            inactiveCustom: filteredInactiveCustom,
-                            onToggleCustom: _toggleCustom,
-                            onToggleDefault: _toggleDefault,
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await _loadCustom();
+              },
+              child: _isLoading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 200),
+                        Center(child: CircularProgressIndicator()),
+                      ],
+                    )
+                  : _loadFailed
+                      ? AppEmptyState(
+                          icon: Icons.error_outline,
+                          title: 'Vorlagen nicht verfügbar',
+                          message:
+                              'Eigene Tätigkeiten konnten nicht geladen werden.',
+                          action: FilledButton.icon(
+                            onPressed: _loadCustom,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Erneut versuchen'),
                           ),
+                        )
+                      : isEmpty
+                          ? const AppEmptyState(
+                              icon: Icons.search_off_outlined,
+                              title: 'Keine Tätigkeiten gefunden',
+                              message:
+                                  'Passe Suche oder Kategorie an, um weitere Tätigkeiten zu sehen.',
+                            )
+                          : _TemplateList(
+                              activeDefaults: filteredActiveDefaults,
+                              inactiveDefaults: filteredInactiveDefaults,
+                              activeCustom: filteredActiveCustom,
+                              inactiveCustom: filteredInactiveCustom,
+                              onToggleCustom: _toggleCustom,
+                              onToggleDefault: _toggleDefault,
+                            ),
+            ),
           ),
         ],
       ),

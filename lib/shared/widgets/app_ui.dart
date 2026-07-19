@@ -297,3 +297,61 @@ class AppSectionDivider extends StatelessWidget {
     );
   }
 }
+
+/// Kompakter Schritt-Indikator (#UX-1 A2): N Punkte, davon der aktive
+/// breiter und in Primärfarbe. Erledigte Schritte dezent in Primärfarbe,
+/// kommende im neutralen Surface-Ton. Liefert zusätzlich ein
+/// `Semantics`-Label für Screenreader.
+class AppStepIndicator extends StatelessWidget {
+  final int currentStep;
+  final int totalSteps;
+  final String? semanticLabel;
+
+  const AppStepIndicator({
+    super.key,
+    required this.currentStep,
+    required this.totalSteps,
+    this.semanticLabel,
+  })  : assert(currentStep >= 1, 'currentStep muss >= 1 sein'),
+        assert(totalSteps >= 1, 'totalSteps muss >= 1 sein'),
+        assert(currentStep <= totalSteps, 'currentStep darf totalSteps nicht überschreiten');
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final dots = <Widget>[];
+    for (int i = 0; i < totalSteps; i++) {
+      final isCurrent = i + 1 == currentStep;
+      final isDone = i + 1 < currentStep;
+      dots.add(
+        AnimatedContainer(
+          key: ValueKey('app_step_indicator_dot_${i + 1}'),
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          width: isCurrent ? 22 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isCurrent || isDone
+                ? cs.primary
+                : cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      );
+      if (i < totalSteps - 1) {
+        dots.add(const SizedBox(width: 6));
+      }
+    }
+    return Semantics(
+      label: semanticLabel ?? 'Schritt $currentStep von $totalSteps',
+      container: true,
+      excludeSemantics: true,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: dots,
+      ),
+    );
+  }
+}

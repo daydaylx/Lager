@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import '../core/constants.dart';
 import '../core/profile_storage.dart';
+import '../core/services/app_shortcut_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
 import '../core/storage/daily_entry_storage.dart';
@@ -56,6 +57,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   String? _occupation;
   int? _trainingYear;
   late final NotificationScheduler _notificationScheduler;
+  late final AppShortcutService _appShortcutService;
   late ThemePreset _themePreset;
 
   @override
@@ -69,6 +71,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     _themePreset = widget.initialThemePreset;
     _notificationScheduler = widget.notificationScheduler ??
         const FlutterLocalNotificationScheduler();
+    _appShortcutService = AppShortcutService();
   }
 
   Future<void> _completeOnboarding({
@@ -148,6 +151,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               defaultActivityStateStorage: widget.defaultActivityStateStorage,
               onDataCleared: _resetAll,
               notificationScheduler: _notificationScheduler,
+              appShortcutService: _appShortcutService,
               trainingYear: _trainingYear,
               onProfileChanged: _profileChanged,
               themePreset: _themePreset,
@@ -177,6 +181,7 @@ class MainShell extends StatefulWidget {
   final ThemePreset themePreset;
   final Future<void> Function(ThemePreset) onThemeChanged;
   final AppClock clock;
+  final AppShortcutService appShortcutService;
 
   const MainShell({
     super.key,
@@ -185,6 +190,7 @@ class MainShell extends StatefulWidget {
     this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     required this.onDataCleared,
     required this.notificationScheduler,
+    required this.appShortcutService,
     this.trainingYear,
     this.onProfileChanged,
     required this.themePreset,
@@ -209,6 +215,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _currentDate = _normalizedDate(widget.clock());
     _initializeNotifications();
+    _initializeAppShortcuts();
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkTodayEntry());
   }
 
@@ -224,6 +231,26 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _refreshCurrentDate();
       _checkTodayEntry();
+    }
+  }
+
+  Future<void> _initializeAppShortcuts() async {
+    final initial = await widget.appShortcutService.initialize(
+      onAction: _handleShortcutAction,
+    );
+    if (initial != null) {
+      _handleShortcutAction(initial);
+    }
+  }
+
+  void _handleShortcutAction(AppShortcutAction action) {
+    if (!mounted) return;
+    switch (action) {
+      case AppShortcutAction.openToday:
+        setState(() => _currentIndex = 0);
+        break;
+      case AppShortcutAction.unknown:
+        break;
     }
   }
 

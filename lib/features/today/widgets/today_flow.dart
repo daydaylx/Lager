@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/enums/day_type.dart';
 import '../../../core/enums/training_area.dart';
 import '../../../shared/widgets/app_ui.dart';
+import '../today_flow_steps.dart';
 import 'area_grid.dart';
 import 'day_type_row.dart';
 import 'save_bar.dart';
@@ -38,6 +39,7 @@ class TodayCheckInPage extends StatelessWidget {
   final bool isToday;
   final int selectedActivityCount;
   final bool supportsActivities;
+  final Future<void> Function()? onRefresh;
 
   const TodayCheckInPage({
     super.key,
@@ -66,73 +68,85 @@ class TodayCheckInPage extends StatelessWidget {
     required this.isToday,
     required this.selectedActivityCount,
     required this.supportsActivities,
+    this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
+    final counter = todayFlowStepCounter(
+      step: step,
+      dayType: selectedDayType,
+    );
+    final showStepHeader = step != TodayFlowStep.dayType &&
+        step != TodayFlowStep.saved;
     return SafeArea(
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              children: [
-                if (notice != null) ...[
-                  notice!,
-                  const SizedBox(height: 16),
-                ],
-                if (step == TodayFlowStep.dayType) ...[
-                  TodayHeader(
-                    title: title,
-                    date: date,
-                    status: status,
-                    missingItems: missingItems,
-                  ),
-                  const SizedBox(height: 32),
-                  const AppSectionHeader(
-                    title: 'Wie war dein Tag?',
-                    description: 'Wähle den passenden Tagtyp.',
-                  ),
-                  const SizedBox(height: 12),
-                  DayTypeRow(
-                    selectedDayType: selectedDayType,
-                    onSelectBetrieb: onSelectDayType,
-                    onSelectBerufsschule: onSelectDayType,
-                    onOpenAbsenceSheet: onOpenAbsenceSheet,
-                  ),
-                  if (showDuplicateYesterday) ...[
-                    const SizedBox(height: 24),
-                    FilledButton.tonalIcon(
-                      key: const ValueKey('duplicate_yesterday'),
-                      onPressed: onDuplicateYesterday,
-                      icon: const Icon(Icons.copy_outlined),
-                      label: const Text('Wie gestern starten'),
-                    ),
+            child: RefreshIndicator(
+              onRefresh: onRefresh ?? () async {},
+              child: ListView(
+                physics: onRefresh == null
+                    ? const NeverScrollableScrollPhysics()
+                    : const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                children: [
+                  if (notice != null) ...[
+                    notice!,
+                    const SizedBox(height: 16),
                   ],
-                ] else if (step == TodayFlowStep.area) ...[
-                  _StepHeader(
-                    step: 'Schritt 2 von 4',
-                    title: 'Wo hast du gearbeitet?',
-                    onBack: onBack,
+                  // Schrittübergang mit Fade-Animation (#UX-4 B5): der Notice
+                  // bleibt stehen, nur der Step-Inhalt fadet ein/aus. Auch die
+                  // Höhe des Inhalts animiert mit (AnimatedSize), damit der
+                  // SaveBar-Bereich nicht springt.
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                    alignment: Alignment.topCenter,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      ),
+                      child: _StepBody(
+                        key: ValueKey(
+                          'step_body_${step.name}_${selectedDayType?.name ?? "none"}',
+                        ),
+                        step: step,
+                        title: title,
+                        date: date,
+                        status: status,
+                        missingItems: missingItems,
+                        selectedDayType: selectedDayType,
+                        selectedAreas: selectedAreas,
+                        showDuplicateYesterday: showDuplicateYesterday,
+                        onSelectDayType: onSelectDayType,
+                        onOpenAbsenceSheet: onOpenAbsenceSheet,
+                        onDuplicateYesterday: onDuplicateYesterday,
+                        onToggleArea: onToggleArea,
+                        onBack: onBack,
+                        counter: counter,
+                        reviewContent: reviewContent,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  AreaGrid(
-                    areas: TrainingArea.values,
-                    selected: selectedAreas,
-                    onToggle: onToggleArea,
-                  ),
-                ] else ...[
-                  _StepHeader(
-                    step: 'Prüfen & speichern',
-                    title: 'Dein Tag auf einen Blick',
-                    onBack: onBack,
-                  ),
-                  const SizedBox(height: 20),
-                  if (reviewContent != null) reviewContent!,
                 ],
-              ],
+              ),
             ),
           ),
+          if (showStepHeader) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: AppStepIndicator(
+                key: const ValueKey('today_step_indicator'),
+                currentStep: counter.current,
+                totalSteps: counter.total,
+              ),
+            ),
+          ],
           if (step == TodayFlowStep.review)
             SaveBar(
               missingItems: const [],
@@ -163,11 +177,115 @@ class TodayCheckInPage extends StatelessWidget {
   }
 }
 
+/// Inhaltliche Trennung der Flow-Schritte (#UX-4 B5): jeder Schritt ist ein
+/// eigenes Widget mit stabilem Key, damit [AnimatedSwitcher] sauber zwischen
+/// ihnen überblenden kann. Der Key enthält den Step UND den aktuellen
+/// DayType, damit Animationen auch bei DayType-Wechsel ohne Step-Wechsel
+/// (z. B. Auswahl ändern) neu starten, aber die Animation nicht beim reinen
+/// State-Update (z. B. Bereich umschalten) erneut läuft.
+class _StepBody extends StatelessWidget {
+  final TodayFlowStep step;
+  final String title;
+  final DateTime date;
+  final TodayEntryStatus status;
+  final List<String> missingItems;
+  final DayType? selectedDayType;
+  final Set<TrainingArea> selectedAreas;
+  final bool showDuplicateYesterday;
+  final ValueChanged<DayType> onSelectDayType;
+  final VoidCallback onOpenAbsenceSheet;
+  final VoidCallback? onDuplicateYesterday;
+  final ValueChanged<TrainingArea> onToggleArea;
+  final VoidCallback onBack;
+  final TodayFlowStepCounter counter;
+  final Widget? reviewContent;
+
+  const _StepBody({
+    super.key,
+    required this.step,
+    required this.title,
+    required this.date,
+    required this.status,
+    required this.missingItems,
+    required this.selectedDayType,
+    required this.selectedAreas,
+    required this.showDuplicateYesterday,
+    required this.onSelectDayType,
+    required this.onOpenAbsenceSheet,
+    required this.onDuplicateYesterday,
+    required this.onToggleArea,
+    required this.onBack,
+    required this.counter,
+    required this.reviewContent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (step == TodayFlowStep.dayType) ...[
+          TodayHeader(
+            title: title,
+            date: date,
+            status: status,
+            missingItems: missingItems,
+          ),
+          const SizedBox(height: 32),
+          const AppSectionHeader(
+            title: 'Wie war dein Tag?',
+            description: 'Wähle den passenden Tagtyp.',
+          ),
+          const SizedBox(height: 12),
+          DayTypeRow(
+            selectedDayType: selectedDayType,
+            onSelectBetrieb: onSelectDayType,
+            onSelectBerufsschule: onSelectDayType,
+            onOpenAbsenceSheet: onOpenAbsenceSheet,
+          ),
+          if (showDuplicateYesterday) ...[
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              key: const ValueKey('duplicate_yesterday'),
+              onPressed: onDuplicateYesterday,
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('Wie gestern starten'),
+            ),
+          ],
+        ] else if (step == TodayFlowStep.area) ...[
+          _StepHeader(
+            counter: counter,
+            title: 'Wo hast du gearbeitet?',
+            onBack: onBack,
+          ),
+          const SizedBox(height: 20),
+          AreaGrid(
+            areas: TrainingArea.values,
+            selected: selectedAreas,
+            onToggle: onToggleArea,
+          ),
+        ] else ...[
+          _StepHeader(
+            counter: counter,
+            title: 'Dein Tag auf einen Blick',
+            onBack: onBack,
+          ),
+          const SizedBox(height: 20),
+          if (reviewContent != null) reviewContent!,
+        ],
+      ],
+    );
+  }
+}
+
 class TodayActivityPickerPage extends StatelessWidget {
   final Widget picker;
   final int selectedCount;
   final VoidCallback onCancel;
   final VoidCallback? onConfirm;
+  final TodayFlowStepCounter stepCounter;
+  final String? stepContext;
+  final Future<void> Function()? onRefresh;
 
   const TodayActivityPickerPage({
     super.key,
@@ -175,10 +293,14 @@ class TodayActivityPickerPage extends StatelessWidget {
     required this.selectedCount,
     required this.onCancel,
     required this.onConfirm,
+    required this.stepCounter,
+    this.stepContext,
+    this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SafeArea(
       child: Column(
         children: [
@@ -194,27 +316,63 @@ class TodayActivityPickerPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    'Tätigkeiten',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        stepCounter.label,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        'Tätigkeiten',
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
+                      ),
+                      if (stepContext case final context?) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          context,
+                          key: const ValueKey('activity_picker_context'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Text(
                   '$selectedCount gewählt',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,
                       ),
                 ),
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: AppStepIndicator(
+              key: const ValueKey('today_step_indicator'),
+              currentStep: stepCounter.current,
+              totalSteps: stepCounter.total,
+            ),
+          ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              children: [picker],
+            child: RefreshIndicator(
+              onRefresh: onRefresh ?? () async {},
+              child: ListView(
+                physics: onRefresh == null
+                    ? const NeverScrollableScrollPhysics()
+                    : const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [picker],
+              ),
             ),
           ),
           TodayFlowActionBar(
@@ -415,12 +573,12 @@ class TodayFlowActionBar extends StatelessWidget {
 }
 
 class _StepHeader extends StatelessWidget {
-  final String step;
+  final TodayFlowStepCounter counter;
   final String title;
   final VoidCallback onBack;
 
   const _StepHeader({
-    required this.step,
+    required this.counter,
     required this.title,
     required this.onBack,
   });
@@ -442,10 +600,13 @@ class _StepHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(step,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  )),
+              Text(
+                counter.label,
+                key: const ValueKey('today_step_label'),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(height: 2),
               Text(title,
                   style: theme.textTheme.headlineSmall?.copyWith(

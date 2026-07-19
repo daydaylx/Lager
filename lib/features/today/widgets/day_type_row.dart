@@ -47,21 +47,29 @@ class DayTypeRow extends StatelessWidget {
             onSelectBerufsschule(DayType.berufsschule);
           },
         ),
-        ChoiceChip(
-          key: const ValueKey('day_type_absence_chip'),
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_isAbsenceOrOther ? selectedDayType!.label : 'Abwesend'),
-              const SizedBox(width: 2),
-              const Icon(Icons.expand_more, size: 18),
-            ],
+        // Abwesend-Chip öffnet ein Auswahlmenü (kein sofortiger Tagesstatus).
+        // Tooltip + unfold_more-Icon (#UX-1 A10) machen die Menü-Semantik klar.
+        Tooltip(
+          key: const ValueKey('day_type_absence_tooltip'),
+          message: _isAbsenceOrOther
+              ? 'Abwesenheit ändern'
+              : 'Abwesenheit oder Sonstiges wählen',
+          child: ChoiceChip(
+            key: const ValueKey('day_type_absence_chip'),
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_isAbsenceOrOther ? selectedDayType!.label : 'Abwesend'),
+                const SizedBox(width: 4),
+                const Icon(Icons.unfold_more, size: 18),
+              ],
+            ),
+            selected: _isAbsenceOrOther,
+            onSelected: (_) {
+              HapticFeedback.lightImpact();
+              onOpenAbsenceSheet();
+            },
           ),
-          selected: _isAbsenceOrOther,
-          onSelected: (_) {
-            HapticFeedback.lightImpact();
-            onOpenAbsenceSheet();
-          },
         ),
       ],
     );

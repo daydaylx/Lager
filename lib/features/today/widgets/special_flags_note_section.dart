@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/enums/day_type.dart';
 import '../../../core/enums/special_flag.dart';
 import '../../../shared/widgets/app_ui.dart';
@@ -70,10 +71,11 @@ class _SpecialFlagsAndNoteSectionState
         _buildSpecialFlags(),
         const SizedBox(height: 24),
         const AppSectionHeader(
-          title: 'Ergänzung für den Bericht',
+          title: 'Notiz fürs Berichtsheft',
           badge: 'Optional',
           badgeRequired: false,
-          description: 'Erscheint im Berichtshefttext.',
+          description:
+              'Öffentlich – erscheint im Berichtshefttext.',
         ),
         const SizedBox(height: 12),
         TextField(
@@ -117,7 +119,7 @@ class _SpecialFlagsAndNoteSectionState
         ),
         const SizedBox(height: 4),
         Text(
-          'Private Notiz – wird nicht ins Berichtsheft übernommen',
+          'Nur lokal – bleibt in der App, nicht im Berichtsheft.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -165,7 +167,10 @@ class _SpecialFlagsAndNoteSectionState
             key: ValueKey('special_${flag.name}'),
             label: Text(flag.label),
             selected: true,
-            onSelected: (_) => widget.onToggleSpecialFlag(flag),
+            onSelected: (_) {
+              HapticFeedback.selectionClick();
+              widget.onToggleSpecialFlag(flag);
+            },
           ),
         ),
         ...visibleUnselected.map(
@@ -173,7 +178,10 @@ class _SpecialFlagsAndNoteSectionState
             key: ValueKey('special_${flag.name}'),
             label: Text(flag.label),
             selected: false,
-            onSelected: (_) => widget.onToggleSpecialFlag(flag),
+            onSelected: (_) {
+              HapticFeedback.selectionClick();
+              widget.onToggleSpecialFlag(flag);
+            },
           ),
         ),
         if (!showAll && hiddenCount > 0)

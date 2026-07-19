@@ -1,10 +1,49 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-15 (Phase 25: geführter Today-Check-in abgeschlossen; Debug-APK gebaut)
+Stand: 2026-07-15 (Phase 26 abgeschlossen — a/b/c UX-Quick-Wins + d Native Patterns; analyze 0 Issues, 280/280 Tests grün)
 
 ---
 
-## Letzte Änderung: Phase 25 – Geführter Today-Check-in
+## Letzte Änderung: Phase 26d – Native Patterns & Bewegung (UX-4 B3, B5, B11)
+
+- **B3 App-Shortcuts für Android:** `res/xml/shortcuts.xml` mit Shortcut `open_today` (Intent-Schema `berichtsheftmerker://shortcut/<id>`); `res/values/strings.xml` mit Label-Strings; `AndroidManifest.xml` um `<meta-data android:name="app_shortcuts">` ergänzt; `MainActivity.kt` liest Intent in `configureFlutterEngine` und `onNewIntent` und liefert initialen Shortcut bzw. Live-Aufruf via `MethodChannel` `app_shortcuts`; `lib/core/services/app_shortcut_service.dart` als Flutter-Bridge mit `AppShortcutAction`-Enum; `MainShell` schaltet bei `openToday` auf Tab 0. **Verhalten nur auf echtem Gerät verifizierbar** — manuelle QA im Phase-19-Gerätetest.
+- **B5 AnimatedSwitcher zwischen Flow-Schritten:** Step-Inhalt in eigenes `_StepBody`-Widget extrahiert; in `TodayCheckInPage` mit `AnimatedSize` + `AnimatedSwitcher` (FadeTransition, 220 ms, `easeOut`/`easeIn`) umschlossen; stabiler Key enthält Step + DayType, damit State-Updates ohne Step-Wechsel keine neue Animation auslösen.
+- **B11 SaveBar-Sichtbarkeit bei Tastatur:** bestehender Test „Heute-Notiz und Speichern bleiben mit Tastatur erreichbar" (`test/ui_layout_test.dart`, 360×640 + 280 dp Tastatur-Inset) deckt das Verhalten bereits ab — SaveBar bleibt nach Tastatur-Öffnung findbar. Zusätzliche `Scrollable.ensureVisible` wäre redundant; bewusst kein Code-Eingriff.
+- **Bewusst zurückgestellt:** UX-3 A5 (bedingte Suchfeld-Sichtbarkeit), UX-3 B8 (Witz-Sheet-Toggle im Profil) und die umfangreichen Erweiterungen (Stepper-Pattern, Draft-Persistenz, First-Day-Erfahrung, Onboarding-Illustration, App-Icon-Badge) bleiben eigene zukünftige Phasen.
+- **Neue Dateien:** `android/app/src/main/res/xml/shortcuts.xml`, `android/app/src/main/res/values/strings.xml`, `lib/core/services/app_shortcut_service.dart`, `test/app_shortcut_service_test.dart`.
+- **Geänderte Dateien:** `android/app/src/main/AndroidManifest.xml`, `android/app/src/main/kotlin/.../MainActivity.kt`, `lib/app/app.dart`, `lib/features/today/widgets/today_flow.dart`.
+- `flutter analyze` — 0 Issues; `flutter test` — 280/280 grün; `flutter build apk --debug` — erfolgreich; `scripts/check_repo_hygiene.sh` — OK.
+
+---
+
+## Vorherige Änderung: Phase 26 – UX-Quick-Wins
+
+- **26a — Flow-Orientierung & Haptik:** Schritt-Labels aus `TodayFlowStep` + Tagestyp korrekt abgeleitet (Betrieb 1/4, Berufsschule 1/3, Abwesenheit 1/2) statt hartcodiertem „Schritt 2 von 4"; neuer `AppStepIndicator` (N Punkte, aktiver Schritt breiter in Primärfarbe); Picker-Header trägt Bereichs-Kontext; Haptic auf AreaGrid, `ActivityRow` und SpecialFlag; „Wie gestern starten" von FilledButton.tonalIcon auf OutlinedButton.icon; Abwesend-Chip mit Tooltip + `unfold_more`-Icon.
+- **26b — UX-Patterns:** Pull-to-Refresh auf Heute- und Vorlagen-Screen (bisher nur Woche); Pop-Schutz-Differenzierung — reine Notiz-/Flag-Änderungen verwerfen ohne Bestätigungsdialog via `_hasStructuralChanges()`; expliziter Test dokumentiert, dass „Eintrag fehlt"-SnackBar bei Krank-Eintrag nicht mehr erscheint (war faktisch bereits durch `if (entry != null) return;` abgedeckt).
+- **26c — Klarheit & Polish:** „Eigene Tätigkeit" von FilledButton.tonalIcon auf kompakten TextButton.icon; Notizfeld-Beschriftungen präzisiert („Notiz fürs Berichtsheft" + Klarheit in der Description); Suchfeld-Hint „Tätigkeiten suchen"; Wochenstatistik gekürzt („X eingetragen · Y offen" + Verteilung im Tooltip).
+- **Bewusst zurückgestellt (separater Folge-Scope):** App-Shortcuts (Android-Kotlin), AnimatedSwitcher zwischen Flow-Schritten, SaveBar-Tastatur-Handling, bedingte Suchfeld-Sichtbarkeit, Witz-Sheet-Re-Trigger im Profil.
+- **Dokumentation:** `TASKS.md` um Phase 26 erweitert; ADR folgt.
+- **Neue Dateien:** `lib/features/today/today_flow_steps.dart` (reine Step-Logik), `test/today_flow_steps_test.dart` (16 Tests), `test/app_step_indicator_test.dart` (6 Tests).
+- **Goldens regeneriert:** `today_empty.png` (35×36 px im Abwesend-Chip durch Icon-Wechsel) und `week_mixed.png` (großflächige Layout-Anpassung durch kürzere Wochenstatistik) — beide nach Sichtprüfung aktualisiert.
+- `flutter analyze` — 0 Issues; `flutter test` — 274/274 grün; `flutter build apk --debug` — erfolgreich; `scripts/check_repo_hygiene.sh` — OK.
+
+---
+
+## Vorherige Änderung: Vorlagenkatalog fachlich bereinigt
+
+- Passive Pflichtaussagen wie „Persönliche Schutzausrüstung getragen“ und
+  „Sicherheitsvorschriften beachtet“ sowie doppelte Angaben zu Besonderheiten
+  sind aus Vorlagenverwaltung und neuer Tagesauswahl entfernt.
+- Alle 132 stabilen IDs bleiben für historische Einträge auflösbar; 123
+  Tätigkeiten sind fachlich auswählbar, 38 davon standardmäßig aktiv.
+- Unpassende aktive Vorlagen wurden durch konkrete Tätigkeiten zu
+  Ladungsträgern, Qualitätsprüfung, 5S und Qualitätsmängeln ersetzt.
+- Zahlreiche Vorlagentitel wurden handlungsorientierter und eindeutiger
+  formuliert; Kategorie und Untergruppen heißen jetzt passend
+  „Ordnung / Qualität / Unterweisung“.
+- Repo-Hygiene OK; `flutter analyze` 0 Issues; `flutter test` 251/251 bestanden.
+
+## Vorherige Änderung: Phase 25 – Geführter Today-Check-in
 
 - TodayScreen als bedingter Ablauf neu aufgebaut: Tagtyp → Bereich (nur Betrieb) → vollflächige Tätigkeitsauswahl → Prüfen & Speichern.
 - Die Tätigkeitsauswahl arbeitet bis „Auswahl übernehmen“ mit einer Arbeitsauswahl; Abbrechen verwirft nur diese noch nicht übernommenen Änderungen.
@@ -17,7 +56,7 @@ Stand: 2026-07-15 (Phase 25: geführter Today-Check-in abgeschlossen; Debug-APK 
 
 ---
 
-## Phase 24: UX-Upgrade (in Arbeit)
+## Historie: Phase 24 – UX-Upgrade (abgeschlossen)
 
 ### Abgeschlossen:
 - **24a:** `AppSectionDivider`-Widget für dezente Sektions-Trenner im Heute-Screen
@@ -28,12 +67,9 @@ Stand: 2026-07-15 (Phase 25: geführter Today-Check-in abgeschlossen; Debug-APK 
 - `flutter test`: 272/272 bestanden ✅
 - `flutter build apk --debug`: erfolgreich ✅
 
-### Nächste Schritte:
-- **24e:** Undo-SnackBar & Tages-Duplikation
-
 ---
 
-## Letzte Änderung: Phase 24e – Undo & Tages-Duplikation
+## Abschluss Phase 24e – Undo & Tages-Duplikation
 
 - **Undo-SnackBar nach Speichern:** Nach erfolgreichem Speichern eines neuen Eintrags erscheint eine SnackBar mit "Eintrag gespeichert." und einem "Rückgängig"-Button (5 Sekunden sichtbar)
 - **"Wie gestern übernehmen"-Button:** Wenn heute noch kein Eintrag vorhanden ist, aber einer von gestern, erscheint ein Button mit Copy-Icon zum Übernehmen der Tätigkeiten
@@ -157,7 +193,9 @@ Release-QA nicht als erledigt markieren, solange der Gerätetest aussteht.
 
 ## Was fertig ist
 
-Phasen 0–20 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3.
+Phasen 0–20 im Code abgeschlossen, plus UI/UX-Audit Phasen 1–3, plus
+Phase 25 (Geführter Today-Check-in) und Phase 26 (UX-Quick-Wins und Native
+Patterns — Sub-Phasen a/b/c/d).
 Phase 21 (Agenten-Qualität: CI, PR-Template, Hygiene-Skript) bleibt bestehen.
 
 Phase 22 (Daily-Check-in-Redesign) wurde am 2026-07-10 rückgängig gemacht.
@@ -302,7 +340,7 @@ Weitere akzeptierte aktuelle Funktionen:
 - Deterministischer lokaler Tagesberichtsvorschlag in Heute und Woche, inklusive Kopieren
 - Neun lokal persistierte Farbthemes (acht dunkle, ein helles); `Lager Teal` ist das dunkle Standardpreset
 - Theme-Auswahl im Profil über ein Farbkachel-Grid mit Live-Vorschau; Zurücksetzen über „Alle Daten löschen"
-- Tätigkeitskatalog mit 132 vordefinierten Lagerlogistik-Tätigkeiten inklusive EDV/Scanner, Qualität, Ordnung/5S und Unterweisung
+- Tätigkeitskatalog mit 132 stabilen IDs und 123 auswählbaren Lagerlogistik-Tätigkeiten inklusive EDV/Scanner, Qualität, Ordnung/5S und Unterweisung
 - Heute-Screen mit Tätigkeitssuche, häufig genutzten Tätigkeiten, Untergruppen, Ausbildungsjahr-Empfehlungen und sichtbaren Auswahlchips
 - Tagesbericht-Generator mit mehreren deterministischen Satzmustern für Betrieb und Berufsschule; Besonderheiten wie Kontrolle, Fehlerkorrektur, Probleme und Notizen werden eingebunden
 - Fachlagerist/in ist auf Ausbildungsjahr 1–2 begrenzt; Fachkraft für Lagerlogistik erlaubt 1–3
@@ -320,7 +358,7 @@ Aktuell nach Neu-Build des Release-APK (2026-07-15):
 ```
 bash scripts/check_repo_hygiene.sh  →  OK
 flutter analyze          →  0 Issues
-flutter test             →  272/272 bestanden
+flutter test             →  251/251 bestanden
 flutter build apk --debug  →  erfolgreich (Jul 15)
 flutter build apk --release  →  erfolgreich (2026-07-15, 24.4 MB, signiert)
 CI (Job flutter-checks)    →  Required-Check für main (Branch Protection)
