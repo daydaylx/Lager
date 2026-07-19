@@ -5,14 +5,14 @@ import '../models/activity_template.dart';
 ///
 /// Bewusst werden **keine** IDs entfernt oder umbenannt: gespeicherte
 /// Tageseinträge referenzieren diese IDs als Strings, und alte Berichte müssen
-/// auflösbar bleiben. Statt Tätigkeiten zu löschen, werden überflüssig feine
-/// Standardtätigkeiten über [ActivityTemplate.isActive] deaktiviert.
+/// auflösbar bleiben. Nicht mehr sinnvolle Einträge bleiben deshalb hier als
+/// historische Referenz erhalten, werden aber über [retiredDefaultActivityIds]
+/// aus neuer Auswahl und Vorlagenverwaltung ausgeblendet.
 ///
-/// Werksvorgabe (Stand Tätigkeitserfassungs-Überarbeitung): nur die ~38 unten
-/// mit `isActive: true` markierten Einträge sind im Tagesformular direkt
-/// auswählbar; alle weiteren sind `isActive: false` und lassen sich im
-/// Vorlagen-Screen aktivieren/deaktivieren. Titel der aktiven Tätigkeiten sind
-/// gröber formuliert; deaktivierte behalten ihren Originaltitel.
+/// Werksvorgabe: 38 der auswählbaren Einträge sind im Tagesformular direkt
+/// aktiv. Weitere fachlich passende Einträge können im Vorlagen-Screen
+/// aktiviert werden. Passive Pflichtaussagen und Angaben, die bereits über
+/// Besonderheiten abgedeckt sind, gehören nicht zur auswählbaren Liste.
 const List<ActivityTemplate> defaultActivities = [
   // --- Wareneingang (aktiv: 01, 05, 06, 11) ---
   ActivityTemplate(
@@ -29,13 +29,13 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'wareneingang_03',
-    title: 'Menge kontrolliert',
+    title: 'Liefermenge kontrolliert',
     category: ActivityCategory.wareneingang,
     isActive: false,
   ),
   ActivityTemplate(
     id: 'wareneingang_04',
-    title: 'Artikelnummern verglichen',
+    title: 'Artikelnummern mit Lieferpapieren abgeglichen',
     category: ActivityCategory.wareneingang,
     isActive: false,
   ),
@@ -83,7 +83,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'wareneingang_12',
-    title: 'Lieferdaten im Warenwirtschaftssystem nachvollzogen',
+    title: 'Lieferdaten im Warenwirtschaftssystem geprüft',
     category: ActivityCategory.wareneingang,
     isActive: false,
   ),
@@ -101,7 +101,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'wareneingang_15',
-    title: 'Auffälligkeiten bei der Lieferung gemeldet',
+    title: 'Lieferabweichung dokumentiert und gemeldet',
     category: ActivityCategory.wareneingang,
     isActive: false,
   ),
@@ -115,7 +115,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'einlagerung_02',
-    title: 'Lagerplatz gesucht',
+    title: 'Geeigneten Lagerplatz ermittelt',
     category: ActivityCategory.einlagerung,
     isActive: false,
   ),
@@ -145,13 +145,13 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'einlagerung_07',
-    title: 'Mindesthaltbarkeitsdatum und FIFO kontrolliert',
+    title: 'Mindesthaltbarkeitsdaten und FIFO-Reihenfolge kontrolliert',
     category: ActivityCategory.einlagerung,
     isActive: true,
   ),
   ActivityTemplate(
     id: 'einlagerung_08',
-    title: 'Ordnung und Sauberkeit im Lager hergestellt',
+    title: 'Lagerbereich gereinigt und geordnet',
     category: ActivityCategory.einlagerung,
     isActive: true,
   ),
@@ -198,7 +198,7 @@ const List<ActivityTemplate> defaultActivities = [
     isActive: false,
   ),
 
-  // --- Transport (aktiv: 01, 03, 07) ---
+  // --- Transport (aktiv: 01, 03, 08) ---
   ActivityTemplate(
     id: 'transport_01',
     title: 'Ware mit Hubwagen oder Rollwagen transportiert',
@@ -225,13 +225,13 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'transport_05',
-    title: 'Transportwege freigehalten',
+    title: 'Transportwege kontrolliert und Hindernisse entfernt',
     category: ActivityCategory.transport,
     isActive: false,
   ),
   ActivityTemplate(
     id: 'transport_06',
-    title: 'Fördermittel geprüft',
+    title: 'Fördermittel vor dem Einsatz geprüft',
     category: ActivityCategory.transport,
     isActive: false,
   ),
@@ -239,17 +239,17 @@ const List<ActivityTemplate> defaultActivities = [
     id: 'transport_07',
     title: 'Sicherheitsvorgaben beim Transport beachtet',
     category: ActivityCategory.transport,
-    isActive: true,
-  ),
-  ActivityTemplate(
-    id: 'transport_08',
-    title: 'Ware sicher auf Ladungsträger umgesetzt',
-    category: ActivityCategory.transport,
     isActive: false,
   ),
   ActivityTemplate(
+    id: 'transport_08',
+    title: 'Ware auf Ladungsträger umgesetzt und gesichert',
+    category: ActivityCategory.transport,
+    isActive: true,
+  ),
+  ActivityTemplate(
     id: 'transport_09',
-    title: 'Transportauftrag mit Scanner nachvollzogen',
+    title: 'Transportauftrag mit Scanner bearbeitet',
     category: ActivityCategory.transport,
     isActive: false,
   ),
@@ -293,13 +293,13 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'kommissionierung_06',
-    title: 'Fehlbestand gemeldet',
+    title: 'Fehlbestand festgestellt und gemeldet',
     category: ActivityCategory.kommissionierung,
     isActive: false,
   ),
   ActivityTemplate(
     id: 'kommissionierung_07',
-    title: 'Kommissionierte Ware bereitgestellt',
+    title: 'Kommissionierten Auftrag bereitgestellt',
     category: ActivityCategory.kommissionierung,
     isActive: false,
   ),
@@ -311,7 +311,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'kommissionierung_09',
-    title: 'Pickauftrag im System nachvollzogen',
+    title: 'Kommissionierauftrag im System bearbeitet',
     category: ActivityCategory.kommissionierung,
     isActive: false,
   ),
@@ -343,7 +343,7 @@ const List<ActivityTemplate> defaultActivities = [
   // --- Verpackung (aktiv: 01, 05, 10) ---
   ActivityTemplate(
     id: 'verpackung_01',
-    title: 'Ware verpackt',
+    title: 'Ware transportsicher verpackt',
     category: ActivityCategory.verpackung,
     isActive: true,
   ),
@@ -355,7 +355,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'verpackung_03',
-    title: 'Paket gepolstert',
+    title: 'Paket mit Füllmaterial gepolstert',
     category: ActivityCategory.verpackung,
     isActive: false,
   ),
@@ -415,7 +415,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'verpackung_13',
-    title: 'Gefahr- oder Hinweissymbole beachtet',
+    title: 'Gefahr- und Hinweissymbole an Ware oder Sendung geprüft',
     category: ActivityCategory.verpackung,
     isActive: false,
   ),
@@ -453,13 +453,13 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'versand_06',
-    title: 'LKW-Beladung unterstützt',
+    title: 'Lkw-Beladung unterstützt',
     category: ActivityCategory.versand,
     isActive: true,
   ),
   ActivityTemplate(
     id: 'versand_07',
-    title: 'Ladungssicherung beachtet',
+    title: 'Ladung für den Transport gesichert',
     category: ActivityCategory.versand,
     isActive: true,
   ),
@@ -489,7 +489,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'versand_12',
-    title: 'Verladung anhand der Tourenliste unterstützt',
+    title: 'Verladung nach Tourenliste unterstützt',
     category: ActivityCategory.versand,
     isActive: false,
   ),
@@ -533,7 +533,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'inventur_04',
-    title: 'Inventur unterstützt',
+    title: 'Zählarbeiten bei der Inventur durchgeführt',
     category: ActivityCategory.inventur,
     isActive: false,
   ),
@@ -575,7 +575,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'inventur_11',
-    title: 'Doppelzählung zur Kontrolle unterstützt',
+    title: 'Kontrollzählung durchgeführt',
     category: ActivityCategory.inventur,
     isActive: false,
   ),
@@ -589,7 +589,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'retouren_02',
-    title: 'Zurückgesendete Ware geprüft',
+    title: 'Retournierte Ware auf Zustand und Vollständigkeit geprüft',
     category: ActivityCategory.retouren,
     isActive: false,
   ),
@@ -607,7 +607,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'retouren_05',
-    title: 'Ware wieder eingelagert oder aussortiert',
+    title: 'Retournierte Ware wieder eingelagert oder aussortiert',
     category: ActivityCategory.retouren,
     isActive: true,
   ),
@@ -631,7 +631,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'retouren_09',
-    title: 'Ware für Prüfung durch zuständige Person bereitgestellt',
+    title: 'Retoure zur weiteren Prüfung bereitgestellt',
     category: ActivityCategory.retouren,
     isActive: false,
   ),
@@ -645,13 +645,13 @@ const List<ActivityTemplate> defaultActivities = [
   // --- Berufsschule (aktiv: 01, 02, 09, 10, 12) ---
   ActivityTemplate(
     id: 'berufsschule_01',
-    title: 'Fachunterricht besucht',
+    title: 'Fachinhalte zur Lagerlogistik bearbeitet',
     category: ActivityCategory.berufsschule,
     isActive: true,
   ),
   ActivityTemplate(
     id: 'berufsschule_02',
-    title: 'Lernfeld bearbeitet',
+    title: 'Aufgaben zu einem Lernfeld bearbeitet',
     category: ActivityCategory.berufsschule,
     isActive: true,
   ),
@@ -693,7 +693,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'berufsschule_09',
-    title: 'Wirtschafts- und Sozialkunde',
+    title: 'Wirtschafts- und Sozialkunde bearbeitet',
     category: ActivityCategory.berufsschule,
     isActive: true,
   ),
@@ -717,7 +717,7 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'berufsschule_13',
-    title: 'Rechte und Pflichten in der Ausbildung besprochen',
+    title: 'Rechte und Pflichten in der Ausbildung erarbeitet',
     category: ActivityCategory.berufsschule,
     isActive: false,
   ),
@@ -734,22 +734,22 @@ const List<ActivityTemplate> defaultActivities = [
     isActive: false,
   ),
 
-  // --- Sicherheit (aktiv: 01, 02, 03, 09, 14) ---
+  // --- Ordnung / Qualität / Unterweisung (aktiv: 03, 06, 11, 13, 14) ---
   ActivityTemplate(
     id: 'sicherheit_01',
     title: 'Persönliche Schutzausrüstung getragen',
     category: ActivityCategory.sicherheit,
-    isActive: true,
+    isActive: false,
   ),
   ActivityTemplate(
     id: 'sicherheit_02',
     title: 'Sicherheitsvorschriften beachtet',
     category: ActivityCategory.sicherheit,
-    isActive: true,
+    isActive: false,
   ),
   ActivityTemplate(
     id: 'sicherheit_03',
-    title: 'Arbeitsplatz gereinigt und geordnet',
+    title: 'Arbeitsbereich gereinigt und geordnet',
     category: ActivityCategory.sicherheit,
     isActive: true,
   ),
@@ -761,15 +761,15 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'sicherheit_05',
-    title: 'Verpackungsmüll entsorgt',
+    title: 'Verpackungsabfälle getrennt und entsorgt',
     category: ActivityCategory.sicherheit,
     isActive: false,
   ),
   ActivityTemplate(
     id: 'sicherheit_06',
-    title: 'Qualität der Ware kontrolliert',
+    title: 'Ware auf Qualitätsmängel geprüft',
     category: ActivityCategory.sicherheit,
-    isActive: false,
+    isActive: true,
   ),
   ActivityTemplate(
     id: 'sicherheit_07',
@@ -787,7 +787,7 @@ const List<ActivityTemplate> defaultActivities = [
     id: 'sicherheit_09',
     title: 'Selbstständig gearbeitet',
     category: ActivityCategory.sicherheit,
-    isActive: true,
+    isActive: false,
   ),
   ActivityTemplate(
     id: 'sicherheit_10',
@@ -797,9 +797,9 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'sicherheit_11',
-    title: '5S-Regeln am Arbeitsplatz angewendet',
+    title: 'Arbeitsbereich nach 5S geprüft und geordnet',
     category: ActivityCategory.sicherheit,
-    isActive: false,
+    isActive: true,
   ),
   ActivityTemplate(
     id: 'sicherheit_12',
@@ -809,13 +809,13 @@ const List<ActivityTemplate> defaultActivities = [
   ),
   ActivityTemplate(
     id: 'sicherheit_13',
-    title: 'Qualitätsmangel erkannt und weitergegeben',
+    title: 'Qualitätsmangel festgestellt und gemeldet',
     category: ActivityCategory.sicherheit,
-    isActive: false,
+    isActive: true,
   ),
   ActivityTemplate(
     id: 'sicherheit_14',
-    title: 'Unterweisung zur Arbeitssicherheit erhalten',
+    title: 'An einer Arbeitsschutzunterweisung teilgenommen',
     category: ActivityCategory.sicherheit,
     isActive: true,
   ),
@@ -826,3 +826,24 @@ const List<ActivityTemplate> defaultActivities = [
     isActive: false,
   ),
 ];
+
+/// Historische Katalogeinträge, die keine eigenständige, berichtsfähige
+/// Tätigkeit beschreiben. Die IDs und Originaltitel bleiben zur Auflösung alter
+/// Tageseinträge erhalten, sind für neue Einträge aber nicht mehr auswählbar.
+const Set<String> retiredDefaultActivityIds = {
+  'transport_07',
+  'sicherheit_01',
+  'sicherheit_02',
+  'sicherheit_04',
+  'sicherheit_07',
+  'sicherheit_08',
+  'sicherheit_09',
+  'sicherheit_10',
+  'sicherheit_12',
+};
+
+bool isSelectableDefaultActivity(ActivityTemplate activity) =>
+    !retiredDefaultActivityIds.contains(activity.id);
+
+final List<ActivityTemplate> selectableDefaultActivities =
+    List.unmodifiable(defaultActivities.where(isSelectableDefaultActivity));

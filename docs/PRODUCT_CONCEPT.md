@@ -316,8 +316,8 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 
 - Ware angenommen
 - Lieferung anhand des Lieferscheins geprüft
-- Menge kontrolliert
-- Artikelnummern verglichen
+- Liefermenge kontrolliert
+- Artikelnummern mit Lieferpapieren abgeglichen
 - Verpackung auf Schäden geprüft
 - beschädigte Ware gemeldet
 - Ware ausgepackt
@@ -330,13 +330,13 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 ### 9.2 Einlagerung / Lagerung
 
 - Ware eingelagert
-- Lagerplatz gesucht
+- geeigneten Lagerplatz ermittelt
 - Ware nach Lagerordnung einsortiert
 - Lagerbestand geprüft
 - Ware umgelagert
 - Lagerplatz beschriftet
-- Mindesthaltbarkeitsdatum kontrolliert
-- Ordnung und Sauberkeit im Lager hergestellt
+- Mindesthaltbarkeitsdaten und FIFO-Reihenfolge kontrolliert
+- Lagerbereich gereinigt und geordnet
 - Lagerfläche vorbereitet
 - Ware gegen Beschädigung gesichert
 
@@ -348,9 +348,9 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 - Ware mit Rollwagen transportiert
 - Ware zum vorgesehenen Lagerplatz gebracht
 - Ware zur Versandzone gebracht
-- Transportwege freigehalten
-- Fördermittel geprüft
-- Sicherheitsvorgaben beim Transport beachtet
+- Transportwege kontrolliert und Hindernisse entfernt
+- Fördermittel vor dem Einsatz geprüft
+- Ware auf Ladungsträger umgesetzt und gesichert
 
 ---
 
@@ -361,17 +361,17 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 - Ware aus dem Lager entnommen
 - Artikel gescannt
 - Menge kontrolliert
-- Fehlbestand gemeldet
-- kommissionierte Ware bereitgestellt
+- Fehlbestand festgestellt und gemeldet
+- kommissionierten Auftrag bereitgestellt
 - Auftrag auf Vollständigkeit geprüft
 
 ---
 
 ### 9.5 Verpackung
 
-- Ware verpackt
+- Ware transportsicher verpackt
 - passende Verpackung ausgewählt
-- Paket gepolstert
+- Paket mit Füllmaterial gepolstert
 - Paket verschlossen
 - Versandlabel angebracht
 - Ware für den Versand vorbereitet
@@ -387,8 +387,8 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 - Lieferschein beigelegt
 - Paket beschriftet
 - Ware zur Verladung bereitgestellt
-- LKW-Beladung unterstützt
-- Ladungssicherung beachtet
+- Lkw-Beladung unterstützt
+- Ladung für den Transport gesichert
 - Ware auf Palette gestapelt
 - Palette foliert
 - Versandbereich aufgeräumt
@@ -400,7 +400,7 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 - Lagerbestand gezählt
 - Bestand mit System verglichen
 - Fehlmengen gemeldet
-- Inventur unterstützt
+- Zählarbeiten bei der Inventur durchgeführt
 - Artikel gezählt
 - Bestandsabweichung dokumentiert
 - Lagerkennzahlen besprochen
@@ -420,32 +420,32 @@ Diese Übersicht wird nicht als offizieller Export verstanden. Sie dient nur als
 
 ### 9.9 Berufsschule
 
-- Fachunterricht besucht
-- Lernfeld bearbeitet
+- Fachinhalte zur Lagerlogistik bearbeitet
+- Aufgaben zu einem Lernfeld bearbeitet
 - Aufgaben im Bereich Lagerlogistik bearbeitet
 - Warenannahme theoretisch behandelt
 - Lagerarten besprochen
 - Kommissionierung besprochen
 - Verpackung und Versand behandelt
 - Arbeitssicherheit behandelt
-- Wirtschafts- und Sozialkunde gehabt
+- Wirtschafts- und Sozialkunde bearbeitet
 - Klassenarbeit geschrieben
 - Unterrichtsinhalte wiederholt
 
 ---
 
-### 9.10 Sicherheit / Ordnung / Qualität
+### 9.10 Ordnung / Qualität / Unterweisung
 
-- persönliche Schutzausrüstung getragen
-- Sicherheitsvorschriften beachtet
-- Arbeitsplatz gereinigt
-- Verkehrswege freigehalten
-- Verpackungsmüll entsorgt
-- Qualität der Ware kontrolliert
-- Arbeitsanweisung beachtet
-- unter Anleitung gearbeitet
-- selbstständig gearbeitet
-- neue Aufgabe gelernt
+- Arbeitsbereich gereinigt und geordnet
+- Verpackungsabfälle getrennt und entsorgt
+- Ware auf Qualitätsmängel geprüft
+- Arbeitsbereich nach 5S geprüft und geordnet
+- Qualitätsmangel festgestellt und gemeldet
+- an einer Arbeitsschutzunterweisung teilgenommen
+- Prüfpunkte einer Arbeitsanweisung nachvollzogen
+
+Passive Pflichtaussagen und Angaben wie „unter Anleitung“ oder „selbstständig“
+gehören nicht zu den Tätigkeiten; Letztere werden als Besonderheiten erfasst.
 
 ---
 

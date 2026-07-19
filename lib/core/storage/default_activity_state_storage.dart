@@ -7,8 +7,10 @@ import '../constants.dart';
 /// Persistiert die Aktiv/Inaktiv-Auswahl des Nutzers für Standardtätigkeiten.
 ///
 /// Standardtätigkeiten tragen in [defaultActivities] eine Werksvorgabe
-/// (`isActive`). Nutzer können jede Standardtätigkeit im Vorlagen-Screen
-/// aktivieren oder deaktivieren; Abweichungen von der Werksvorgabe werden hier
+/// (`isActive`). Nutzer können jede auswählbare Standardtätigkeit im
+/// Vorlagen-Screen aktivieren oder deaktivieren; fachlich aussortierte
+/// Altvorlagen bleiben unabhängig von gespeicherten Overrides verborgen.
+/// Abweichungen von der Werksvorgabe werden hier
 /// als `Map<String, bool>` gespeichert (JSON in SharedPreferences). Fehlt ein
 /// Eintrag, gilt die Werksvorgabe.
 ///
