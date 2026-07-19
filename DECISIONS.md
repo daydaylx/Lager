@@ -69,6 +69,84 @@ gezieltem Bearbeiten. Das bleibt lokaler `setState`-UI-State und verändert wede
 
 ---
 
+## UX-Revisionen
+
+**Phase 26: UX-Quick-Wins-Scope (2026-Q3) — additive Verbesserungen statt Flow-Redesign**
+
+Die in `.agent/plans/current-plan.md` dokumentierte UX-Analyse identifizierte
+etwa 15 Themen in zwei Clustern: Quick Wins (Inkonsistenzen wie
+„Schritt 2 von 4" hardcodiert, fehlender Schritt-Indikator, Suchfeld-
+Sichtbarkeit) und UX-Lücken (Pull-to-Refresh nur auf Woche,
+„Eintrag fehlt"-SnackBar bei Abwesenheit, kürzere Wochenstatistik).
+Statt einen erneuten Flow-Refactor (Phase 22 wurde 2026-07-10 rückgängig
+gemacht) wurden die Themen als additive Sub-Phasen 26a/b/c umgesetzt:
+
+- **26a** Flow-Orientierung: korrekte Schritt-Labels aus `TodayFlowStep` +
+  Tagestyp (Betrieb 1/4, Berufsschule 1/3, Abwesenheit 1/2); neuer
+  `AppStepIndicator` als reine UI-Komponente; Picker-Kontext im Header;
+  konsistente `HapticFeedback.selectionClick()` auf AreaGrid, `ActivityRow`
+  und SpecialFlag-Chips.
+- **26b** UX-Patterns: Pull-to-Refresh auf Heute- und Vorlagen-Screen;
+  Pop-Schutz-Differenzierung via `_hasStructuralChanges()` (reine
+  Notiz-/Flag-Änderungen verwerfen ohne Bestätigungsdialog, strukturelle
+  Änderungen lösen weiter den Dialog aus).
+- **26c** Klarheit & Polish: „Eigene Tätigkeit" von
+  `FilledButton.tonalIcon` auf kompakten `TextButton.icon`; präzisere
+  Notiz-Beschriftungen; Wochenstatistik auf zwei Bestandteile gekürzt
+  (Verteilung im Tooltip).
+
+Bewusst zurückgestellt (separater Folge-Scope, eigene Produktentscheidung):
+
+- **UX-4 B3** statische App-Shortcuts (Android-Kotlin)
+- **UX-4 B5** `AnimatedSwitcher` zwischen Flow-Schritten (würde
+  ListView-Refactor erfordern)
+- **UX-4 B11** SaveBar-Sichtbarkeit bei geöffneter Tastatur
+- **UX-3 A5** bedingte Suchfeld-Sichtbarkeit (subjektiv, niedrige Priorität)
+- **UX-3 B8** Witz-Sheet-Re-Trigger im Profil
+- **Stepper-Pattern, Draft-Persistenz bei App-Kill, First-Day-Erfahrung,
+  Onboarding-Illustration, App-Icon-Badge** — alle ausdrücklich nicht im
+  Scope dieses Plans, separate Phasen mit eigener Produktentscheidung.
+
+Begründung Scope-Begrenzung: Phase 22 (Daily-Check-in-Redesign) hat
+gezeigt, dass Flow-Refactors am tatsächlichen Nutzerbedarf vorbeigehen
+können und teuer rückgängig zu machen sind. Additive Quick Wins greifen
+konkret beobachtbare UX-Schmerzen auf, ohne den Phase-25-Flow zu gefährden.
+
+Verifikation pro Sub-Phase: `flutter analyze` (0 Issues), `flutter test`
+(vorherige Tests + neue Unit-/Widget-Tests grün), Goldens nur nach
+Sichtprüfung der PNGs regeneriert, `scripts/check_repo_hygiene.sh` OK,
+`flutter build apk --debug` erfolgreich. 274/274 Tests grün nach Phase 26c.
+
+**Phase 26d — Native Patterns & Bewegung (UX-4 B3, B5, B11)**
+ergänzt die Quick Wins um native Patterns:
+
+- **B3 App-Shortcuts:** Long-Press auf das Android-App-Icon zeigt
+  statische Shortcuts aus `res/xml/shortcuts.xml`. Der Intent-Schema ist
+  `berichtsheftmerker://shortcut/<id>`, die Auswertung erfolgt in
+  `MainActivity.kt` über den `MethodChannel`
+  `com.daydaylx.berichtsheftmerker/app_shortcuts` an Flutter. Aktuell
+  nur „Heute eintragen" (`open_today`); weitere Shortcuts folgen, sobald
+  die Intent-Handhabung in Production verifiziert ist. Verhalten ist
+  nur auf echtem Gerät verifizierbar — bleibt manuelle QA in Phase 19.
+- **B5 Flow-Übergänge:** Schritt-Inhalt wird in ein eigenes `_StepBody`
+  Widget mit stabilem Key extrahiert und mit `AnimatedSize` +
+  `AnimatedSwitcher` (FadeTransition, 220 ms) animiert. Key enthält
+  Step + DayType, damit State-Updates ohne Step-Wechsel keine
+  Animation neu starten.
+- **B11 SaveBar-Sichtbarkeit bei Tastatur:** bewusst kein Code-Eingriff.
+  Der bestehende Test „Heute-Notiz und Speichern bleiben mit Tastatur
+  erreichbar" (`test/ui_layout_test.dart`, 360×640 + 280 dp
+  Tastatur-Inset) verifiziert das Verhalten bereits ab Phase 11.
+  Eine zusätzliche `Scrollable.ensureVisible` wäre redundant und
+  würde den bestehenden automatischen Flutter-Mechanismus doppeln.
+
+Verifikation Phase 26d: `flutter analyze` 0 Issues, `flutter test`
+280/280 grün (274 alt + 6 neue Tests für `AppShortcutService`),
+`flutter build apk --debug` erfolgreich, `scripts/check_repo_hygiene.sh`
+OK.
+
+---
+
 ## State Management
 
 **setState im MVP — kein Framework**

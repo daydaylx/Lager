@@ -25,6 +25,11 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- App-Shortcuts (#UX-4 B3): Long-Press auf App-Icon
+                 zeigt die in res/xml/shortcuts.xml definierten Einträge. -->
+            <meta-data
+                android:name="app_shortcuts"
+                android:resource="@xml/shortcuts" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

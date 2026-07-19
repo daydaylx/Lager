@@ -133,6 +133,31 @@ void main() {
       expect(model.unavailableSelectedIds, ['missing_old_id']);
     });
 
+    test('aussortierte Altvorlage kann nicht reaktiviert werden', () {
+      final model = _model(
+        areas: const {TrainingArea.transport},
+        defaultOverrides: const {'transport_07': true},
+      );
+
+      expect(model.activitiesById['transport_07']?.isActive, isFalse);
+      expect(_groupActivityIds(model), isNot(contains('transport_07')));
+      expect(
+        model.recommendedActivities.map((activity) => activity.id),
+        isNot(contains('transport_07')),
+      );
+    });
+
+    test('aussortierte Altvorlage bleibt in historischem Eintrag lesbar', () {
+      final model = _model(
+        areas: const {TrainingArea.transport},
+        selectedIds: const {'transport_07'},
+      );
+
+      expect(model.unavailableSelectedIds, isEmpty);
+      expect(model.selectedActivities.single.id, 'transport_07');
+      expect(_groupActivityIds(model), contains('transport_07'));
+    });
+
     test('activityIdsForCategory enthält Standard- und Custom-IDs', () {
       final ids = activityIdsForCategory(
         ActivityCategory.wareneingang,

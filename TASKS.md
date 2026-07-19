@@ -54,7 +54,7 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 
 - [x] Tageseintrag erstellen (Datum, Tagtyp, Bereich, Tätigkeiten, Besonderheiten, Notiz)
 - [x] Tagtypen: Betrieb, Berufsschule, Frei, Urlaub, Krank, Feiertag, Sonstiges
-- [x] Tätigkeitsliste aus 132 vordefinierten Vorlagen wählen
+- [x] Tätigkeitsliste aus bereinigtem Standardkatalog wählen (132 stabile IDs, 123 auswählbar)
 - [x] Freie Notiz hinzufügen
 - [x] Eintrag speichern und bearbeiten (zunächst im Arbeitsspeicher)
 - [x] Bestehenden Eintrag für heute anzeigen wenn vorhanden
@@ -208,7 +208,7 @@ Issues #14–#20 aus GitHub abgearbeitet.
 
 ### Tätigkeiten-Erfassung #29–#36
 
-- [x] #29 Tätigkeitskatalog fachlich erweitert: 132 vordefinierte Tätigkeiten
+- [x] #29 Tätigkeitskatalog fachlich erweitert: 132 stabile IDs, davon 123 auswählbare Tätigkeiten
 - [x] #30 Heute-Screen: Suche, häufig genutzt und ausgewählte Tätigkeiten als Chips
 - [x] #31 Untergruppen / Arbeitsschritte: optionales `subcategory`-Feld, UI-Untergruppen
 - [x] #32 EDV-, Scanner- und Warenwirtschafts-Tätigkeiten ergänzt
@@ -308,7 +308,7 @@ Bereits in früheren Phasen implementiert; Phase-17-Einträge waren stale.
 - [x] #30 Tätigkeiten-UI: Häufig genutzt, Suche, Auswahlchips (in `today_screen.dart` / `activity_section.dart`)
 - [x] #31 Untergruppen via `activitySubcategories.dart` und `ActivityGroup`-Widget
 - [x] #41 Eigene Tätigkeiten gegen normalisierte Duplikate prüfen (Fehlermeldung mit Konfliktnamen: s. Robustheitskorrekturen)
-- [x] #29 Tätigkeitskatalog: 132 vordefinierte Lagerlogistik-Tätigkeiten
+- [x] #29 Tätigkeitskatalog: 132 stabile IDs, davon 123 auswählbare Lagerlogistik-Tätigkeiten
 - [x] #32 EDV-, Scanner- und Warenwirtschafts-Tätigkeiten
 - [x] #34 Qualität, Ordnung und 5S
 - [x] #33 Unterweisung punktuell über Tätigkeiten/Besonderheiten
@@ -533,6 +533,95 @@ Abwesenheits-Sheet statt sieben direkter Chips.
 - [x] Gespeicherte Tage als kompakte Übersicht mit gezieltem Bearbeiten umgesetzt.
 - [x] Kontextuelle Aktion „Wie gestern starten“ beibehalten.
 - [x] Widget-, Layout- und Golden-Tests auf den neuen Flow angepasst.
+
+---
+
+## Phase 26: UX-Quick-Wins (Plan `.agent/plans/current-plan.md`) ✅
+
+Ziel: Die in der UX-Analyse identifizierten Quick Wins (Inkonsistenzen) und
+UX-Lücken (fehlende Standard-Patterns) beheben, ohne den Phase-25-Flow
+umzubauen. Funktionalität bleibt erhalten; nur UX/UI. Phase-22-Redesign
+wurde 2026-07-10 rückgängig gemacht — bewusst additive Verbesserungen,
+kein erneuter Flow-Refactor.
+
+### Phase 26a — Flow-Orientierung & Haptik (Quick Wins) ✅
+
+- [x] A1: Schritt-Labels aus `TodayFlowStep` + Tagestyp abgeleitet
+      (`lib/features/today/today_flow_steps.dart`); Berufsschule zählt 1/3,
+      Abwesenheit/Sonstiges 1/2, Betrieb 1/4 — statt vorher fest „Schritt 2 von 4"
+- [x] A2: `AppStepIndicator`-Widget in `lib/shared/widgets/app_ui.dart`
+      (N Punkte, aktiver Schritt breiter in Primärfarbe, Semantics-Label)
+- [x] A3: Picker-Header trägt Schritt-Label + Bereichs-Kontext
+      („Tätigkeiten · Wareneingang" bzw. „Tätigkeiten · Berufsschule")
+- [x] A6: `HapticFeedback.selectionClick()` auf AreaGrid-Chips,
+      `ActivityRow` + Checkbox und SpecialFlag-Chips (vorher nur Tagestyp)
+- [x] A7: „Wie gestern starten" von `FilledButton.tonalIcon` auf
+      `OutlinedButton.icon` umgestellt (deutlich, aber sekundär)
+- [x] A10: Abwesend-Chip in `day_type_row.dart` mit `Tooltip` +
+      `Icons.unfold_more` (klare Menü-Semantik)
+- [x] Unit-Tests: `test/today_flow_steps_test.dart` (16 Tests),
+      `test/app_step_indicator_test.dart` (6 Tests)
+- [x] Golden `today_empty.png` regeneriert (Icon-Wechsel `expand_more`
+      → `unfold_more`, 35×36 px Differenz im Abwesend-Chip-Bereich)
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 273/273 grün
+
+### Phase 26b — UX-Patterns ergänzen ✅
+
+- [x] A8: Bestehende `if (entry != null) return;`-Logik in
+      `_checkTodayEntry` deckt bereits jede Tageseintragsform
+      (inklusive Abwesenheit) ab; expliziter Test in `widget_test.dart`
+      dokumentiert das Verhalten ab
+- [x] A9: `RefreshIndicator` auf `TodayCheckInPage` (step dayType/area/review)
+      und `TodayActivityPickerPage` mit `_loadEntry` als Callback;
+      analog auf `TemplatesScreen` mit `_loadCustom` als Callback
+- [x] B10: Pop-Schutz-Differenzierung über `_hasStructuralChanges()` in
+      `today_screen.dart` — reine Notiz-/Flag-Änderungen verwerfen ohne
+      Bestätigungsdialog; strukturelle Änderungen lösen weiter den Dialog aus
+- [x] B1 und B4: bewusst zurückgestellt (Scroll-FAB und Skeleton-Loader
+      würden Layout-Refactor erfordern, nicht im Quick-Wins-Scope)
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 274/274 grün;
+      `flutter build apk --debug` erfolgreich
+
+### Phase 26c — Klarheit & Polish ✅
+
+- [x] A4: „Eigene Tätigkeit hinzufügen" von `FilledButton.tonalIcon` auf
+      kompakten `TextButton.icon` mit `VisualDensity.compact` umgestellt —
+      weniger visuell dominant, Funktion bleibt sichtbar
+- [x] B2: Notizfeld-Beschriftungen präzisiert — Titel „Notiz fürs
+      Berichtsheft" (statt „Ergänzung für den Bericht") und „Private
+      Notiz" bleiben kurz; Klarheit über „öffentlich/lokal" liegt in den
+      Descriptions. Lange Titel-Variante („… (öffentlich)") wurde verworfen,
+      weil sie auf 360-px-Display + Tastatur RenderFlex-Overflow auslöst
+- [x] B6: Suchfeld-Hint „Tätigkeiten durchsuchen" → „Tätigkeiten suchen"
+- [x] B9: Wochenstatistik gekürzt — `_WeekStats.toSummary(dueDays:)` zeigt
+      jetzt „X eingetragen · Y offen" bzw. „Alle Y Tage eingetragen" /
+      „Y Tage offen"; Verteilung nach Tagestyp liegt im Tooltip
+      (`_WeekStats.toDistributionTooltip()`)
+- [x] A5 und B8: bewusst zurückgestellt (bedingte Suchfeld-Sichtbarkeit
+      und Witz-Sheet-Re-Trigger im Profil)
+- [x] Golden `week_mixed.png` regeneriert (großflächige Layout-Anpassung
+      durch kürzere Wochenstatistik; vor und nach Sichtprüfung)
+- [x] `flutter analyze` — 0 Issues; `flutter test` — 274/274 grün
+
+### Bewusst zurückgestellt (separater Folge-Scope)
+
+- [x] UX-4 B3 (statische App-Shortcuts) — Android-Kotlin-Erweiterung ✅
+- [x] UX-4 B5 (AnimatedSwitcher zwischen Flow-Schritten) ✅
+- [x] UX-4 B11 (SaveBar-Sichtbarkeit bei Tastatur) — faktisch bereits durch
+      bestehenden Test abgedeckt, daher kein Code-Eingriff nötig ✅
+- [ ] UX-3 A5 (bedingte Suchfeld-Sichtbarkeit) — subjektiv, niedrige Priorität
+- [ ] UX-3 B8 (Witz-Sheet-Toggle im Profil) — moderate Profildaten-Erweiterung
+- [ ] Erweiterte UX-Themen aus dem Plan (Stepper-Pattern, Draft-Persistenz,
+      First-Day-Erfahrung, Onboarding-Illustration, App-Icon-Badge) — bleiben
+      eigene zukünftige Phasen mit eigener Produktentscheidung
+
+#### Phase 26d — Native Patterns & Bewegung (UX-4 B3, B5, B11) ✅
+
+- [x] **B3 App-Shortcuts für Android:** `res/xml/shortcuts.xml` mit Shortcut `open_today` (Intent-Schema `berichtsheftmerker://shortcut/<id>`); `res/values/strings.xml` mit Label-Strings; `AndroidManifest.xml` um `<meta-data android:name="app_shortcuts">` ergänzt; `MainActivity.kt` liest Intent in `configureFlutterEngine` und `onNewIntent` und liefert initialen Shortcut bzw. Live-Aufruf via `MethodChannel` `app_shortcuts`; `lib/core/services/app_shortcut_service.dart` als Flutter-Bridge mit `AppShortcutAction`-Enum; `MainShell` schaltet bei `openToday` auf Tab 0. Verhalten nur auf echtem Gerät verifizierbar (siehe `CURRENT_STATUS.md` Rest-Risiko-Liste).
+- [x] **B5 AnimatedSwitcher zwischen Flow-Schritten:** Step-Inhalt in eigenes `_StepBody`-Widget extrahiert; in `TodayCheckInPage` mit `AnimatedSize` + `AnimatedSwitcher` (FadeTransition, 220 ms, `easeOut`/`easeIn`) umschlossen; stabiler Key enthält Step + DayType, damit State-Updates ohne Step-Wechsel keine neue Animation auslösen.
+- [x] **B11 SaveBar-Sichtbarkeit bei Tastatur:** bestehender Test „Heute-Notiz und Speichern bleiben mit Tastatur erreichbar" (`test/ui_layout_test.dart`, 360×640 + 280 dp Tastatur-Inset) deckt das Verhalten bereits ab — SaveBar bleibt nach Tastatur-Öffnung findbar. Zusätzliche `Scrollable.ensureVisible` wäre redundant; bewusst kein Code-Eingriff.
+- [x] **Tests UX-4:** 6 neue Tests in `test/app_shortcut_service_test.dart` (Parser, Initial-Intent, No-Plugin-Pfad, Live-Aufruf). 280/280 grün.
+- [x] `flutter analyze` — 0 Issues; `flutter build apk --debug` — erfolgreich.
 
 ---
 

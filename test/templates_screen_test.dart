@@ -81,6 +81,28 @@ void main() {
     expect(find.text('Ware verpackt'), findsNothing);
   });
 
+  testWidgets('aussortierte Altvorlagen erscheinen auch in der Suche nicht', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('template_search')),
+      'Persönliche Schutzausrüstung getragen',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(ListTile),
+        matching: find.text('Persönliche Schutzausrüstung getragen'),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Keine Tätigkeiten gefunden'), findsOneWidget);
+  });
+
   testWidgets('eigene Tätigkeit hinzufügen erscheint in Eigene-Liste', (
     tester,
   ) async {

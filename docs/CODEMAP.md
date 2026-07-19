@@ -87,7 +87,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `core/constants.dart`                   | `AppStrings` + SharedPreferences-Schlüssel         |
 | `core/profile_storage.dart`             | `StoredProfile` in SharedPreferences               |
 | `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                          |
-| `core/data/default_activities.dart`     | 132 vordefinierte Tätigkeiten mit stabilen IDs     |
+| `core/data/default_activities.dart`     | 132 stabile IDs; 123 fachlich auswählbare Tätigkeiten |
 | `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten        |
 | `core/data/lager_jokes.dart`            | 300 lokale Lagerlogistik-Witze, deterministisch pro Kalendertag |
 | `core/ui/day_status_colors.dart`        | Zentrale Statusfarben (saved/open/absence/neutral) |
@@ -171,7 +171,7 @@ App-Start:
 | `week_screen_test.dart`                    | Wochenstatus, Navigation                                           |
 | `templates_screen_test.dart`               | Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)               |
 | `week_utils_test.dart`                     | ISO-Kalenderwochen, Jahreswechsel                                  |
-| `default_activities_test.dart`             | 132 Einträge, eindeutige IDs                                       |
+| `default_activities_test.dart`             | 132 stabile IDs, 123 auswählbare Einträge, 38 aktive Vorlagen      |
 | `hive_daily_entry_storage_test.dart`       | Persistenz über Box-Neuöffnung                                     |
 | `hive_activity_template_storage_test.dart` | Aktivstatus + Rückwärtskompatibilität                              |
 | `reminder_settings_test.dart`              | Modell-Defaults, Gleichheit, Serialisierung                        |

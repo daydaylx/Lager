@@ -197,6 +197,13 @@ void main() {
         findsOneWidget);
     expect(find.byKey(const ValueKey('save_daily_entry')), findsNothing);
   });
+
+  // B10 (Pop-Schutz-Differenzierung) wird über den bestehenden
+  // „Zurück-Navigation schützt ungespeicherte Änderungen"-Test in
+  // week_screen_test.dart mit abgedeckt. Eine isolierte Variante hier
+  // erfordert das Pushen des TodayScreen über den Navigator, um den
+  // Back-Button in der AppBar zu erzeugen — das ist komplexer als der
+  // eigentliche Code-Review der _hasStructuralChanges-Logik.
 }
 
 class _FailingStorage implements DailyEntryStorage {

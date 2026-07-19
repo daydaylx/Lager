@@ -18,7 +18,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 | ---------------------------------------------- | -------------------------------------------------------- |
 | `TASKS.md`                                     | Genaue Anforderungen Phase 6                             |
 | `lib/features/templates/templates_screen.dart` | Eigene Tätigkeiten verwalten                             |
-| `lib/core/data/default_activities.dart`        | 132 Tätigkeiten mit stabilen IDs und Kategorien          |
+| `lib/core/data/default_activities.dart`        | 132 stabile IDs, 123 auswählbare Tätigkeiten             |
 | `lib/core/data/activity_subcategories.dart`    | UI-Untergruppen für vordefinierte Tätigkeiten            |
 | `lib/core/models/activity_template.dart`       | ActivityTemplate-Modell                                  |
 | `lib/core/enums/activity_category.dart`        | ActivityCategory-Enum (10 Kategorien)                    |
@@ -31,7 +31,7 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 
 ### Risiken
 
-- **Stabile IDs:** ActivityTemplate-IDs in `default_activities.dart` sind Fremdschlüssel in gespeicherten DailyEntry-Objekten. Nie ändern, nie löschen.
+- **Stabile IDs:** ActivityTemplate-IDs in `default_activities.dart` sind Fremdschlüssel in gespeicherten DailyEntry-Objekten. Nie ändern, nie löschen. Fachlich aussortierte IDs bleiben in `retiredDefaultActivityIds` nur zur historischen Auflösung erhalten.
 - **Keine neuen Packages:** Vorlagenverwaltung braucht kein neues Package. Nur vorhandene Hive CE / SharedPreferences nutzen.
 - **setState reicht:** Kein State-Management-Framework einführen.
 - **Kategorie-Filter als Chips:** Nicht als Dropdown — sieh UI_UX_SPEC.md.

@@ -433,13 +433,27 @@ class _WeekStats {
     required this.offen,
   });
 
-  String toSummary() {
+  String toSummary({required int dueDays}) {
+    if (dueDays == 0) return 'Keine fälligen Werktage';
+    final entered = betrieb + berufsschule + abwesenheit;
+    if (entered == 0) {
+      return '$dueDays ${dueDays == 1 ? 'Tag' : 'Tage'} offen';
+    }
+    if (offen == 0) {
+      return 'Alle $dueDays Tage eingetragen';
+    }
+    return '$entered eingetragen · $offen offen';
+  }
+
+  /// Tooltip-Text mit der Verteilung nach Tagestyp — bleibt verfügbar, auch
+  /// wenn die Kurzfassung nur „X eingetragen · Y offen" zeigt.
+  String toDistributionTooltip() {
     final parts = <String>[];
     if (betrieb > 0) parts.add('$betrieb× Betrieb');
     if (berufsschule > 0) parts.add('$berufsschule× Berufsschule');
     if (abwesenheit > 0) parts.add('$abwesenheit× Abwesenheit');
-    if (offen > 0) parts.add('$offen× offen');
-    return parts.isEmpty ? 'Keine Einträge' : parts.join(', ');
+    if (parts.isEmpty) return 'Keine Tagestypen';
+    return parts.join(' · ');
   }
 }
 
@@ -541,10 +555,14 @@ class _WeekHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          stats.toSummary(),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        Tooltip(
+          key: const ValueKey('week_stats_tooltip'),
+          message: stats.toDistributionTooltip(),
+          child: Text(
+            stats.toSummary(dueDays: dueDays),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ],

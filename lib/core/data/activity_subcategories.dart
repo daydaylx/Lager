@@ -23,8 +23,8 @@ String? activitySubcategory(ActivityTemplate activity) {
       },
     ActivityCategory.transport => switch (number) {
         <= 4 => 'Transport',
-        <= 7 => 'Sicherheit',
-        _ => 'Ladehilfsmittel & Scanner',
+        <= 6 => 'Arbeitsmittel & Transportwege',
+        _ => 'Ladungsträger & Scanner',
       },
     ActivityCategory.kommissionierung => switch (number) {
         <= 5 => 'Auftrag & Entnahme',
@@ -57,9 +57,10 @@ String? activitySubcategory(ActivityTemplate activity) {
         _ => 'Fachthemen & Ausbildung',
       },
     ActivityCategory.sicherheit => switch (number) {
-        <= 5 => 'Sicherheit',
-        <= 10 => 'Ordnung & 5S',
-        _ => 'Qualität & Unterweisung',
+        3 || 5 || 11 => 'Ordnung & 5S',
+        6 || 13 || 15 => 'Qualität & Prüfung',
+        14 => 'Unterweisung',
+        _ => 'Sicherheit',
       },
   };
 }

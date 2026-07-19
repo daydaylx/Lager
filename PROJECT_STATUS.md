@@ -47,7 +47,7 @@ waren nach dem Umbau erfolgreich.
   - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für das Ausbildungsprofil
   - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien und Besonderheiten mit UI-Labels
   - `lib/core/models/` — `DailyEntry`, `ActivityTemplate` und `ReminderSettings`
-  - `lib/core/data/default_activities.dart` — 132 vordefinierte Tätigkeiten mit stabilen IDs
+  - `lib/core/data/default_activities.dart` — 132 stabile IDs, 123 auswählbare und 38 standardmäßig aktive Tätigkeiten
   - `lib/core/data/activity_subcategories.dart` — fachliche Untergruppen für Tätigkeiten
   - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
   - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge ohne KI
@@ -77,7 +77,7 @@ waren nach dem Umbau erfolgreich.
 - `test/widget_test.dart` — Onboarding-, Profil- und Navigationstests
 - `test/today_screen_test.dart` — Validierung, Suche, häufig genutzt, Untergruppen, Empfehlungen, Speicherung, Bearbeitung und Tagtypen
 - `test/today_entry_draft_test.dart`, `test/activity_picker_model_test.dart`, `test/activity_recommender_test.dart` — ausgelagerte Today-Logik
-- `test/default_activities_test.dart` — Katalogumfang und eindeutige IDs
+- `test/default_activities_test.dart` — Katalogumfang, auswählbare Altvorlagen und eindeutige IDs
 - `test/hive_daily_entry_storage_test.dart` — echter Persistenztest über Box-Neuöffnung
 - `test/week_utils_test.dart` — ISO-Kalenderwochen inklusive Jahreswechsel
 - `test/week_screen_test.dart` — Wochenstatus, Navigation, Zusammenfassung und Fehlerbehandlung
@@ -100,7 +100,7 @@ waren nach dem Umbau erfolgreich.
 | `flutter create --platforms=android .`   | Erfolgreich, android/ generiert                            |
 | `flutter pub get`                        | Erfolgreich, Abhängigkeiten aufgelöst                      |
 | `flutter analyze`                        | 0 Issues                                                   |
-| `flutter test`                           | 249/249 Tests bestanden                                    |
+| `flutter test`                           | 251/251 Tests bestanden                                    |
 | `flutter build apk --debug`              | Erfolgreich, Debug-APK 91 MB                               |
 | `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.1 MB                      |
 | Release-Signatur                         | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |

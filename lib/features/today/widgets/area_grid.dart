@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/enums/training_area.dart';
 
 // #23: 2-column area card grid using FilterChips with icons (multi-select)
@@ -58,7 +59,10 @@ class AreaGrid extends StatelessWidget {
       avatar: Icon(area.icon, size: 18),
       showCheckmark: true,
       selected: isSelected,
-      onSelected: (_) => onToggle(area),
+      onSelected: (_) {
+        HapticFeedback.selectionClick();
+        onToggle(area);
+      },
     );
   }
 }

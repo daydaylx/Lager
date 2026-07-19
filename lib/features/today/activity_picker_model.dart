@@ -201,6 +201,9 @@ class ActivityPickerModel {
     ActivityTemplate activity,
     Map<String, bool> overrides,
   ) {
+    if (!isSelectableDefaultActivity(activity)) {
+      return activity.isActive ? activity.copyWith(isActive: false) : activity;
+    }
     final override = overrides[activity.id];
     if (override == null || override == activity.isActive) return activity;
     return activity.copyWith(isActive: override);

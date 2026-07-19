@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/app/app.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
+import 'package:berichtsheft_merker/core/enums/day_type.dart';
+import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/models/reminder_settings.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
@@ -458,6 +460,42 @@ void main() {
 
     final navigation = tester.widget<NavigationBar>(find.byType(NavigationBar));
     expect(navigation.selectedIndex, 0);
+  });
+
+  testWidgets(
+      'Eintrag-fehlt-SnackBar erscheint nicht, wenn heute als Abwesenheit eingetragen ist (#UX-2 A8)',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      PreferenceKeys.reminderEnabled: true,
+    });
+    final today = DateTime(2026, 6, 17);
+    final storage = InMemoryDailyEntryStorage(
+      initialEntries: [
+        DailyEntry(
+          id: DailyEntry.idForDate(today),
+          date: today,
+          dayType: DayType.krank,
+          areas: const [],
+          selectedActivities: const [],
+          specialFlags: const [],
+          reportNote: null,
+          createdAt: today,
+          updatedAt: today,
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: storage,
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: true,
+        notificationScheduler: NoOpNotificationScheduler(),
+        clock: () => today,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Eintragen'), findsNothing);
   });
 
   testWidgets('Resume nach Tageswechsel aktualisiert den Heute-Screen', (

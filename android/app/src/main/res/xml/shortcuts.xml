@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        Statische App-Shortcuts (#UX-4 B3):
+        - Long-Press auf das App-Icon zeigt diese Einträge
+        - Aktuell nur ein Shortcut ("Heute öffnen") als sicherer Einstieg
+        - Weitere Shortcuts können später ergänzt werden, sobald die
+          Intent-Handhabung in MainActivity stabil ist
+    -->
+    <shortcut
+        android:shortcutId="open_today"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_today_short"
+        android:shortcutLongLabel="@string/shortcut_today_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.daydaylx.berichtsheftmerker"
+            android:targetClass="com.daydaylx.berichtsheftmerker.MainActivity"
+            android:data="berichtsheftmerker://shortcut/open_today" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/data/activity_subcategories.dart';
 import '../../../core/models/activity_template.dart';
 import '../../../shared/widgets/app_ui.dart';
@@ -153,7 +154,12 @@ class ActivityRow extends StatelessWidget {
       children: [
         InkWell(
           key: ValueKey('activity_${activity.id}'),
-          onTap: enabled ? () => onToggle(activity.id) : null,
+          onTap: enabled
+              ? () {
+                  HapticFeedback.selectionClick();
+                  onToggle(activity.id);
+                }
+              : null,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 56),
             child: Padding(
@@ -162,7 +168,12 @@ class ActivityRow extends StatelessWidget {
                 children: [
                   Checkbox(
                     value: isSelected,
-                    onChanged: enabled ? (_) => onToggle(activity.id) : null,
+                    onChanged: enabled
+                        ? (_) {
+                            HapticFeedback.selectionClick();
+                            onToggle(activity.id);
+                          }
+                        : null,
                   ),
                   const SizedBox(width: 8),
                   Expanded(

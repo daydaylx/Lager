@@ -6,8 +6,9 @@ Persistenzverträge. Der ausführbare Code bleibt die Quelle der Wahrheit.
 **Status:** `DailyEntry` und eigene Tätigkeiten werden mit Hive CE persistiert;
 Profil, Onboarding, Reminder und Theme-Preset liegen in SharedPreferences.
 
-Vollständiger Tätigkeitskatalog (132 Einträge):
-`lib/core/data/default_activities.dart`
+Vollständiger historischer Tätigkeitskatalog (132 stabile IDs):
+`lib/core/data/default_activities.dart`. Davon sind 123 fachlich passende
+Standardtätigkeiten auswählbar; 38 sind in der Werksvorgabe direkt aktiv.
 
 ---
 
@@ -47,7 +48,7 @@ enum ActivityCategory {
   inventur,
   retouren,
   berufsschule,
-  sicherheit,     // Sicherheit/Ordnung/Qualität
+  sicherheit,     // Ordnung/Qualität/Unterweisung (persistierter Enum-Name)
 }
 
 enum SpecialFlag {
@@ -96,7 +97,7 @@ class ActivityTemplate {
   final String title;               // Anzeigetext, z.B. "Wareneingangsprüfung durchführen"
   final ActivityCategory category;  // Kategorie
   final bool isCustom;              // true bei selbst angelegten Tätigkeiten
-  final bool isActive;              // false = nur noch für historische Einträge sichtbar
+  final bool isActive;              // false = nicht vorausgewählt, ggf. reaktivierbar
   final String? subcategory;        // optionale Arbeitsschritt-Untergruppe
 }
 ```
@@ -139,7 +140,7 @@ lib/core/
     activity_category.dart
     special_flag.dart
   data/
-    default_activities.dart    ← 132 vordefinierte Tätigkeiten als const List
+    default_activities.dart    ← 132 stabile IDs, davon 123 auswählbar
   storage/
     daily_entry_storage.dart
     daily_entry_adapter.dart
@@ -187,6 +188,10 @@ Zähler.
 verwendet; fehlt `subcategory`, bleibt die Untergruppe `null`. Eigene
 Tätigkeiten werden deaktiviert statt hart gelöscht. Vordefinierte Tätigkeiten
 werden im UI zusätzlich über stabile ID-Bereiche fachlich untergruppiert.
+Passive Pflichtaussagen und durch `SpecialFlag` abgedeckte Altvorlagen stehen in
+`retiredDefaultActivityIds`: Sie bleiben zur Auflösung historischer Einträge im
+Katalog, werden aber in Vorlagenverwaltung, Suche und neuer Auswahl nicht mehr
+angeboten.
 
 **SharedPreferences-Schlüssel:**
 
@@ -227,4 +232,4 @@ Kanonische vollständige Liste mit stabilen IDs:
 | Inventur           | Bestand zählen, Scanner-Zählung, Doppelzählung unterstützen     |
 | Retouren           | Retoure erfassen, Retourengrund, Prüfung bereitstellen          |
 | Berufsschule       | Lernfeld, Ladungssicherung, Warenwirtschaft, Qualitätsgrundlagen |
-| Sicherheit/Ordnung | PSA, 5S, Arbeitsanweisung, Qualitätsmangel weitergeben          |
+| Ordnung/Qualität/Unterweisung | 5S, Qualitätsprüfung, Qualitätsmangel melden, Unterweisung |

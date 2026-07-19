@@ -23,7 +23,7 @@ extension ActivityCategoryLabel on ActivityCategory {
       ActivityCategory.inventur => 'Bestandskontrolle / Inventur',
       ActivityCategory.retouren => 'Retouren / Reklamation',
       ActivityCategory.berufsschule => 'Berufsschule',
-      ActivityCategory.sicherheit => 'Sicherheit / Ordnung / Qualität',
+      ActivityCategory.sicherheit => 'Ordnung / Qualität / Unterweisung',
     };
   }
 }

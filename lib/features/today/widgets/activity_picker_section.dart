@@ -50,7 +50,7 @@ class ActivityPickerSection extends StatelessWidget {
           controller: searchController,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Tätigkeiten durchsuchen',
+            hintText: 'Tätigkeiten suchen',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: searchQuery.isEmpty
                 ? null
@@ -63,12 +63,22 @@ class ActivityPickerSection extends StatelessWidget {
           ),
           onChanged: onSearchChanged,
         ),
-        const SizedBox(height: 12),
-        FilledButton.tonalIcon(
-          key: const ValueKey('add_activity_button'),
-          onPressed: onAddActivity,
-          icon: const Icon(Icons.add),
-          label: const Text('Eigene Tätigkeit hinzufügen'),
+        const SizedBox(height: 8),
+        // Eigene-Tätigkeit-Aktion (#UX-3 A4): weniger prominent, damit die
+        // Auswahl-Listen nicht visuell überfrachtet werden. Bei leerem
+        // Suchergebnis bleibt sie sichtbar.
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const ValueKey('add_activity_button'),
+            onPressed: onAddActivity,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Eigene Tätigkeit hinzufügen'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         if (model.frequentActivities.isNotEmpty)
