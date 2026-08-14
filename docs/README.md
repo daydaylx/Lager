@@ -24,6 +24,8 @@ Erstellt am: 2026-06-12
 - `VALIDATION_MATRIX.md` — erforderliche Prüfungen
 - `QA_REMINDER_CHECKLIST.md` — offener manueller Android-Test
 - `QA_RELEASE_CHECKLIST.md` — Release-QA auf echtem Gerät
+- `ki-openrouter/` — geplanter Umsetzungsplan für die optionale
+  KI-Nachbearbeitung über OpenRouter; noch nicht implementiert
 
 ## Ziel des Projekts
 
