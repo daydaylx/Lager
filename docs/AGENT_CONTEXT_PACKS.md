@@ -164,7 +164,8 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 
 ### Risiken
 
-- Notification-IDs müssen für Primär-, Folge- und Wochenhinweise eindeutig bleiben.
+- Notification-IDs müssen pro Wochentag stabil und eindeutig bleiben; die separate Test-ID darf nicht kollidieren.
+- Reminder-Änderungen müssen im Release-Build geprüft werden, weil R8 den nativen Receiver-Pfad beeinflusst.
 - Permission-Verweigerung oder Speicherfehler dürfen den bestehenden Zeitplan nicht unbemerkt zerstören.
 - Offene Heute-Eingaben dürfen beim Tageswechsel nicht dem neuen Datum zugeordnet werden.
 - Release-Builds dürfen nie mit Debug-Schlüssel signiert werden.
@@ -251,4 +252,43 @@ Danach manueller Gerätetest:
 ```bash
 /home/d/flutter/bin/flutter analyze
 /home/d/flutter/bin/flutter test
+```
+
+---
+
+## Pack 8: Optionale OpenRouter-Berichtsnachbearbeitung
+
+**Aufgabe:** Positiv gelistete, offline-first Nachbearbeitung bereits
+ gespeicherter Tagesberichte über die dokumentierte OpenRouter-Servicegrenze.
+
+### Dateien lesen
+
+| Datei | Warum |
+| --- | --- |
+| `docs/ki-openrouter/PLAN.md` und Phasen | Reihenfolge, Datenschutz- und Abnahmekriterien |
+| `docs/PRIVACY_CONTEXT.md`, `DECISIONS.md`, `TASKS.md` | kanonischer Produkt- und Datenschutzvertrag |
+| `lib/app/bootstrap.dart`, `lib/app/app.dart` | Storage-Öffnung und Dependency-Injektion |
+| `lib/core/models/daily_entry.dart`, `lib/core/report/daily_report_generator.dart` | erlaubte Berichtsdaten und lokaler Fallback |
+| `lib/features/today/today_screen.dart`, `lib/features/week/week_screen.dart`, `lib/core/services/export_service.dart` | Save, Anzeige, Kopieren, Woche und Export |
+| `pubspec.yaml`, `scripts/check_repo_hygiene.sh`, Manifest und CI | Dependencies, Secrets, Internet und öffentliche Artefakte |
+
+### Risiken
+
+- `privateNote`, Profil, Betrieb, IDs, Zeitstempel und Debugdaten dürfen weder
+  Payload noch Logs oder Test-Fixtures erreichen.
+- Ohne vollständige private `--dart-define`-Konfiguration bleibt die Funktion
+  deaktiviert; lokaler Save und Bericht dürfen nie warten oder fehlschlagen.
+- ZDR, `data_collection: "deny"` und `require_parameters: true` gelten für
+  jeden Request; kein Modell-Fallback und kein Request aus WeekScreen.
+- KI-Daten bleiben getrennt von `DailyEntry`; Edit, Undo, Löschung und
+  Neustart dürfen keine veraltete Antwort sichtbar machen.
+
+### Mindestchecks
+
+```bash
+/home/d/flutter/bin/flutter pub get
+bash scripts/check_repo_hygiene.sh
+/home/d/flutter/bin/flutter analyze
+/home/d/flutter/bin/flutter test
+/home/d/flutter/bin/flutter build apk --debug
 ```

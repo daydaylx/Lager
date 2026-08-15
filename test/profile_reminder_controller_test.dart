@@ -1,128 +1,117 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:berichtsheft_merker/core/models/reminder_settings.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/features/profile/profile_reminder_controller.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProfileReminderController', () {
-    test('successful save stores normalized settings and schedules', () async {
-      final scheduler = _RecordingScheduler();
-      final saved = <ReminderSettings>[];
+    test('speichert Nutzerabsicht vor der Android-Planung', () async {
+      final events = <String>[];
+      final scheduler = _RecordingScheduler(
+        onSchedule: (settings) {
+          events.add('schedule:${settings.enabled}');
+          return _status(settings);
+        },
+      );
       final controller = ProfileReminderController(
         scheduler: scheduler,
         saveSettings: (settings) async {
-          saved.add(settings);
+          events.add('save:${settings.enabled}');
         },
       );
-      const previous = ReminderSettings.defaults;
-      const next = ReminderSettings(
-        enabled: true,
-        times: [
-          ReminderTime(hour: 20, minute: 0),
-          ReminderTime(hour: 8, minute: 0),
-        ],
-        weekdays: [5, 1, 1],
+      final next = ReminderSettings.defaults.copyWith(enabled: true);
+
+      final result = await controller.saveAndReschedule(
+        previous: ReminderSettings.defaults,
+        next: next,
+        requestPermissions: true,
+      );
+
+      expect(events, ['save:true', 'schedule:true']);
+      expect(result.settings, next);
+      expect(result.status?.state, ReminderRuntimeState.readyExact);
+      expect(scheduler.lastRequestPermissions, isTrue);
+    });
+
+    test('Speicherfehler verändert Android-Planung nicht', () async {
+      final scheduler = _RecordingScheduler();
+      final controller = ProfileReminderController(
+        scheduler: scheduler,
+        saveSettings: (_) async => throw StateError('disk full'),
       );
 
       final result = await controller.saveAndReschedule(
-        previous: previous,
+        previous: ReminderSettings.defaults,
+        next: ReminderSettings.defaults.copyWith(enabled: true),
+      );
+
+      expect(result.settings, ReminderSettings.defaults);
+      expect(result.error, ProfileReminderController.saveError);
+      expect(scheduler.scheduleCalls, 0);
+    });
+
+    test('Planungsfehler behält gespeicherte Nutzerabsicht aktiv', () async {
+      final saved = <ReminderSettings>[];
+      final scheduler = _RecordingScheduler(
+        onSchedule: (_) => throw StateError('native failure'),
+      );
+      final controller = ProfileReminderController(
+        scheduler: scheduler,
+        saveSettings: (settings) async => saved.add(settings),
+      );
+      final next = ReminderSettings.defaults.copyWith(enabled: true);
+
+      final result = await controller.saveAndReschedule(
+        previous: ReminderSettings.defaults,
         next: next,
       );
 
-      final expected = next.normalized();
-      expect(result.settings, expected);
-      expect(result.error, isNull);
-      expect(result.notificationsBlockedBySystem, isFalse);
-      expect(scheduler.scheduled, [expected]);
-      expect(saved, [expected]);
+      expect(saved, [next]);
+      expect(result.settings.enabled, isTrue);
+      expect(result.status?.state, ReminderRuntimeState.error);
+      expect(result.error, ProfileReminderController.scheduleError);
     });
 
-    test('permission denied restores previous schedule without saving',
+    test('load liefert Einstellungen und tatsächlichen Laufzeitstatus',
         () async {
       final scheduler = _RecordingScheduler(
-        onSchedule: (settings) => settings.enabled
-            ? NotificationScheduleResult.permissionDenied
-            : NotificationScheduleResult.disabled,
+        exactAlarmsEnabled: false,
       );
-      final saved = <ReminderSettings>[];
+      final settings = ReminderSettings.defaults.copyWith(enabled: true);
       final controller = ProfileReminderController(
         scheduler: scheduler,
-        saveSettings: (settings) async {
-          saved.add(settings);
-        },
-      );
-      const previous = ReminderSettings.defaults;
-
-      final result = await controller.saveAndReschedule(
-        previous: previous,
-        next: previous.copyWith(enabled: true),
+        loadSettings: () async => settings,
       );
 
-      expect(result.settings, previous);
-      expect(result.error, ProfileReminderController.permissionError);
-      expect(result.notificationsBlockedBySystem, isTrue);
-      expect(scheduler.scheduled, [
-        previous.copyWith(enabled: true),
-        previous,
-      ]);
-      expect(saved, isEmpty);
+      final result = await controller.load();
+
+      expect(result.settings, settings);
+      expect(result.status?.state, ReminderRuntimeState.readyApproximate);
     });
 
-    test('scheduling error restores previous settings and reports save error',
-        () async {
-      final scheduler = _RecordingScheduler(
-        onSchedule: (settings) {
-          if (settings.enabled) throw StateError('native scheduling failed');
-          return NotificationScheduleResult.disabled;
-        },
-      );
-      final saved = <ReminderSettings>[];
-      final controller = ProfileReminderController(
-        scheduler: scheduler,
-        saveSettings: (settings) async {
-          saved.add(settings);
-        },
-      );
-      const previous = ReminderSettings.defaults;
+    test('reconcile repariert ohne Berechtigungsdialog', () async {
+      final scheduler = _RecordingScheduler();
+      final controller = ProfileReminderController(scheduler: scheduler);
+      final settings = ReminderSettings.defaults.copyWith(enabled: true);
 
-      final result = await controller.saveAndReschedule(
-        previous: previous,
-        next: previous.copyWith(enabled: true),
-      );
+      await controller.reconcile(settings);
 
-      expect(result.settings, previous);
-      expect(result.error, ProfileReminderController.saveError);
-      expect(result.notificationsBlockedBySystem, isNull);
-      expect(scheduler.scheduled, [
-        previous.copyWith(enabled: true),
-        previous,
-      ]);
-      expect(saved, [previous]);
+      expect(scheduler.lastRequestPermissions, isFalse);
     });
 
-    test('permission check sets and clears permission error', () async {
-      final scheduler = _RecordingScheduler(notificationsEnabled: false);
+    test('Testbenachrichtigung wird separat angestoßen', () async {
+      final scheduler = _RecordingScheduler();
       final controller = ProfileReminderController(scheduler: scheduler);
 
-      final blocked = await controller.checkPermission(
-        settings: ReminderSettings.defaults.copyWith(enabled: true),
-        currentError: null,
+      final result = await controller.sendTest(
+        ReminderSettings.defaults.copyWith(enabled: true),
       );
 
-      expect(blocked?.notificationsBlockedBySystem, isTrue);
-      expect(blocked?.error, ProfileReminderController.permissionError);
-
-      scheduler.notificationsEnabled = true;
-      final allowed = await controller.checkPermission(
-        settings: ReminderSettings.defaults.copyWith(enabled: true),
-        currentError: ProfileReminderController.permissionError,
-      );
-
-      expect(allowed?.notificationsBlockedBySystem, isFalse);
-      expect(allowed?.error, isNull);
+      expect(scheduler.testCalls, 1);
+      expect(result.error, isNull);
     });
 
-    test('changeTime updates the single time', () {
+    test('changeTime ersetzt die einzelne Uhrzeit', () {
       final controller = ProfileReminderController(
         scheduler: _RecordingScheduler(),
       );
@@ -132,41 +121,52 @@ void main() {
         const ReminderTime(hour: 8, minute: 30),
       );
 
-      expect(edit.settings?.times, const [ReminderTime(hour: 8, minute: 30)]);
-      expect(edit.error, isNull);
+      expect(edit.settings?.time, const ReminderTime(hour: 8, minute: 30));
     });
 
-    test('last weekday cannot be deselected', () {
+    test('letzter Wochentag kann nicht abgewählt werden', () {
       final controller = ProfileReminderController(
         scheduler: _RecordingScheduler(),
       );
       const settings = ReminderSettings(
         enabled: true,
-        times: [ReminderTime(hour: 20, minute: 0)],
+        time: ReminderTime(hour: 20, minute: 0),
         weekdays: [1],
       );
 
-      final weekdayEdit = controller.toggleWeekday(settings, 1);
-
-      expect(weekdayEdit.settings, isNull);
-      expect(weekdayEdit.error, isNull);
+      expect(controller.toggleWeekday(settings, 1).settings, isNull);
     });
   });
 }
 
+ReminderRuntimeStatus _status(
+  ReminderSettings settings, {
+  bool exactAlarmsEnabled = true,
+}) {
+  if (!settings.enabled) return ReminderRuntimeStatus.disabled;
+  return ReminderRuntimeStatus(
+    state: exactAlarmsEnabled
+        ? ReminderRuntimeState.readyExact
+        : ReminderRuntimeState.readyApproximate,
+    notificationsEnabled: true,
+    exactAlarmsEnabled: exactAlarmsEnabled,
+    channelEnabled: true,
+    expectedCount: settings.weekdays.length,
+    pendingCount: settings.weekdays.length,
+  );
+}
+
 class _RecordingScheduler implements NotificationScheduler {
-  final NotificationScheduleResult Function(ReminderSettings settings)?
-      onSchedule;
-  final List<ReminderSettings> scheduled = [];
-  bool notificationsEnabled;
+  final ReminderRuntimeStatus Function(ReminderSettings settings)? onSchedule;
+  final bool exactAlarmsEnabled;
+  int scheduleCalls = 0;
+  int testCalls = 0;
+  bool? lastRequestPermissions;
 
   _RecordingScheduler({
     this.onSchedule,
-    this.notificationsEnabled = true,
+    this.exactAlarmsEnabled = true,
   });
-
-  @override
-  Future<bool> areNotificationsEnabled() async => notificationsEnabled;
 
   @override
   Future<void> cancelAll() async {}
@@ -175,16 +175,35 @@ class _RecordingScheduler implements NotificationScheduler {
   void clearOnTap() {}
 
   @override
-  Future<String?> initialize(void Function(String? p1) onTap) async => null;
+  Future<String?> initialize(void Function(String? payload) onTap) async =>
+      null;
 
   @override
-  Future<NotificationScheduleResult> schedule(ReminderSettings settings) async {
-    final normalized = settings.normalized();
-    scheduled.add(normalized);
-    final handler = onSchedule;
-    if (handler != null) return handler(normalized);
-    return normalized.enabled
-        ? NotificationScheduleResult.scheduled
-        : NotificationScheduleResult.disabled;
+  Future<ReminderRuntimeStatus> inspect(ReminderSettings settings) async =>
+      _status(
+        settings,
+        exactAlarmsEnabled: exactAlarmsEnabled,
+      );
+
+  @override
+  Future<ReminderRuntimeStatus> schedule(
+    ReminderSettings settings, {
+    bool requestPermissions = false,
+  }) async {
+    scheduleCalls++;
+    lastRequestPermissions = requestPermissions;
+    return onSchedule?.call(settings) ??
+        _status(
+          settings,
+          exactAlarmsEnabled: exactAlarmsEnabled,
+        );
+  }
+
+  @override
+  Future<ReminderRuntimeStatus> sendTestNotification(
+    ReminderSettings settings,
+  ) async {
+    testCalls++;
+    return inspect(settings);
   }
 }

@@ -38,8 +38,27 @@ Flutter liegt unter `/home/d/flutter/bin/flutter` — nicht im System-PATH.
 
 Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
-Es sind keine Environment-Variablen, API-Schlüssel, Backend-Dienste oder
-Cloud-Zugänge erforderlich.
+### Optionale private Berichtsnachbearbeitung
+
+Die App bleibt ohne zusätzliche Konfiguration vollständig lokal. Die optionale
+OpenRouter-Nachbearbeitung ist erst aktiv, wenn du die ignorierte Datei
+`config/openrouter.private.json` aus `config/openrouter.example.json` anlegst
+und eigene Werte für `OPENROUTER_ENABLED`, `OPENROUTER_MODEL_ID` und
+`OPENROUTER_API_KEY` setzt. Starte einen privaten Build dann mit:
+
+```bash
+/home/d/flutter/bin/flutter run --dart-define-from-file=config/openrouter.private.json
+```
+
+Die Datei, ihr Schlüssel und ein damit gebautes APK dürfen weder committet noch
+als CI- oder GitHub-Artefakt veröffentlicht werden. Vor Aktivierung müssen für
+das gewählte Modell ZDR und Structured Outputs verfügbar sein; das individuelle
+Budget wird beim privaten OpenRouter-Key gesetzt.
+
+Für den normalen lokalen Betrieb sind keine Environment-Variablen oder
+API-Schlüssel erforderlich. Die optionale Berichtsnachbearbeitung bleibt ohne
+private `--dart-define`-Konfiguration deaktiviert; ihr Schlüssel darf nie in
+Git, CI oder öffentliche APK-Artefakte gelangen.
 
 ## Android-Release
 
@@ -59,8 +78,10 @@ keyPassword=...
 committet werden. Ohne diese Datei erzeugt der Release-Build nur ein
 unsigniertes, nicht zur Installation oder Verteilung bestimmtes APK.
 
-Alle App-Daten bleiben lokal. Android-Cloud-Backup und Gerätetransfer sind für
-die App deaktiviert.
+Alle Primärdaten bleiben lokal. Nur bei bewusst aktivierter optionaler
+Berichtsnachbearbeitung werden positiv gelistete Berichtsdaten an OpenRouter
+übertragen; `privateNote`, Profil- und interne IDs bleiben immer lokal.
+Android-Cloud-Backup und Gerätetransfer sind für die App deaktiviert.
 
 ## Projektdokumente
 
@@ -89,7 +110,7 @@ auf `AGENTS.md`.
 - PDF-Export
 - Cloud-Sync oder Login
 - Backend oder Server
-- KI-Funktionen
+- KI-Chat oder freie LLM-Funktionen (nur die optional deaktivierte, eng begrenzte Berichtsnachbearbeitung ist separat dokumentiert)
 - Mehrbenutzer-Verwaltung
 - iOS-App
 

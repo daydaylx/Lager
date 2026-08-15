@@ -1,10 +1,10 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-07-10
+Zuletzt aktualisiert: 2026-08-14
 
 ## Aktueller Stand
 
-**Phasen 0–20 im Code abgeschlossen. Phase 21 (Agenten-Qualität) Infrastruktur besteht (CI-Quality-Gate, PR-/Handoff-Template, Repo-Hygiene-Checks, Branch Protection, QA-Status-Doku). Phase 22 (Daily-Check-in-Redesign) wurde am 2026-07-10 rückgängig gemacht. Phase 19 (Release-QA) ist der einzige offene Punkt: manueller Gerätetest auf echtem Android-Gerät steht aus.**
+**Phasen 0–20 im Code abgeschlossen. Der Reminder-Stack wurde am 2026-07-19 release-stabil überarbeitet (R8-Fix, atomare V2-Persistenz, exakte Alarme mit Fallback, Laufzeitstatus und sofortige Testfunktion). Phase 21 (Agenten-Qualität) Infrastruktur besteht. Phase 27 ergänzt eine optional deaktivierte OpenRouter-Berichtsnachbearbeitung mit lokalem Fallback; Modell-ID, Key und Budget sind bewusst nicht im Repository gesetzt. Phase 19 (Release-QA) bleibt offen: die vollständige manuelle Geräte-Checkliste ist noch nicht abgeschlossen.**
 
 ### Release-QA-Status (eindeutig)
 
@@ -14,7 +14,7 @@ Zuletzt aktualisiert: 2026-07-10
 | Automatisierte Checks (CI)      | bestanden — analyze 0, test grün, debug-APK baut |
 | Debug-APK gebaut                | ja                                               |
 | Release-APK gebaut/signiert     | ja (v1/v2, lokaler Upload-Keystore)              |
-| Manuelle Android-QA            | **offen** (Gerätetest nach QA_RELEASE_CHECKLIST) |
+| Manuelle Android-QA            | **teilweise** (Release-Update, Status, Testposting und Boot-Receiver geprüft) |
 | Bekannte manuelle Risiken       | Theme-Persistenz, Reminder unter Samsung, Backup-Sperre am Gerät |
 
 Der offene Punkt ist manuelles Testen, kein Code-Mangel.
@@ -50,7 +50,8 @@ waren nach dem Umbau erfolgreich.
   - `lib/core/data/default_activities.dart` — 132 stabile IDs, 123 auswählbare und 38 standardmäßig aktive Tätigkeiten
   - `lib/core/data/activity_subcategories.dart` — fachliche Untergruppen für Tätigkeiten
   - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
-  - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge ohne KI
+  - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge als verbindlicher Fallback
+  - `lib/core/ai/` — deaktivierbare Compile-Time-Konfiguration, Positivlisten-Payload, isolierter OpenRouter-Client, separater Cache, Hintergrundkoordinator und Bericht-Resolver
   - `lib/core/services/export_service.dart` — JSON-Export aller Daten via System-Share-Sheet
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
@@ -70,6 +71,7 @@ waren nach dem Umbau erfolgreich.
 - `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
 - `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge und eigene Tätigkeiten dauerhaft
 - `flutter_local_notifications` / `flutter_timezone` — lokale Erinnerungen in Gerätezeitzone
+- `http` / `crypto` — isolierter optionaler Report-Client und SHA-256-Fingerprint; ohne private Define-Datei keine Netzwerkverbindung
 - `app_settings` — öffnet Android-Benachrichtigungseinstellungen direkt aus der App
 - Android Application ID `com.daydaylx.berichtsheftmerker`
 - Android-Cloud-Backup und Gerätetransfer für lokale Daten deaktiviert
@@ -84,9 +86,10 @@ waren nach dem Umbau erfolgreich.
 - `test/daily_report_generator_test.dart` — Berichtstexte je Tagtyp und Besonderheit
 - `test/persistence_stability_test.dart` — stabile Enum-Namen, kontrollierte Parser und Tätigkeits-IDs
 - `test/version_consistency_test.dart` — verhindert Drift zwischen `pubspec.yaml` und `kAppVersion`
-- `test/notification_service_test.dart` — Reminder-Plan, IDs und Tap-Payload
-- `test/profile_reminder_controller_test.dart` — Reminder-Controller mit Permission, Rollback und Edit-Regeln
+- `test/notification_service_test.dart` — Reminder-Plan, stabile Tages-IDs, Laufzeitstatus und Tap-Payload
+- `test/profile_reminder_controller_test.dart` — persistierte Nutzerabsicht, Planung, Fehler und Edit-Regeln
 - `test/profile_reminder_screen_test.dart` — Profil-Screen Erinnerungs-UI
+- `test/android_notification_config_test.dart` — Manifest, R8-Regeln und Notification-Icon
 - `test/profile_theme_grid_test.dart` — Farbkachel-Grid der Theme-Auswahl
 - `test/bootstrap_test.dart` — sichtbarer Bootstrap-Fehler und Retry
 - `test/templates_screen_test.dart` — Vorlagenverwaltung (Suche, Hinzufügen, Deaktivieren)
@@ -101,11 +104,11 @@ waren nach dem Umbau erfolgreich.
 | `flutter pub get`                        | Erfolgreich, Abhängigkeiten aufgelöst                      |
 | `flutter analyze`                        | 0 Issues                                                   |
 | `flutter test`                           | 251/251 Tests bestanden                                    |
-| `flutter build apk --debug`              | Erfolgreich, Debug-APK 91 MB                               |
-| `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.1 MB                      |
+| `flutter build apk --debug`              | Erfolgreich, Debug-APK 113 MB (2026-07-19)                 |
+| `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.5 MB (2026-07-19)         |
 | Release-Signatur                         | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |
 | Zusammengeführtes Release-Manifest       | Package-ID und Backup-Sperre bestätigt                     |
-| Installation und Start auf Android-Gerät | Samsung SM-S931B: installiert und gestartet                |
+| Installation und Start auf Android-Gerät | Samsung SM-S931B: Release-Update erfolgreich; Package-Replaced-Receiver ohne Absturz |
 
 Debug-APK: `build/app/outputs/flutter-apk/app-debug.apk`
 Release-APK: `build/app/outputs/flutter-apk/app-release.apk`

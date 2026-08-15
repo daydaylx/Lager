@@ -1,10 +1,62 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-07-15 (Phase 26 abgeschlossen — a/b/c UX-Quick-Wins + d Native Patterns; analyze 0 Issues, 280/280 Tests grün)
+Stand: 2026-08-14 (optionale OpenRouter-Berichtsnachbearbeitung implementiert, ohne private Konfiguration deaktiviert)
 
 ---
 
-## Letzte Änderung: Phase 26d – Native Patterns & Bewegung (UX-4 B3, B5, B11)
+## Letzte Änderung: Phase 27 – Optionale OpenRouter-Berichtsnachbearbeitung
+
+- `DailyReportGenerator` bleibt jederzeit der lokale, sofort sichtbare Fallback.
+  Ohne `config/openrouter.private.json` und vollständige `--dart-define`-Werte
+  startet kein Netzwerkrequest.
+- Die neue Core-Grenze umfasst Compile-Time-Konfiguration, Positivlisten-
+  Payload, strikte JSON-Validierung, isolierten HTTP-Transport,
+  ZDR-/`data_collection: deny`-/`require_parameters`-Regeln, getrennten
+  `ai_reports`-Hive-Cache und einen deduplizierten Hintergrundkoordinator.
+  `privateNote`, Profil, IDs und Zeitstempel können den Request nicht
+  erreichen; der Cache wird bei Edit, Undo und Gesamtlöschung bereinigt.
+- Heute und Wochenzusammenfassung verwenden denselben `ResolvedReport`; nur ein
+  tatsächlich gültiger Cache-Bericht trägt „KI-optimiert“, und Kopieren/Export
+  verwenden denselben Text. WeekScreen löst selbst keine Anfragen aus.
+- Verifiziert: `flutter pub get`, `flutter analyze` (0 Issues), `flutter test`
+  (300 bestanden) und Debug-APK erfolgreich. Repo-Hygiene konnte im Harness
+  nicht ausgeführt werden (System-/Secret-Grenze); das kanonische
+  `project_check verify` ist nicht konfiguriert, weil `.pi/verify.json` fehlt.
+- Offen: Erst nach dem nachträglichen Setzen von Modell-ID, privatem Key und
+  Budget ZDR-/Endpoint-Prüfung, privater signierter Release-Build und
+  Android-Gerätetest; keine Key-aktivierte APK oder Konfiguration veröffentlichen.
+
+---
+
+## Vorherige Änderung: Reminder-Stack Release-stabil und selbstprüfend
+
+- Ursache des bisherigen Release-Ausfalls behoben: R8 entfernte die generische
+  Gson-`TypeToken`-Signatur des Notification-Plugins. Eigene ProGuard-Regeln
+  sichern nun `Signature` und `TypeToken`; ein Konfigurationstest schützt dies.
+- Reminder werden als atomare V2-Einstellung gespeichert: aktiv/aus, genau eine
+  Uhrzeit und mindestens ein Wochentag. Alte Preference-Schlüssel werden
+  einmalig migriert; bei mehreren Altzeiten gewinnt die früheste gültige Zeit.
+- Android plant pro Wochentag genau einen stabilen Alarm. Mit
+  `SCHEDULE_EXACT_ALARM` wird minutengenau geplant; ohne Freigabe bleibt ein
+  explizit angezeigter ungenauer Fallback aktiv.
+- Profil zeigt den tatsächlichen Laufzeitstatus, bietet Reparatur und eine
+  sofortige, wiederholbar alarmierende Testbenachrichtigung. Bei App-Start und Resume wird die Planung mit der
+  gespeicherten Nutzerabsicht abgeglichen.
+- Eigenes kräftiges Glocken-Icon, farblicher Teal-Akzent, Reminder-Kategorie
+  und Resource-Keep-Regel ergänzt.
+- Verifiziert: `flutter analyze` 0 Issues; gezielte Reminder-/UI-Tests grün;
+  Debug-APK und signierte Release-APK erfolgreich gebaut; v1/v2-Signatur und
+  Release-R8-Konfiguration geprüft. Installation als Update auf Samsung
+  SM-S931B erfolgreich; der Boot-/Package-Replaced-Receiver lief im Release
+  ohne den früheren `TypeToken`-Absturz. Status-UI meldete minutengenaue
+  Planung für 7/7 Tage. Die sofortige Testnotification wurde von Android mit
+  hoher Wichtigkeit aktiv gepostet; ein wiederholter Test löscht den alten
+  Eintrag zuerst, damit Samsung ihn nicht nur still aktualisiert. Sichtprüfung
+  des neuen Glocken-Icons und ein echter Geräteneustart sind noch offen.
+
+---
+
+## Vorherige Änderung: Phase 26d – Native Patterns & Bewegung (UX-4 B3, B5, B11)
 
 - **B3 App-Shortcuts für Android:** `res/xml/shortcuts.xml` mit Shortcut `open_today` (Intent-Schema `berichtsheftmerker://shortcut/<id>`); `res/values/strings.xml` mit Label-Strings; `AndroidManifest.xml` um `<meta-data android:name="app_shortcuts">` ergänzt; `MainActivity.kt` liest Intent in `configureFlutterEngine` und `onNewIntent` und liefert initialen Shortcut bzw. Live-Aufruf via `MethodChannel` `app_shortcuts`; `lib/core/services/app_shortcut_service.dart` als Flutter-Bridge mit `AppShortcutAction`-Enum; `MainShell` schaltet bei `openToday` auf Tab 0. **Verhalten nur auf echtem Gerät verifizierbar** — manuelle QA im Phase-19-Gerätetest.
 - **B5 AnimatedSwitcher zwischen Flow-Schritten:** Step-Inhalt in eigenes `_StepBody`-Widget extrahiert; in `TodayCheckInPage` mit `AnimatedSize` + `AnimatedSwitcher` (FadeTransition, 220 ms, `easeOut`/`easeIn`) umschlossen; stabiler Key enthält Step + DayType, damit State-Updates ohne Step-Wechsel keine neue Animation auslösen.
@@ -142,8 +194,8 @@ Stand: 2026-07-15 (Phase 26 abgeschlossen — a/b/c UX-Quick-Wins + d Native Pat
 - Folgeerinnerung (30 Min) und Wochencheck (Freitag 19:00) wurden entfernt.
 - Im Profil kann nur noch eine einzige Uhrzeit festgelegt werden; sie wird per
   TimePicker geändert.
-- `ReminderSettings.maxTimes` ist auf 1 reduziert; gespeicherte mehrere Zeiten
-  werden beim Laden auf die früheste normalisiert.
+- `ReminderSettings` enthält direkt genau eine `ReminderTime`; alte gespeicherte
+  Zeitlisten werden bei der V2-Migration auf die früheste gültige Zeit reduziert.
 - `docs/QA_REMINDER_CHECKLIST.md` wurde an das neue Verhalten angepasst.
 - `flutter analyze` 0 Issues; `flutter test` 267/267 bestanden;
   `flutter build apk --debug` erfolgreich.

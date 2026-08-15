@@ -7,8 +7,10 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 ## 1. Berechtigung (Issue #14)
 
 - [ ] Reminder aktivieren → Android 13+: Permission-Dialog erscheint
-- [ ] Permission erteilen → Reminder wird eingerichtet, kein Fehler
-- [ ] Permission verweigern → Fehlermeldung mit "Bitte in den Einstellungen aktivieren" sichtbar
+- [ ] Benachrichtigungen erlauben → Android fragt danach nach „Alarme & Erinnerungen"
+- [ ] Beide Freigaben erteilen → Status „Bereit – minutengenau"
+- [ ] Exaktalarm-Freigabe verweigern → Status „Aktiv – Uhrzeit kann abweichen"; Reminder bleibt aktiv
+- [ ] Benachrichtigungen verweigern → Status „Benachrichtigungen sind blockiert"; Nutzer-Toggle bleibt aktiv
 - [ ] "Benachrichtigungseinstellungen öffnen" → App-Einstellungen öffnen sich auf Notification-Seite
 - [ ] Berechtigung nachträglich in Einstellungen sperren → Profil-Screen zeigt Warnung nach Rückkehr in die App
 - [ ] Berechtigung nachträglich erlauben → Warnung verschwindet nach Rückkehr in die App
@@ -30,6 +32,13 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] Tap bei laufender App im Hintergrund → Heute-Tab wird ausgewählt
 - [ ] App vollständig beenden, dann Notification antippen → Kaltstart öffnet Heute-Tab
 
+## 3a. Eingebaute Testbenachrichtigung
+
+- [ ] Profil → Erinnerungen → „Testbenachrichtigung" ist bei erlaubten Notifications aktiv
+- [ ] Testnotification erscheint sofort und bei wiederholtem Test erneut
+- [ ] Testnotification zeigt das monochrome App-Symbol korrekt in der Statusleiste
+- [ ] Logcat enthält keinen `AndroidRuntime`-/`TypeToken`-Fehler des `ScheduledNotificationReceiver`
+
 ## 4. Tägliche Erinnerung
 
 - [ ] An jedem gewählten Wochentag erscheint genau eine Notification
@@ -45,6 +54,9 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 - [ ] Tippen auf die Uhrzeit öffnet den TimePicker
 - [ ] Wochentage können wie bisher einzeln gewählt werden
 - [ ] Letzter Wochentag kann nicht abgewählt werden
+- [ ] Status zeigt die Anzahl nativer Alarme („X von X Tagen geplant") korrekt
+- [ ] „Neu planen" repariert einen unvollständigen nativen Zustand
+- [ ] Nach Rückkehr aus Android-Einstellungen aktualisiert sich der Status
 
 ## 6. App-Start-Banner (Issue #19)
 
@@ -78,6 +90,8 @@ Mindestens ein Test auf echtem Samsung-Gerät erforderlich.
 
 - [ ] App nach Neustart → Reminder werden automatisch neu geplant (RECEIVE_BOOT_COMPLETED)
 - [ ] Reminder erscheinen wieder zur konfigurierten Uhrzeit
+- [ ] Signierte Release-APK: Boot-Receiver läuft ohne Gson-`TypeToken`-/R8-Absturz
+- [ ] App-Update mit `adb install -r` erhält Einstellungen und plant ohne Receiver-Absturz neu
 
 ## 11. Zeitzone und Tageswechsel
 

@@ -1,46 +1,20 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:berichtsheft_merker/core/models/reminder_settings.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('ReminderSettings.defaults', () {
-    test('Standardwerte sind korrekt', () {
-      expect(ReminderSettings.defaults.enabled, isFalse);
-      expect(
-        ReminderSettings.defaults.times,
-        [const ReminderTime(hour: 20, minute: 0)],
-      );
-      expect(ReminderSettings.defaults.weekdays, [1, 2, 3, 4, 5]);
-    });
-  });
-
   group('ReminderTime', () {
-    test('Gleichheit bei gleichen Werten', () {
+    test('parst und formatiert HH:MM', () {
       expect(
-        const ReminderTime(hour: 20, minute: 0),
-        equals(const ReminderTime(hour: 20, minute: 0)),
+        ReminderTime.fromString('08:30'),
+        const ReminderTime(hour: 8, minute: 30),
+      );
+      expect(
+        const ReminderTime(hour: 8, minute: 5).toDisplayString(),
+        '08:05',
       );
     });
 
-    test('Ungleichheit bei verschiedenen Werten', () {
-      expect(
-        const ReminderTime(hour: 8, minute: 0),
-        isNot(equals(const ReminderTime(hour: 20, minute: 0))),
-      );
-    });
-
-    test('fromString parst HH:MM korrekt', () {
-      final t = ReminderTime.fromString('08:30');
-      expect(t.hour, 8);
-      expect(t.minute, 30);
-    });
-
-    test('toDisplayString gibt nullaufgefüllte Zeit zurück', () {
-      expect(const ReminderTime(hour: 8, minute: 5).toDisplayString(), '08:05');
-      expect(
-          const ReminderTime(hour: 20, minute: 0).toDisplayString(), '20:00');
-    });
-
-    test('fromString wirft bei ungültigem Format', () {
+    test('weist ungültige persistierte Zeiten zurück', () {
       expect(() => ReminderTime.fromString('invalid'), throwsFormatException);
       expect(() => ReminderTime.fromString('25:00'), throwsFormatException);
       expect(() => ReminderTime.fromString('08:60'), throwsFormatException);
@@ -48,46 +22,62 @@ void main() {
   });
 
   group('ReminderSettings', () {
-    test('Gleichheit funktioniert', () {
-      const a = ReminderSettings(
-        enabled: true,
-        times: [ReminderTime(hour: 8, minute: 0)],
-        weekdays: [1, 2, 3],
+    test('Defaults sind aus, 20:00 und Montag bis Freitag', () {
+      expect(ReminderSettings.defaults.enabled, isFalse);
+      expect(
+        ReminderSettings.defaults.time,
+        const ReminderTime(hour: 20, minute: 0),
       );
-      const b = ReminderSettings(
-        enabled: true,
-        times: [ReminderTime(hour: 8, minute: 0)],
-        weekdays: [1, 2, 3],
-      );
-      expect(a, equals(b));
+      expect(ReminderSettings.defaults.weekdays, [1, 2, 3, 4, 5]);
     });
 
-    test('copyWith ändert nur angegebene Felder', () {
-      final copy = ReminderSettings.defaults.copyWith(enabled: true);
+    test('copyWith ändert einzelne Werte und schützt die Tagesliste', () {
+      final copy = ReminderSettings.defaults.copyWith(
+        enabled: true,
+        time: const ReminderTime(hour: 8, minute: 30),
+        weekdays: [6, 7],
+      );
+
       expect(copy.enabled, isTrue);
-      expect(copy.times, ReminderSettings.defaults.times);
-      expect(copy.weekdays, ReminderSettings.defaults.weekdays);
+      expect(copy.time, const ReminderTime(hour: 8, minute: 30));
+      expect(copy.weekdays, [6, 7]);
+      expect(() => copy.weekdays.add(1), throwsUnsupportedError);
     });
 
-    test('copyWith ohne Argumente erzeugt gleiche Einstellungen', () {
-      expect(ReminderSettings.defaults.copyWith(),
-          equals(ReminderSettings.defaults));
-    });
-
-    test('normalized behält nur die früheste Uhrzeit', () {
-      final settings = ReminderSettings(
+    test('normalized filtert, dedupliziert und sortiert Wochentage', () {
+      const settings = ReminderSettings(
         enabled: true,
-        times: [
-          for (var hour = 10; hour >= 1; hour--)
-            ReminderTime(hour: hour, minute: 0),
-          const ReminderTime(hour: 1, minute: 0),
-        ],
-        weekdays: const [5, 1, 5, 9],
-      ).normalized();
+        time: ReminderTime(hour: 7, minute: 15),
+        weekdays: [5, 1, 5, 9, 0],
+      );
 
-      expect(settings.times.length, ReminderSettings.maxTimes);
-      expect(settings.times.first, const ReminderTime(hour: 1, minute: 0));
-      expect(settings.weekdays, [1, 5]);
+      expect(settings.normalized().weekdays, [1, 5]);
+    });
+
+    test('normalized repariert eine leere Tagesliste', () {
+      const settings = ReminderSettings(
+        enabled: true,
+        time: ReminderTime(hour: 7, minute: 15),
+        weekdays: [],
+      );
+
+      expect(
+          settings.normalized().weekdays, ReminderSettings.defaults.weekdays);
+    });
+
+    test('Gleichheit berücksichtigt Uhrzeit und Tage', () {
+      const first = ReminderSettings(
+        enabled: true,
+        time: ReminderTime(hour: 8, minute: 0),
+        weekdays: [1, 3, 5],
+      );
+      const second = ReminderSettings(
+        enabled: true,
+        time: ReminderTime(hour: 8, minute: 0),
+        weekdays: [1, 3, 5],
+      );
+
+      expect(first, second);
     });
   });
 }

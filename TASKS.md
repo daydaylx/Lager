@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 19: Release-QA auf echtem Android-Gerät** 🔨 — UI-Stand: Phase 23 (Tagestyp-Redesign). Phase 22 (Daily-Check-in-Redesign) wurde rückgängig gemacht. Phase 21 (Agenten-Qualität) bleibt bestehen. Manueller Gerätetest bleibt ausstehend.
+**Phase 27: Optionale OpenRouter-Berichtsnachbearbeitung** 🔨 — Implementierung läuft ohne private Modell-/Key-Konfiguration; die App bleibt bis zur späteren Aktivierung vollständig lokal. Phase 19 (Release-QA auf echtem Android-Gerät) bleibt separat offen.
 
 ---
 
@@ -116,12 +116,26 @@ Voraussetzung: Flutter SDK installiert, `flutter pub get` erfolgreich.
 - [x] `ReminderStorage` (SharedPreferences, JSON-Serialisierung)
 - [x] `NotificationScheduler`-Interface + `NoOpNotificationScheduler` (Tests) + `FlutterLocalNotificationScheduler` (Produktiv)
 - [x] Profil-Screen: Erinnerungen-Sektion (Toggle, Zeiten, Wochentage)
-- [x] Android-Permissions und Receiver: `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`
+- [x] Android-Permissions und Receiver: `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`
 - [x] `flutter_local_notifications` + `timezone` + `flutter_timezone` in pubspec.yaml
 - [x] Tests: `reminder_settings_test.dart`, `reminder_storage_test.dart`, `profile_reminder_screen_test.dart`
 - [x] `flutter pub get` → `flutter analyze` → `flutter test` auf Entwicklermaschine ausführen
 - [x] Debug-APK mit lokaler Reminder-Konfiguration bauen: `build/app/outputs/flutter-apk/app-debug.apk`
 - [ ] Manuelle Tests auf echtem Android-Gerät (Permission-Dialog, Notification erscheint)
+
+### Reminder-Stabilisierung 2026-07-19 ✅ Code abgeschlossen; Geräte-QA läuft
+
+- [x] Release-Absturz der Notification- und Boot-Receiver durch R8/Gson-`TypeToken`-Regeln behoben
+- [x] Atomare V2-Persistenz mit sicherer Migration der alten Reminder-Schlüssel
+- [x] Genau eine Uhrzeit und stabile Alarm-ID pro ausgewähltem Wochentag
+- [x] Minutengenaue Alarme bei Freigabe; transparenter ungenauer Fallback ohne Freigabe
+- [x] Laufzeitstatus, Reparaturaktion und Testbenachrichtigung im Profil
+- [x] Selbstheilende Neuplanung bei App-Start und Resume
+- [x] Monochromes Notification-Icon und Release-Konfiguration automatisiert geprüft
+- [x] Analyze, Reminder-/UI-Tests, Debug- und signierter Release-Build erfolgreich
+- [x] Release-Update auf Samsung SM-S931B; Package-Replaced-Receiver ohne R8-Absturz
+- [x] Status-UI (minutengenau, 7/7) und sofortiges Android-Posting der Testnotification geprüft
+- [ ] Neues Glocken-Icon visuell und Verhalten nach echtem Geräteneustart abschließend prüfen
 
 ---
 
@@ -338,7 +352,7 @@ Ziel: Erst nach den obigen Änderungen ernsthaft testen. Vorher ist ein komplett
 - Nach jeder Phase mindestens `flutter analyze` und `flutter test`.
 - Bei UI-Änderungen Screenshots/Golden-Referenzen prüfen.
 - Keine neuen Features einbauen, die nicht durch ein Issue gedeckt sind.
-- Keine KI/API/PDF/Cloud-Funktion einschleppen, solange die App bewusst lokaler Berichtsheft-Merker bleibt.
+- Keine KI/API/PDF/Cloud-Funktion einschleppen, außer der explizit freigegebenen, optionalen OpenRouter-Berichtsnachbearbeitung über ihre dokumentierte Servicegrenze.
 
 ---
 
@@ -622,6 +636,29 @@ kein erneuter Flow-Refactor.
 - [x] **B11 SaveBar-Sichtbarkeit bei Tastatur:** bestehender Test „Heute-Notiz und Speichern bleiben mit Tastatur erreichbar" (`test/ui_layout_test.dart`, 360×640 + 280 dp Tastatur-Inset) deckt das Verhalten bereits ab — SaveBar bleibt nach Tastatur-Öffnung findbar. Zusätzliche `Scrollable.ensureVisible` wäre redundant; bewusst kein Code-Eingriff.
 - [x] **Tests UX-4:** 6 neue Tests in `test/app_shortcut_service_test.dart` (Parser, Initial-Intent, No-Plugin-Pfad, Live-Aufruf). 280/280 grün.
 - [x] `flutter analyze` — 0 Issues; `flutter build apk --debug` — erfolgreich.
+
+---
+
+## Phase 27: Optionale OpenRouter-Berichtsnachbearbeitung 🔨
+
+Der lokale Bericht bleibt der unverzügliche und verbindliche Fallback. Die
+Nachbearbeitung bleibt ohne vollständige private `--dart-define`-Konfiguration
+deaktiviert; Modell-ID, API-Schlüssel und Budget werden nachträglich gesetzt.
+
+- [x] Phase 0: Architektur-, Datenschutz- und Agentenvertrag auf die eng
+  begrenzte Netzwerk-Ausnahme konsolidiert.
+- [x] Phase 1: Deaktivierbare Konfiguration, separaten KI-Cache und
+  injizierbare Servicegrenzen ergänzt.
+- [x] Phase 2: Positiv gelisteten OpenRouter-Client, Prompt und strikte
+  Antwortvalidierung mit Fake-Transport getestet.
+- [x] Phase 3: Nicht blockierenden, deduplizierten Hintergrundablauf mit
+  Fingerprint-, Edit-, Undo- und Neustart-Schutz integriert.
+- [x] Phase 4: Aufgelösten Bericht in Heute, Woche, Kopieren, Export und
+  Löschpfaden verwendet und Daten-/UI-Dokumentation aktualisiert.
+- [ ] Phase 5: Privaten Modell-/Key-Build, ZDR-/Budgetprüfung und Android-
+  Gerätetest nach dem nachträglichen Setzen der privaten Konfiguration
+  nachweisen. Automatisiert: `flutter analyze` 0 Issues, 300 Tests und
+  Debug-APK erfolgreich.
 
 ---
 

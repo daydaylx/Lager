@@ -2,7 +2,11 @@ class ReminderTime {
   final int hour;
   final int minute;
 
-  const ReminderTime({required this.hour, required this.minute});
+  const ReminderTime({required this.hour, required this.minute})
+      : assert(hour >= 0 && hour <= 23),
+        assert(minute >= 0 && minute <= 59);
+
+  bool get isValid => hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
 
   static ReminderTime fromString(String hhmm) {
     final parts = hhmm.split(':');
@@ -30,48 +34,47 @@ class ReminderTime {
 }
 
 class ReminderSettings {
-  static const int maxTimes = 1;
-
   final bool enabled;
-  final List<ReminderTime> times;
+  final ReminderTime time;
   final List<int> weekdays;
 
   const ReminderSettings({
     required this.enabled,
-    required this.times,
+    required this.time,
     required this.weekdays,
   });
 
   static const ReminderSettings defaults = ReminderSettings(
     enabled: false,
-    times: [ReminderTime(hour: 20, minute: 0)],
+    time: ReminderTime(hour: 20, minute: 0),
     weekdays: [1, 2, 3, 4, 5],
   );
 
   ReminderSettings copyWith({
     bool? enabled,
-    List<ReminderTime>? times,
+    ReminderTime? time,
     List<int>? weekdays,
   }) {
     return ReminderSettings(
       enabled: enabled ?? this.enabled,
-      times: List.unmodifiable(times ?? this.times),
+      time: time ?? this.time,
       weekdays: List.unmodifiable(weekdays ?? this.weekdays),
     );
   }
 
   ReminderSettings normalized() {
-    final normalizedTimes = times.toSet().toList()
-      ..sort((a, b) => a.hour == b.hour
-          ? a.minute.compareTo(b.minute)
-          : a.hour.compareTo(b.hour));
-    final normalizedWeekdays =
-        weekdays.where((day) => day >= 1 && day <= 7).toSet().toList()..sort();
+    final normalizedWeekdays = weekdays
+        .where((day) => day >= DateTime.monday && day <= DateTime.sunday)
+        .toSet()
+        .toList()
+      ..sort();
 
     return ReminderSettings(
       enabled: enabled,
-      times: List.unmodifiable(normalizedTimes.take(maxTimes)),
-      weekdays: List.unmodifiable(normalizedWeekdays),
+      time: time.isValid ? time : defaults.time,
+      weekdays: List.unmodifiable(
+        normalizedWeekdays.isEmpty ? defaults.weekdays : normalizedWeekdays,
+      ),
     );
   }
 
@@ -79,12 +82,11 @@ class ReminderSettings {
   bool operator ==(Object other) =>
       other is ReminderSettings &&
       other.enabled == enabled &&
-      _listEquals(other.times, times) &&
+      other.time == time &&
       _listEquals(other.weekdays, weekdays);
 
   @override
-  int get hashCode =>
-      Object.hash(enabled, Object.hashAll(times), Object.hashAll(weekdays));
+  int get hashCode => Object.hash(enabled, time, Object.hashAll(weekdays));
 }
 
 bool _listEquals<T>(List<T> a, List<T> b) {

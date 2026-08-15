@@ -5,6 +5,8 @@ Persistenzverträge. Der ausführbare Code bleibt die Quelle der Wahrheit.
 
 **Status:** `DailyEntry` und eigene Tätigkeiten werden mit Hive CE persistiert;
 Profil, Onboarding, Reminder und Theme-Preset liegen in SharedPreferences.
+Abgeleitete optionale KI-Berichte liegen getrennt in einer eigenen Hive-Box und
+verändern weder `DailyEntry` noch seinen Adapter.
 
 Vollständiger historischer Tätigkeitskatalog (132 stabile IDs):
 `lib/core/data/default_activities.dart`. Davon sind 123 fachlich passende
@@ -141,6 +143,11 @@ lib/core/
     special_flag.dart
   data/
     default_activities.dart    ← 132 stabile IDs, davon 123 auswählbar
+  ai/
+    ai_report_cache.dart
+    hive_ai_report_cache.dart
+    report_enhancement_coordinator.dart
+    resolved_report.dart
   storage/
     daily_entry_storage.dart
     daily_entry_adapter.dart
@@ -165,6 +172,7 @@ Hive-CE-Boxen:
 |---|---|---|
 | `'entries'` | `Box<DailyEntry>` | Alle Tageseinträge, Schlüssel = Datum als String `'yyyy-MM-dd'` |
 | `'custom_templates'` | `Box<ActivityTemplate>` | Eigene Tätigkeiten mit stabilem Schlüssel und Aktivstatus |
+| `'ai_reports'` | `Box<String>` | Abgeleitete Berichte, Fingerprint, Modell-/Prompt-Version, Status und begrenzte Retry-Metadaten |
 
 **DailyEntryStorage-Schnittstelle:**
 - `loadByDate(DateTime date)` — Lädt Eintrag für ein bestimmtes Datum
@@ -178,6 +186,12 @@ Enum-Adapter benötigt werden. Das aktuelle `areas`-Feld liest auch ältere
 Einträge mit einem einzelnen gespeicherten Bereich.
 Gespeicherte Enum-Strings werden über zentrale Parser gelesen; unbekannte Werte
 werfen eine lesbare `FormatException` statt eines unklaren `byName`-Fehlers.
+
+`ai_reports` speichert keine primären Eingabedaten und keine API-Schlüssel oder
+Requestkörper. Ein Cache-Eintrag ist nur bei gleichem Fingerprint,
+Modell und `promptVersion` gültig; Undo, Einzellöschung und „Alle Daten löschen"
+bereinigen ihn. Fehler oder Korruption des Caches dürfen lokale Einträge und den
+lokalen Bericht nie blockieren.
 
 `DailyEntryStorage.loadAll()` liefert die lokal gespeicherten Einträge für
 abgeleitete UI-Funktionen wie „Häufig genutzt"; es speichert keine zusätzlichen

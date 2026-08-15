@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,13 +61,17 @@ void main() {
     });
 
     testWidgets(
-        'Toggle aktivieren speichert reminder_enabled in SharedPreferences',
+        'Toggle aktivieren speichert atomare V2-Einstellung in SharedPreferences',
         (tester) async {
       await pumpScreen(tester);
       await tester.tap(find.byKey(const ValueKey('reminder_toggle')));
       await tester.pumpAndSettle();
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('reminder_enabled'), isTrue);
+      final stored = jsonDecode(prefs.getString('reminder_settings_v2')!)
+          as Map<String, dynamic>;
+      expect(stored['version'], 2);
+      expect(stored['enabled'], isTrue);
+      expect(stored['time'], '20:00');
     });
 
     testWidgets('Toggle aktivieren ruft schedule() auf', (tester) async {
@@ -138,27 +144,25 @@ void main() {
       expect(chip.onSelected, isNull);
     });
 
-    testWidgets('verweigerte Berechtigung behält deaktivierten Zustand', (
+    testWidgets('verweigerte Berechtigung behält Nutzerabsicht aktiv', (
       tester,
     ) async {
       final spy = NoOpNotificationScheduler(
-        scheduleResult: NotificationScheduleResult.permissionDenied,
+        notificationsEnabled: false,
       );
       await pumpScreen(tester, scheduler: spy);
       await tester.tap(find.byKey(const ValueKey('reminder_toggle')));
       await tester.pumpAndSettle();
 
       expect(
-        find.text(
-          'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.',
-        ),
+        find.text('Benachrichtigungen sind blockiert'),
         findsOneWidget,
       );
       final toggle = tester.widget<SwitchListTile>(
         find.byKey(const ValueKey('reminder_toggle')),
       );
-      expect(toggle.value, isFalse);
-      expect(spy.scheduleCalls, 2);
+      expect(toggle.value, isTrue);
+      expect(spy.scheduleCalls, 1);
     });
 
     testWidgets('Schedulingfehler zeigt Meldung und behält Zustand', (
@@ -173,14 +177,14 @@ void main() {
 
       expect(
         find.text(
-          'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.',
+          'Die Einstellung ist gespeichert, aber Android konnte die Erinnerung noch nicht vollständig planen.',
         ),
         findsOneWidget,
       );
       final toggle = tester.widget<SwitchListTile>(
         find.byKey(const ValueKey('reminder_toggle')),
       );
-      expect(toggle.value, isFalse);
+      expect(toggle.value, isTrue);
     });
 
     testWidgets('Berechtigungsstatus wird nach Rückkehr erneut geprüft', (
@@ -194,9 +198,7 @@ void main() {
       );
 
       expect(
-        find.text(
-          'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.',
-        ),
+        find.text('Benachrichtigungen sind blockiert'),
         findsOneWidget,
       );
 
@@ -207,11 +209,40 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text(
-          'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.',
-        ),
+        find.text('Benachrichtigungen sind blockiert'),
         findsNothing,
       );
+      expect(find.text('Bereit – minutengenau'), findsOneWidget);
+    });
+
+    testWidgets('fehlende Exaktalarm-Freigabe zeigt Fallback transparent', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        prefs: {'reminder_enabled': true},
+        scheduler: NoOpNotificationScheduler(exactAlarmsEnabled: false),
+      );
+
+      expect(find.text('Aktiv – Uhrzeit kann abweichen'), findsOneWidget);
+      expect(find.text('Minutengenaue Alarme erlauben'), findsOneWidget);
+    });
+
+    testWidgets('Testschaltfläche sendet eine Testbenachrichtigung', (
+      tester,
+    ) async {
+      final spy = await pumpScreen(
+        tester,
+        prefs: {'reminder_enabled': true},
+      );
+      await scrollTo(tester, 'reminder_test');
+
+      await tester.tap(find.byKey(const ValueKey('reminder_test')));
+      await tester.pumpAndSettle();
+
+      expect(spy.testCalls, 1);
+      expect(find.textContaining('Testbenachrichtigung wurde gesendet'),
+          findsOneWidget);
     });
   });
 }

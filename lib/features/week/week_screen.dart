@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
+import '../../core/ai/report_enhancement_coordinator.dart';
+import '../../core/ai/resolved_report.dart';
 import '../../core/report/daily_report_generator.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
@@ -24,6 +26,8 @@ class WeekScreen extends StatefulWidget {
   final int refreshSignal;
   final int templateRefreshSignal;
   final VoidCallback? onNavigateToToday;
+  final ReportEnhancementCoordinator? reportCoordinator;
+  final ResolvedReportResolver? reportResolver;
 
   const WeekScreen({
     super.key,
@@ -35,6 +39,8 @@ class WeekScreen extends StatefulWidget {
     this.refreshSignal = 0,
     this.templateRefreshSignal = 0,
     this.onNavigateToToday,
+    this.reportCoordinator,
+    this.reportResolver,
   });
 
   @override
@@ -399,6 +405,8 @@ class _WeekScreenState extends State<WeekScreen> {
           defaultActivityStateStorage: widget.defaultActivityStateStorage,
           date: date,
           protectBackNavigation: false,
+          reportCoordinator: widget.reportCoordinator,
+          reportResolver: widget.reportResolver,
         ),
       ),
     );
@@ -414,6 +422,7 @@ class _WeekScreenState extends State<WeekScreen> {
           entries: _entries,
           today: _today,
           activityTitles: buildActivityTitlesMap(_customTemplates.values),
+          reportResolver: widget.reportResolver,
         ),
       ),
     );
@@ -786,6 +795,7 @@ class _WeekSummaryScreen extends StatelessWidget {
   final Map<String, DailyEntry> entries;
   final DateTime today;
   final Map<String, String> activityTitles;
+  final ResolvedReportResolver? reportResolver;
 
   const _WeekSummaryScreen({
     required this.weekStart,
@@ -793,6 +803,7 @@ class _WeekSummaryScreen extends StatelessWidget {
     required this.entries,
     required this.today,
     required this.activityTitles,
+    this.reportResolver,
   });
 
   @override
@@ -817,6 +828,7 @@ class _WeekSummaryScreen extends StatelessWidget {
                 date: date,
                 entry: entry,
                 activityTitles: activityTitles,
+                reportResolver: reportResolver,
                 isMissing: date.weekday <= DateTime.friday &&
                     !date.isAfter(today) &&
                     entry == null,
@@ -834,12 +846,14 @@ class _SummaryDayCard extends StatelessWidget {
   final DailyEntry? entry;
   final bool isMissing;
   final Map<String, String> activityTitles;
+  final ResolvedReportResolver? reportResolver;
 
   const _SummaryDayCard({
     required this.date,
     required this.entry,
     required this.isMissing,
     required this.activityTitles,
+    this.reportResolver,
   });
 
   @override
@@ -898,32 +912,52 @@ class _SummaryDayCard extends StatelessWidget {
               const SizedBox(height: 12),
               const Divider(),
               const SizedBox(height: 8),
-              Text(
-                'Vorschlag fürs Berichtsheft',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 6),
-              SelectableText(
-                DailyReportGenerator.generate(entry, titles),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                key: Key('copy_report_${entry.id}'),
-                icon: const Icon(Icons.copy_outlined),
-                label: const Text('Kopieren'),
-                onPressed: () {
-                  Clipboard.setData(
-                    ClipboardData(
-                      text: DailyReportGenerator.generate(
-                        entry,
-                        titles,
+              FutureBuilder<ResolvedReport>(
+                future: _resolveReport(entry, titles),
+                builder: (context, snapshot) {
+                  final resolved = snapshot.data ??
+                      ResolvedReport.local(
+                        DailyReportGenerator.generate(entry, titles),
+                      );
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Vorschlag fürs Berichtsheft',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          if (resolved.isAiEnhanced)
+                            const Chip(
+                              label: Text('KI-optimiert'),
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                        ],
                       ),
-                    ),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tagesbericht kopiert.')),
+                      const SizedBox(height: 6),
+                      SelectableText(resolved.text),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        key: Key('copy_report_${entry.id}'),
+                        icon: const Icon(Icons.copy_outlined),
+                        label: const Text('Kopieren'),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: resolved.text));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tagesbericht kopiert.'),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   );
                 },
               ),
@@ -933,6 +967,15 @@ class _SummaryDayCard extends StatelessWidget {
       ),
     );
   }
+
+  Future<ResolvedReport> _resolveReport(
+    DailyEntry entry,
+    Map<String, String> titles,
+  ) =>
+      reportResolver?.resolve(entry) ??
+      Future<ResolvedReport>.value(
+        ResolvedReport.local(DailyReportGenerator.generate(entry, titles)),
+      );
 
   String _activityTitle(String id, Map<String, String> titles) {
     return titles[id] ?? 'Nicht mehr verfügbare Tätigkeit';

@@ -45,6 +45,15 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Private OpenRouter-Define-Datei: Modell, Key und Budget bleiben lokal.
+config/openrouter.private.json
+
+# JS-Tooling-Verzeichnisse gehören nicht ins Repo
+node_modules/
+
+# Lokale Agenten-Artefakte
+.pi-subagents/
+
 # Shell- und Home-Konfigurationen gehören nicht ins Repo
 .bashrc
 .bash_profile

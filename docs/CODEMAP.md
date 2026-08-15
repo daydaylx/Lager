@@ -9,7 +9,7 @@ Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Aktueller Arbeitsstan
 
 ```
 lib/main.dart                → runApp mit AppBootstrap
-lib/app/bootstrap.dart       → lokale Speicher und Theme öffnen, Startfehler + Retry
+lib/app/bootstrap.dart       → lokale Speicher, optionalen KI-Cache und Theme öffnen, Startfehler + Retry
 lib/app/app.dart             → MaterialApp, ThemePreset, MainShell, IndexedStack, NavigationBar
 lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Komponententheme
 ```
@@ -26,7 +26,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `today/today_entry_draft.dart`             | ✅ fertig | DailyEntry-Entwurf für Validierung, Speichern und Berichtsvorschau                                                                         |
 | `today/activity_recommender.dart`          | ✅ fertig | Häufig-genutzt-Sortierung und Ausbildungsjahr-Empfehlungen                                                                                 |
 | `today/widgets/`                           | ✅ fertig | UI-Bausteine: `TodayFlow` (Check-in-Schritte, Tätigkeitsauswahl und Übersicht), `TodayHeader`, `DayTypeRow`, `AbsenceSheet`, `SaveBar`, `AreaGrid`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
-| `today/widgets/report_card.dart`           | ✅ fertig | Generierte Berichtskarte mit Entwurf/Erledigt-Chip und Kopier-Button                                                                       |
+| `today/widgets/report_card.dart`           | ✅ fertig | Lokale oder gültig nachbearbeitete Berichtskarte mit Status, optionalem „KI-optimiert“-Chip und Kopier-Button                             |
 | `week/week_screen.dart`                    | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                                  |
 | `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |
 | `profile/profile_screen.dart`              | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                                   |
@@ -73,12 +73,23 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `storage/theme_preset_storage.dart`           | Gewähltes ThemePreset in SharedPreferences             |
 | `storage/preferences_write.dart`              | Prüft SharedPreferences-Schreibergebnisse              |
 
+### KI-Berichtsnachbearbeitung
+
+| Datei | Inhalt |
+| --- | --- |
+| `ai/openrouter_config.dart` | private Compile-Time-Konfiguration, ohne Werte deaktiviert |
+| `ai/report_payload_builder.dart` | Positivliste, lokaler Entwurf und kanonischer SHA-256-Fingerprint |
+| `ai/openrouter_report_enhancer.dart` | isolierter HTTP-Client mit ZDR-, Structured-Output- und Fehlerregeln |
+| `ai/ai_report_cache.dart`, `ai/hive_ai_report_cache.dart` | separater Cache ohne `DailyEntry`-Migration |
+| `ai/report_enhancement_coordinator.dart` | Hintergrundablauf, Deduplizierung, Retry und Aktualitätsprüfung |
+| `ai/resolved_report.dart` | Auswahl von gültigem Cache-Bericht oder lokalem Fallback |
+
 ### Services
 
 | Datei                                | Inhalt                                                                             |
 | ------------------------------------ | ---------------------------------------------------------------------------------- |
 | `services/notification_service.dart` | Scheduler-Interface, Reminder-Plan, Tap-Routing und Produktiv-/Testimplementierung |
-| `report/daily_report_generator.dart` | Deterministische lokale Tagesberichtstexte ohne KI                                 |
+| `report/daily_report_generator.dart` | Deterministische lokale Tagesberichtstexte als Fallback                             |
 
 ### Sonstiges Core
 
@@ -122,8 +133,8 @@ Erinnerungen:
   profile_screen.dart
     → profile_reminder_controller.dart
     → reminder_storage.dart
-    → SharedPreferences (reminder_enabled, reminder_times, reminder_weekdays)
-    → notification_service.dart (FlutterLocalNotificationScheduler)
+    → SharedPreferences (atomarer Schlüssel reminder_settings_v2; Legacy-Migration)
+    → notification_service.dart (Statusprüfung, Exact-/Fallback-Planung, Testnotification)
     → flutter_timezone + flutter_local_notifications
 
 Theme:
@@ -146,9 +157,12 @@ Ausbildungsjahr-Empfehlungen:
 
 Berichtsvorschlag:
   today_screen.dart / week_screen.dart
-    → today_entry_draft.dart (Heute)
-    → report/daily_report_generator.dart
-    → deterministische lokale Satzmuster + Clipboard
+    → ResolvedReportResolver
+    → gültiger `ai_reports`-Cache oder `daily_report_generator.dart`
+    → deterministische lokale Satzmuster als Fallback + Clipboard
+  today_screen.dart nach lokalem Save
+    → ReportEnhancementCoordinator (nur bei privater vollständiger Konfiguration)
+    → OpenRouter-Client im Hintergrund; nie beim Öffnen der Woche
 
 App-Start:
   main.dart
@@ -186,7 +200,8 @@ App-Start:
 | `android_backup_test.dart`               | Android-Cloud-Backup und Gerätetransfer bleiben deaktiviert         |
 | `version_consistency_test.dart`            | `pubspec.yaml`-Version gegen `kAppVersion`                         |
 | `ui_layout_test.dart`                      | Kleine Displays, große Schrift, Tastatur, Touchflächen, Goldens    |
-| `export_service_test.dart`                 | JSON-Export: Profil, Einträge, eigene Tätigkeiten (`generateJson`) |
+| `export_service_test.dart`                 | JSON-Export: Profil, Einträge, eigene Tätigkeiten und gültige abgeleitete Berichte |
+| `openrouter_*`, `report_*`, `ai_report_validator_test.dart` | deaktivierte Konfiguration, Payload-Privatsphäre, Clientregeln, Cache, Race-Schutz und Resolver |
 | `profile_storage_test.dart`                | Profil save/load, Validierung Beruf/Jahr, Onboarding-Status        |
 | `theme_preset_storage_test.dart`           | Theme-Preset-Roundtrip und Fallback auf `lagerTeal`                |
 | `theme_test.dart`                          | `buildThemeForPreset` pro Preset: M3, Brightness, primary          |

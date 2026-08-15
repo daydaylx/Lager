@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class ReportCard extends StatelessWidget {
   final String report;
   final bool isSaved;
+  final bool isAiEnhanced;
   final VoidCallback onCopy;
 
   const ReportCard({
     super.key,
     required this.report,
     required this.isSaved,
+    this.isAiEnhanced = false,
     required this.onCopy,
   });
 
@@ -33,6 +35,10 @@ class ReportCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isAiEnhanced) ...[
+                  const SizedBox(width: 8),
+                  const _AiEnhancedChip(),
+                ],
                 const SizedBox(width: 8),
                 _StatusChip(isSaved: isSaved),
               ],
@@ -52,6 +58,24 @@ class ReportCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AiEnhancedChip extends StatelessWidget {
+  const _AiEnhancedChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Chip(
+      label: const Text('KI-optimiert'),
+      labelStyle: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSecondaryContainer,
+      ),
+      backgroundColor: theme.colorScheme.secondaryContainer,
+      padding: EdgeInsets.zero,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }

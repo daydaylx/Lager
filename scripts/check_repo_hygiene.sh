@@ -33,7 +33,18 @@ if [ "${#secret_files[@]}" -gt 0 ]; then
   printf '  %s\n' "${secret_files[@]}"
 fi
 
-# --- 3. Android-Backup bleibt deaktiviert ---------------------------------
+# --- 3. Keine private OpenRouter-Konfiguration oder Key-Muster -------------
+# Die echte Define-Datei muss ignoriert bleiben. Ausgabe niemals mit Secretwert.
+if git ls-files --error-unmatch config/openrouter.private.json >/dev/null 2>&1; then
+  fail "config/openrouter.private.json darf nicht versioniert werden."
+fi
+if git ls-files -co --exclude-standard -z \
+  | xargs -0 -r grep -IlE 'sk-or-v1-[A-Za-z0-9_-]{16,}' 2>/dev/null \
+  | grep -q .; then
+  fail "Mögliches OpenRouter-Key-Muster im Repository gefunden; Wert wird nicht ausgegeben."
+fi
+
+# --- 4. Android-Backup bleibt deaktiviert ---------------------------------
 # Schnelle Textprüfung als Frühindikator; die verbindliche Assertion läuft im
 # Dart-Test (android_backup_test.dart). allowBackup darf nicht auf true stehen.
 if grep -qE 'android:allowBackup="true"' android/app/src/main/AndroidManifest.xml 2>/dev/null; then

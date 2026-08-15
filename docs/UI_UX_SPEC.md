@@ -502,8 +502,11 @@ Ziel:
 Die Nutzerin soll daraus ihr schriftliches Berichtsheft leichter schreiben können.
 
 Zusätzlich erzeugt die App lokal einen deterministischen Berichtsvorschlag pro
-Tag. Er ist in Heute und in der Wochenzusammenfassung sichtbar und kopierbar. Das
-ist keine KI-Funktion und keine offizielle Exportfunktion.
+Tag. Er ist in Heute und in der Wochenzusammenfassung sichtbar und kopierbar.
+Bei bewusst aktivierter und gültiger optionaler Nachbearbeitung darf derselbe
+Bericht dezent als „KI-optimiert“ gekennzeichnet erscheinen. Entwürfe, fehlende
+Konfiguration und Fehler bleiben normale lokale Fallback-Zustände: kein Spinner,
+kein Fehlerbanner und keine manuelle KI-Schaltfläche im Tagesflow.
 
 ---
 

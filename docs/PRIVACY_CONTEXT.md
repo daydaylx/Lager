@@ -2,12 +2,19 @@
 
 ## Regel für Agenten
 
-Diese App speichert **ausschließlich lokal**. Der Produktivcode führt keine
-Netzwerkrequests aus und verwendet kein Backend oder Cloud-System.
+Diese App speichert ihre Primärdaten lokal und verwendet kein Backend,
+Cloud-Sync oder Tracking. Ausschließlich die optional aktivierte
+OpenRouter-Berichtsnachbearbeitung darf über ihre dokumentierte Servicegrenze
+einen Netzwerkrequest ausführen. Ohne vollständige private
+`--dart-define`-Konfiguration bleibt sie deaktiviert und die App funktioniert
+vollständig lokal.
 
-Die generierten Debug- und Profile-Manifeste enthalten die Flutter-Entwicklungspermission
-`INTERNET` für Debugging und Hot Reload. Sie ist kein Produktfeature und darf nicht
-mit app-initiiertem Netzwerkzugriff verwechselt werden.
+Jeder erlaubte Request erzwingt Zero Data Retention, lehnt Datensammlung ab und
+wird nur an Endpunkte mit benötigten Structured Outputs geroutet. Übertragen
+werden ausschließlich Tagtyp, sichtbare Bereichs- und Tätigkeitstitel,
+fachliche Besonderheiten, `reportNote` und der lokale Berichtsentwurf. Niemals
+übertragen werden `privateNote`, Profil, Betrieb, Entry-/Activity-IDs,
+Zeitstempel, andere Einträge, Geräteinformationen oder Debugdaten.
 
 ---
 
@@ -26,7 +33,7 @@ mit app-initiiertem Netzwerkzugriff verwechselt werden.
 
 ## Was Agenten nicht einbauen dürfen
 
-- HTTP-Requests, Dio, http-Package
+- HTTP-Requests außerhalb des klar abgegrenzten OpenRouter-Report-Clients sowie Dio oder sonstige Netzwerkpakete
 - Firebase, Supabase, Amplify
 - Cloud-Backup, iCloud, Google Drive Sync
 - Analytics, Crashlytics, Sentry

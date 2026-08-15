@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/models/reminder_settings.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../shared/widgets/app_ui.dart';
 
 class ReminderSection extends StatelessWidget {
   static const _weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
   final ReminderSettings settings;
+  final ReminderRuntimeStatus status;
   final String? error;
   final bool isSaving;
-  final bool isPermissionBlocked;
+  final bool isTesting;
   final VoidCallback? onOpenSettings;
+  final VoidCallback onRequestPermissions;
+  final VoidCallback onRepair;
+  final VoidCallback onTest;
   final ValueChanged<bool> onToggle;
   final ValueChanged<TimeOfDay> onChangeTime;
   final ValueChanged<int> onToggleWeekday;
@@ -18,10 +23,14 @@ class ReminderSection extends StatelessWidget {
   const ReminderSection({
     super.key,
     required this.settings,
+    required this.status,
     required this.error,
     required this.isSaving,
-    required this.isPermissionBlocked,
+    required this.isTesting,
     required this.onOpenSettings,
+    required this.onRequestPermissions,
+    required this.onRepair,
+    required this.onTest,
     required this.onToggle,
     required this.onChangeTime,
     required this.onToggleWeekday,
@@ -46,27 +55,27 @@ class ReminderSection extends StatelessWidget {
                 )
               : null,
         ),
+        if (settings.enabled) ...[
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: _ReminderStatusMessage(
+              status: status,
+              isSaving: isSaving,
+              onOpenSettings: onOpenSettings,
+              onRequestPermissions: onRequestPermissions,
+              onRepair: onRepair,
+            ),
+          ),
+        ],
         if (error case final msg?) ...[
           const Divider(),
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppMessage(
-                  icon: Icons.error_outline,
-                  title: msg,
-                  tone: AppMessageTone.error,
-                ),
-                if (isPermissionBlocked && onOpenSettings != null) ...[
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: onOpenSettings,
-                    icon: const Icon(Icons.settings_outlined),
-                    label: const Text('Benachrichtigungseinstellungen öffnen'),
-                  ),
-                ],
-              ],
+            child: AppMessage(
+              icon: Icons.error_outline,
+              title: msg,
+              tone: AppMessageTone.error,
             ),
           ),
         ],
@@ -84,13 +93,13 @@ class ReminderSection extends StatelessWidget {
           ListTile(
             key: const ValueKey('reminder_time'),
             leading: const Icon(Icons.schedule_outlined),
-            title: Text(settings.times.first.toDisplayString()),
+            title: Text(settings.time.toDisplayString()),
             trailing: const Icon(Icons.edit_outlined),
             enabled: !isSaving,
             onTap: isSaving
                 ? null
                 : () async {
-                    final time = settings.times.first;
+                    final time = settings.time;
                     final picked = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay(
@@ -129,6 +138,25 @@ class ReminderSection extends StatelessWidget {
                       : (_) => onToggleWeekday(weekday),
                 );
               }),
+            ),
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: OutlinedButton.icon(
+              key: const ValueKey('reminder_test'),
+              onPressed: isSaving || isTesting || status.isPermissionBlocked
+                  ? null
+                  : onTest,
+              icon: isTesting
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.notifications_active_outlined),
+              label: Text(
+                isTesting ? 'Test wird vorbereitet …' : 'Testbenachrichtigung',
+              ),
             ),
           ),
         ],
@@ -174,6 +202,99 @@ class ReminderSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _ReminderStatusMessage extends StatelessWidget {
+  final ReminderRuntimeStatus status;
+  final bool isSaving;
+  final VoidCallback? onOpenSettings;
+  final VoidCallback onRequestPermissions;
+  final VoidCallback onRepair;
+
+  const _ReminderStatusMessage({
+    required this.status,
+    required this.isSaving,
+    required this.onOpenSettings,
+    required this.onRequestPermissions,
+    required this.onRepair,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final planned =
+        '${status.pendingCount} von ${status.expectedCount} Tagen geplant';
+    return switch (status.state) {
+      ReminderRuntimeState.disabled => const AppMessage(
+          icon: Icons.notifications_off_outlined,
+          title: 'Erinnerung ist aus',
+        ),
+      ReminderRuntimeState.readyExact => AppMessage(
+          key: const ValueKey('reminder_status_exact'),
+          icon: Icons.check_circle_outline,
+          title: 'Bereit – minutengenau',
+          message: planned,
+          tone: AppMessageTone.success,
+        ),
+      ReminderRuntimeState.readyApproximate => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppMessage(
+              key: const ValueKey('reminder_status_approximate'),
+              icon: Icons.schedule_outlined,
+              title: 'Aktiv – Uhrzeit kann abweichen',
+              message: '$planned. Android darf die Erinnerung später anzeigen.',
+              tone: AppMessageTone.warning,
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              key: const ValueKey('reminder_request_exact'),
+              onPressed: isSaving ? null : onRequestPermissions,
+              icon: const Icon(Icons.alarm_on_outlined),
+              label: const Text('Minutengenaue Alarme erlauben'),
+            ),
+          ],
+        ),
+      ReminderRuntimeState.blocked => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppMessage(
+              key: const ValueKey('reminder_status_blocked'),
+              icon: Icons.notifications_off_outlined,
+              title: 'Benachrichtigungen sind blockiert',
+              message: planned,
+              tone: AppMessageTone.error,
+            ),
+            if (onOpenSettings != null) ...[
+              const SizedBox(height: 8),
+              FilledButton.icon(
+                onPressed: onOpenSettings,
+                icon: const Icon(Icons.settings_outlined),
+                label: const Text('Benachrichtigungseinstellungen öffnen'),
+              ),
+            ],
+          ],
+        ),
+      ReminderRuntimeState.error => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppMessage(
+              key: const ValueKey('reminder_status_error'),
+              icon: Icons.sync_problem_outlined,
+              title: 'Planung unvollständig',
+              message: planned,
+              tone: AppMessageTone.error,
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              key: const ValueKey('reminder_repair'),
+              onPressed: isSaving ? null : onRepair,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Neu planen'),
+            ),
+          ],
+        ),
+    };
   }
 }
 

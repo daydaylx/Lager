@@ -146,7 +146,17 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ---
 
-## 8. Datenlöschung
+## 8. Optionale OpenRouter-Berichtsnachbearbeitung (nur privater Key-Build)
+
+- [ ] Ohne private Define-Datei: Speichern, Bericht, Kopieren und App-Neustart funktionieren vollständig lokal.
+- [ ] Online: Nach Speichern bleibt der lokale Bericht sofort sichtbar; ein gültiger Hintergrundbericht aktualisiert nur diesen gespeicherten Eintrag und trägt „KI-optimiert“.
+- [ ] Offline, Timeout, 401, 402, 403 und 429: lokaler Bericht bleibt sichtbar, kein blockierender Dialog.
+- [ ] Langsame Antwort: Eintrag während der Anfrage bearbeiten oder per Undo löschen → alte Antwort erscheint nicht.
+- [ ] Woche und Zwischenablage verwenden denselben sichtbaren Bericht; das Öffnen der Woche löst keine Anfragen aus.
+- [ ] Export enthält nur gültigen abgeleiteten Bericht mit Modell, Prompt-Version und Fingerprint; nie Schlüssel oder Requestdaten.
+- [ ] „Alle Daten löschen“ entfernt den KI-Cache. OpenRouter-Konto auf ZDR-Endpunkt, Modellbindung und Budgetlimit prüfen.
+
+## 9. Datenlöschung
 
 - [ ] „Alle Daten löschen" im Profil zeigt Bestätigungs-Dialog
 - [ ] Nach Bestätigung: alle Einträge, Vorlagen und Einstellungen gelöscht
@@ -155,7 +165,7 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ---
 
-## 9. App-Neustart und Stabilität
+## 10. App-Neustart und Stabilität
 
 - [ ] Alle Einträge überleben App-Neustart
 - [ ] Profil-/Einstellungsdaten überleben Neustart

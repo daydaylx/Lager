@@ -51,7 +51,7 @@ Die einzige Quelle für aktive Phase und offene Aufgaben ist `TASKS.md`.
 - Cloud-Sync, Firebase, Supabase oder ähnliches
 - Login, Registrierung, Authentifizierung
 - Backend, REST-API, GraphQL
-- KI-Chat, Sprachsteuerung, Autovervollständigung per LLM
+- KI-Chat, Sprachsteuerung oder freie LLM-Autovervollständigung; ausschließlich die dokumentierte, optional deaktivierte OpenRouter-Nachbearbeitung gespeicherter Berichte ist erlaubt
 - Kalender-Sync (Google Calendar, iCal)
 - Digitale Unterschrift
 - Ausbilderportal oder Mehrbenutzer-Verwaltung
@@ -261,5 +261,5 @@ Flutter ist unter `/home/d/flutter/bin/flutter` installiert — **nicht** im Sys
 - Material 3
 - Lokale Speicherung: Hive CE für Tageseinträge und eigene Tätigkeiten
 - SharedPreferences: Profil, Onboarding, Reminder und Theme-Preset
-- Deterministischer lokaler Tagesberichtsgenerator; keine KI
-- Kein Backend, keine Cloud, kein Login
+- Deterministischer lokaler Tagesberichtsgenerator als verbindlicher Fallback; optionale OpenRouter-Nachbearbeitung nur über die dokumentierte Servicegrenze, mit ZDR und ohne private Notizen
+- Kein Backend, keine Cloud-Synchronisation, kein Login

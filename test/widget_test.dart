@@ -32,16 +32,35 @@ class DelayedInitialNotificationScheduler implements NotificationScheduler {
   void clearOnTap() {}
 
   @override
-  Future<bool> areNotificationsEnabled() async => true;
+  Future<ReminderRuntimeStatus> inspect(ReminderSettings settings) async =>
+      _statusFor(settings);
 
   @override
   Future<void> cancelAll() async {}
 
   @override
-  Future<NotificationScheduleResult> schedule(ReminderSettings settings) async {
-    return settings.enabled
-        ? NotificationScheduleResult.scheduled
-        : NotificationScheduleResult.disabled;
+  Future<ReminderRuntimeStatus> schedule(
+    ReminderSettings settings, {
+    bool requestPermissions = false,
+  }) async =>
+      _statusFor(settings);
+
+  @override
+  Future<ReminderRuntimeStatus> sendTestNotification(
+    ReminderSettings settings,
+  ) async =>
+      _statusFor(settings);
+
+  ReminderRuntimeStatus _statusFor(ReminderSettings settings) {
+    if (!settings.enabled) return ReminderRuntimeStatus.disabled;
+    return ReminderRuntimeStatus(
+      state: ReminderRuntimeState.readyExact,
+      notificationsEnabled: true,
+      exactAlarmsEnabled: true,
+      channelEnabled: true,
+      expectedCount: settings.weekdays.length,
+      pendingCount: settings.weekdays.length,
+    );
   }
 }
 

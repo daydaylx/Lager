@@ -168,6 +168,15 @@ Erinnerungen werden ausschließlich auf dem Android-Gerät geplant. Sie verwende
 die Gerätezeitzone, benötigen keine Push-Infrastruktur und werden beim Löschen
 aller Daten abgebrochen.
 
+**Minutengenaue Reminder mit ehrlichem Android-Fallback**
+Die gespeicherte Reminder-Einstellung ist die Nutzerabsicht und wird atomar als
+V2-Datensatz abgelegt. Androids tatsächlicher Planungs- und Berechtigungsstatus
+wird separat ermittelt. Mit der speziellen Exaktalarm-Freigabe wird
+`exactAllowWhileIdle` verwendet; ohne Freigabe bleibt `inexactAllowWhileIdle`
+aktiv und die mögliche Abweichung wird im Profil sichtbar angezeigt. Ein
+Berechtigungs- oder nativer Planungsfehler darf die Nutzerabsicht nicht heimlich
+auf „Aus“ zurücksetzen.
+
 **Android-Backup und Gerätetransfer deaktiviert**
 Die App enthält private Ausbildungsnotizen und verspricht rein lokale
 Datenhaltung. Android-Cloud-Backup und automatischer Gerätetransfer sind deshalb
@@ -184,10 +193,19 @@ Tageseinträge speichern Tätigkeit-IDs. Eigene Tätigkeiten bleiben deshalb mit
 stabiler ID und Titel erhalten; deaktivierte Vorlagen verschwinden nur aus neuen
 Auswahlen und bleiben für historische Einträge lesbar.
 
-**Deterministischer Tagesbericht statt KI-Formulierung**
-Der lokale `DailyReportGenerator` erzeugt aus Tagestyp, Bereich, Tätigkeiten und
-ausgewählten Besonderheiten einen kopierbaren Berichtsvorschlag. Er verwendet
-keine externe API, kein Sprachmodell und verändert keine gespeicherten Daten.
+**Lokaler Tagesbericht mit optionaler OpenRouter-Nachbearbeitung**
+Der lokale `DailyReportGenerator` erzeugt weiterhin sofort aus Tagtyp, Bereich,
+Tätigkeiten und ausgewählten Besonderheiten den verbindlichen kopierbaren
+Fallback und verändert keine gespeicherten Daten. Eine optional aktivierte,
+nicht blockierende OpenRouter-Nachbearbeitung darf nur diesen Entwurf und eine
+Positivliste sichtbarer Berichtsfakten verarbeiten. `privateNote`, Profil,
+Betrieb, IDs und Zeitstempel bleiben lokal. Der Client erzwingt ZDR,
+`data_collection: "deny"` und Structured Outputs; Provider-Fallbacks bleiben
+auf die jeweils konfigurierte Modell-ID begrenzt. Schlüssel, Modell-ID und
+Budget liegen ausschließlich in einer privaten ignorierten Build-Konfiguration;
+ohne sie bleibt die App vollständig lokal. Ein Schlüssel in einer APK ist
+extrahierbar, daher sind damit gebaute APKs weder öffentliche Artefakte noch
+ein Ersatz für ein Backend bei Weitergabe der App.
 
 **Lokaler Speicher-Witz statt Gamification-System**
 Nach dem ersten erfolgreichen Speichern eines neuen Tageseintrags zeigt die App

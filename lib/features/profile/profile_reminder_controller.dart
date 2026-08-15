@@ -8,12 +8,14 @@ typedef ReminderSettingsSaver = Future<void> Function(
 );
 
 class ProfileReminderController {
-  static const permissionError =
-      'Benachrichtigungen sind nicht erlaubt. Bitte in den Einstellungen aktivieren.';
   static const loadError =
       'Erinnerungseinstellungen konnten nicht geladen werden.';
   static const saveError =
-      'Die Erinnerung konnte nicht gespeichert werden. Bitte versuche es erneut.';
+      'Die Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut.';
+  static const scheduleError =
+      'Die Einstellung ist gespeichert, aber Android konnte die Erinnerung noch nicht vollständig planen.';
+  static const testError =
+      'Die Testbenachrichtigung konnte nicht gesendet werden.';
 
   final NotificationScheduler _scheduler;
   final ReminderSettingsLoader _loadSettings;
@@ -27,76 +29,105 @@ class ProfileReminderController {
         _loadSettings = loadSettings ?? ReminderStorage.load,
         _saveSettings = saveSettings ?? ReminderStorage.save;
 
-  Future<ReminderLoadResult> load({
-    required bool notificationsBlockedBySystem,
-  }) async {
+  Future<ReminderLoadResult> load() async {
     try {
       final settings = await _loadSettings();
-      return ReminderLoadResult(
-        settings: settings,
-        error: settings.enabled && notificationsBlockedBySystem
-            ? permissionError
-            : null,
-      );
+      try {
+        final status = await _scheduler.inspect(settings);
+        return ReminderLoadResult(settings: settings, status: status);
+      } catch (_) {
+        return ReminderLoadResult(
+          settings: settings,
+          status: _errorStatus(settings),
+          error: scheduleError,
+        );
+      }
     } catch (_) {
       return const ReminderLoadResult(error: loadError);
-    }
-  }
-
-  Future<ReminderPermissionResult?> checkPermission({
-    required ReminderSettings settings,
-    required String? currentError,
-  }) async {
-    try {
-      final enabled = await _scheduler.areNotificationsEnabled();
-      return ReminderPermissionResult(
-        notificationsBlockedBySystem: !enabled,
-        error: _permissionErrorForStatus(
-          enabled: enabled,
-          settings: settings,
-          currentError: currentError,
-        ),
-      );
-    } catch (_) {
-      return null;
     }
   }
 
   Future<ReminderSaveResult> saveAndReschedule({
     required ReminderSettings previous,
     required ReminderSettings next,
+    bool requestPermissions = false,
   }) async {
     final normalized = next.normalized();
     try {
-      final result = await _scheduler.schedule(normalized);
-      if (result == NotificationScheduleResult.permissionDenied) {
-        await _restoreSchedule(previous);
-        return ReminderSaveResult(
-          settings: previous,
-          error: permissionError,
-          notificationsBlockedBySystem: true,
-        );
-      }
       await _saveSettings(normalized);
+    } catch (_) {
+      return ReminderSaveResult(settings: previous, error: saveError);
+    }
+
+    try {
+      final status = await _scheduler.schedule(
+        normalized,
+        requestPermissions: requestPermissions,
+      );
+      return ReminderSaveResult(settings: normalized, status: status);
+    } catch (_) {
       return ReminderSaveResult(
         settings: normalized,
-        notificationsBlockedBySystem: false,
+        status: _errorStatus(normalized),
+        error: scheduleError,
       );
+    }
+  }
+
+  Future<ReminderSaveResult> reconcile(ReminderSettings settings) async {
+    final normalized = settings.normalized();
+    try {
+      final status = await _scheduler.schedule(normalized);
+      return ReminderSaveResult(settings: normalized, status: status);
     } catch (_) {
-      await _restoreReminderState(previous);
-      return ReminderSaveResult(settings: previous, error: saveError);
+      return ReminderSaveResult(
+        settings: normalized,
+        status: _errorStatus(normalized),
+        error: scheduleError,
+      );
+    }
+  }
+
+  Future<ReminderSaveResult> requestPermissions(
+    ReminderSettings settings,
+  ) async {
+    final normalized = settings.normalized();
+    try {
+      final status = await _scheduler.schedule(
+        normalized,
+        requestPermissions: true,
+      );
+      return ReminderSaveResult(settings: normalized, status: status);
+    } catch (_) {
+      return ReminderSaveResult(
+        settings: normalized,
+        status: _errorStatus(normalized),
+        error: scheduleError,
+      );
+    }
+  }
+
+  Future<ReminderTestResult> sendTest(ReminderSettings settings) async {
+    try {
+      final status = await _scheduler.sendTestNotification(settings);
+      return ReminderTestResult(status: status);
+    } catch (_) {
+      return ReminderTestResult(
+        status: _errorStatus(settings),
+        error: testError,
+      );
     }
   }
 
   ReminderSettingsEdit toggleEnabled(
     ReminderSettings settings,
     bool enabled,
-  ) {
-    return ReminderSettingsEdit(settings: settings.copyWith(enabled: enabled));
-  }
+  ) =>
+      ReminderSettingsEdit(settings: settings.copyWith(enabled: enabled));
 
-  ReminderSettingsEdit changeTime(ReminderSettings settings, ReminderTime time) {
-    return ReminderSettingsEdit(settings: settings.copyWith(times: [time]));
+  ReminderSettingsEdit changeTime(
+      ReminderSettings settings, ReminderTime time) {
+    return ReminderSettingsEdit(settings: settings.copyWith(time: time));
   }
 
   ReminderSettingsEdit toggleWeekday(ReminderSettings settings, int weekday) {
@@ -109,64 +140,48 @@ class ProfileReminderController {
       weekdays.sort();
     }
     return ReminderSettingsEdit(
-        settings: settings.copyWith(weekdays: weekdays));
+      settings: settings.copyWith(weekdays: weekdays),
+    );
   }
 
-  String? _permissionErrorForStatus({
-    required bool enabled,
-    required ReminderSettings settings,
-    required String? currentError,
-  }) {
-    if (enabled && currentError == permissionError) return null;
-    if (!enabled && settings.enabled) return permissionError;
-    return currentError;
-  }
-
-  Future<void> _restoreSchedule(ReminderSettings previous) async {
-    try {
-      await _scheduler.schedule(previous);
-    } catch (_) {
-      // The visible save error covers both the initial and rollback failures.
-    }
-  }
-
-  Future<void> _restoreReminderState(ReminderSettings previous) async {
-    await _restoreSchedule(previous);
-    try {
-      await _saveSettings(previous);
-    } catch (_) {
-      // The visible save error covers native and persisted rollback failures.
-    }
+  ReminderRuntimeStatus _errorStatus(ReminderSettings settings) {
+    return ReminderRuntimeStatus(
+      state: ReminderRuntimeState.error,
+      notificationsEnabled: true,
+      exactAlarmsEnabled: false,
+      channelEnabled: true,
+      expectedCount: settings.enabled ? settings.weekdays.length : 0,
+      pendingCount: 0,
+      error: scheduleError,
+    );
   }
 }
 
 class ReminderLoadResult {
   final ReminderSettings? settings;
+  final ReminderRuntimeStatus? status;
   final String? error;
 
-  const ReminderLoadResult({this.settings, this.error});
-}
-
-class ReminderPermissionResult {
-  final bool notificationsBlockedBySystem;
-  final String? error;
-
-  const ReminderPermissionResult({
-    required this.notificationsBlockedBySystem,
-    required this.error,
-  });
+  const ReminderLoadResult({this.settings, this.status, this.error});
 }
 
 class ReminderSaveResult {
   final ReminderSettings settings;
+  final ReminderRuntimeStatus? status;
   final String? error;
-  final bool? notificationsBlockedBySystem;
 
   const ReminderSaveResult({
     required this.settings,
+    this.status,
     this.error,
-    this.notificationsBlockedBySystem,
   });
+}
+
+class ReminderTestResult {
+  final ReminderRuntimeStatus status;
+  final String? error;
+
+  const ReminderTestResult({required this.status, this.error});
 }
 
 class ReminderSettingsEdit {

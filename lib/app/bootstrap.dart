@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../core/ai/ai_report_cache.dart';
+import '../core/ai/hive_ai_report_cache.dart';
+import '../core/ai/openrouter_config.dart';
 import '../core/profile_storage.dart';
 import '../core/services/notification_service.dart';
 import '../core/storage/activity_template_storage.dart';
@@ -17,6 +20,8 @@ class BootstrapData {
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final StoredProfile profile;
   final ThemePreset themePreset;
+  final AiReportCache aiReportCache;
+  final OpenRouterConfig openRouterConfig;
 
   const BootstrapData({
     required this.dailyEntryStorage,
@@ -24,6 +29,8 @@ class BootstrapData {
     required this.defaultActivityStateStorage,
     required this.profile,
     required this.themePreset,
+    this.aiReportCache = const DisabledAiReportCache(),
+    this.openRouterConfig = OpenRouterConfig.disabled,
   });
 }
 
@@ -50,12 +57,20 @@ Future<BootstrapData> loadBootstrapData() async {
   final templateStorage = await HiveActivityTemplateStorage.open();
   final profile = await ProfileStorage.load();
   final themePreset = await ThemePresetStorage.load();
+  AiReportCache aiReportCache = const DisabledAiReportCache();
+  try {
+    aiReportCache = await HiveAiReportCache.open();
+  } catch (_) {
+    // The optional report cache must never block local bootstrap.
+  }
   return BootstrapData(
     dailyEntryStorage: dailyEntryStorage,
     templateStorage: templateStorage,
     defaultActivityStateStorage: const DefaultActivityStateStorage(),
     profile: profile,
     themePreset: themePreset,
+    aiReportCache: aiReportCache,
+    openRouterConfig: const OpenRouterConfig.fromEnvironment(),
   );
 }
 
@@ -109,6 +124,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
         initialOccupation: profile.occupation,
         initialTrainingYear: profile.trainingYear,
         initialThemePreset: data.themePreset,
+        aiReportCache: data.aiReportCache,
+        openRouterConfig: data.openRouterConfig,
         notificationScheduler: widget.notificationScheduler,
         clock: widget.clock,
       );

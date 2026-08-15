@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/activity_utils.dart';
+import '../../core/ai/report_enhancement_coordinator.dart';
+import '../../core/ai/resolved_report.dart';
 import '../../core/data/default_activities.dart';
 import '../../core/data/lager_jokes.dart';
 import '../../core/enums/activity_category.dart';
@@ -37,6 +39,8 @@ class TodayScreen extends StatefulWidget {
   final int? trainingYear;
   final int templateRefreshSignal;
   final bool protectBackNavigation;
+  final ReportEnhancementCoordinator? reportCoordinator;
+  final ResolvedReportResolver? reportResolver;
 
   const TodayScreen({
     super.key,
@@ -48,6 +52,8 @@ class TodayScreen extends StatefulWidget {
     this.trainingYear,
     this.templateRefreshSignal = 0,
     this.protectBackNavigation = true,
+    this.reportCoordinator,
+    this.reportResolver,
   });
 
   @override
@@ -71,6 +77,7 @@ class _TodayScreenState extends State<TodayScreen> {
   final Set<TrainingArea> _selectedAreas = {};
   DailyEntry? _savedEntry;
   DailyEntry? _yesterdayEntry;
+  ResolvedReport? _resolvedSavedReport;
   bool _hasUnsavedChanges = false;
   bool _isLoading = true;
   bool _loadFailed = false;
@@ -144,6 +151,7 @@ class _TodayScreenState extends State<TodayScreen> {
     _activeDate = _widgetDate;
     _reportNoteController.addListener(_markChanged);
     _privateNoteController.addListener(_markChanged);
+    widget.reportCoordinator?.addListener(_handleReportUpdate);
     _loadEntry();
     _loadTemplates();
     _loadDefaultOverrides();
@@ -164,6 +172,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   void dispose() {
+    widget.reportCoordinator?.removeListener(_handleReportUpdate);
     _activitySearchController.dispose();
     _reportNoteController
       ..removeListener(_markChanged)
@@ -201,8 +210,12 @@ class _TodayScreenState extends State<TodayScreen> {
     final report = _canSave &&
             (_selectedDayType == DayType.betrieb ||
                 _selectedDayType == DayType.berufsschule)
-        ? _currentReport()
+        ? _displayReport()
         : null;
+    final isAiEnhanced = report != null &&
+        _savedEntry != null &&
+        !_hasUnsavedChanges &&
+        _resolvedSavedReport?.isAiEnhanced == true;
 
     return PopScope<void>(
       canPop: !_shouldInterceptPop,
@@ -213,7 +226,7 @@ class _TodayScreenState extends State<TodayScreen> {
             : AppBar(title: const Text('Tageseintrag')),
         body: IgnorePointer(
           ignoring: _isSaving,
-          child: _buildFlowBody(context, report),
+          child: _buildFlowBody(context, report, isAiEnhanced),
         ),
       ),
     );
@@ -224,7 +237,11 @@ class _TodayScreenState extends State<TodayScreen> {
     return _flowStep != TodayFlowStep.dayType || _hasUnsavedChanges;
   }
 
-  Widget _buildFlowBody(BuildContext context, String? report) {
+  Widget _buildFlowBody(
+    BuildContext context,
+    String? report,
+    bool isAiEnhanced,
+  ) {
     if (_flowStep == TodayFlowStep.activities) {
       return TodayActivityPickerPage(
         picker: _buildActivities(context),
@@ -265,6 +282,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 key: const ValueKey('report_card'),
                 report: report,
                 isSaved: !_hasUnsavedChanges,
+                isAiEnhanced: isAiEnhanced,
                 onCopy: _copyReport,
               ),
         onEditDayType: _editDayType,
@@ -300,6 +318,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     key: const ValueKey('report_card'),
                     report: report,
                     isSaved: _savedEntry != null && !_hasUnsavedChanges,
+                    isAiEnhanced: isAiEnhanced,
                     onCopy: _copyReport,
                   ),
           )
@@ -890,6 +909,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
     setState(() {
       _savedEntry = entry;
+      _resolvedSavedReport = null;
       _selectedDayType = entry?.dayType ?? DayType.betrieb;
       _selectedAreas
         ..clear()
@@ -917,6 +937,26 @@ class _TodayScreenState extends State<TodayScreen> {
     });
 
     _isApplyingEntry = false;
+    _loadResolvedReport(entry);
+  }
+
+  Future<void> _loadResolvedReport(DailyEntry? entry) async {
+    final resolver = widget.reportResolver;
+    if (entry == null || resolver == null) return;
+    try {
+      final resolved = await resolver.resolve(entry);
+      if (mounted &&
+          _savedEntry?.id == entry.id &&
+          !_hasUnsavedChanges) {
+        setState(() => _resolvedSavedReport = resolved);
+      }
+    } catch (_) {
+      // A cache or template error must keep the local report usable.
+    }
+  }
+
+  void _handleReportUpdate() {
+    if (_savedEntry case final entry?) _loadResolvedReport(entry);
   }
 
   Future<void> _saveEntry() async {
@@ -938,6 +978,8 @@ class _TodayScreenState extends State<TodayScreen> {
           _flowStep = TodayFlowStep.saved;
         });
         _loadFrequentActivities();
+        _loadResolvedReport(entry);
+        widget.reportCoordinator?.ensureEnhanced(entry);
         if (wasNewEntry) {
           // Witze-Sheet zuerst anzeigen und schließen lassen; erst danach
           // die Undo-SnackBar zeigen. Sonst wird die SnackBar vom modalen
@@ -983,11 +1025,17 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Future<void> _undoEntry(String entryId) async {
     try {
+      try {
+        await widget.reportCoordinator?.clearEntry(entryId);
+      } catch (_) {
+        // Cache cleanup cannot block the local undo.
+      }
       await widget.storage.delete(entryId);
       if (mounted) {
         HapticFeedback.lightImpact();
         setState(() {
           _savedEntry = null;
+          _resolvedSavedReport = null;
           // Die Eingaben bleiben als ungespeicherter Draft erhalten. Damit
           // PopScope den Draft beim Zurück-Navigieren schützt (canPop false),
           // muss der Status auf "unge speicherte Änderungen" stehen.
@@ -1074,6 +1122,15 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
+  String? _displayReport() {
+    if (_savedEntry != null &&
+        !_hasUnsavedChanges &&
+        _resolvedSavedReport != null) {
+      return _resolvedSavedReport!.text;
+    }
+    return _currentReport();
+  }
+
   String? _currentReport() {
     if (!_canSave) return null;
     final now = DateTime.now();
@@ -1085,7 +1142,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   void _copyReport() {
-    final report = _currentReport();
+    final report = _displayReport();
     if (report == null) return;
     Clipboard.setData(ClipboardData(text: report));
     ScaffoldMessenger.of(context).showSnackBar(

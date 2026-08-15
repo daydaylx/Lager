@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
+import '../core/ai/ai_report_cache.dart';
+import '../core/ai/openrouter_config.dart';
+import '../core/ai/openrouter_report_enhancer.dart';
+import '../core/ai/report_enhancement_coordinator.dart';
+import '../core/ai/resolved_report.dart';
 import '../core/constants.dart';
 import '../core/profile_storage.dart';
 import '../core/services/app_shortcut_service.dart';
@@ -28,6 +33,8 @@ class BerichtsheftApp extends StatefulWidget {
   final String? initialOccupation;
   final int? initialTrainingYear;
   final NotificationScheduler? notificationScheduler;
+  final AiReportCache aiReportCache;
+  final OpenRouterConfig openRouterConfig;
   final ThemePreset initialThemePreset;
   final AppClock clock;
 
@@ -42,6 +49,8 @@ class BerichtsheftApp extends StatefulWidget {
     this.initialOccupation,
     this.initialTrainingYear,
     this.notificationScheduler,
+    this.aiReportCache = const DisabledAiReportCache(),
+    this.openRouterConfig = OpenRouterConfig.disabled,
     this.initialThemePreset = ThemePreset.lagerTeal,
     this.clock = DateTime.now,
   });
@@ -58,6 +67,8 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   int? _trainingYear;
   late final NotificationScheduler _notificationScheduler;
   late final AppShortcutService _appShortcutService;
+  late final ReportEnhancementCoordinator _reportCoordinator;
+  late final ResolvedReportResolver _reportResolver;
   late ThemePreset _themePreset;
 
   @override
@@ -69,9 +80,27 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     _occupation = widget.initialOccupation;
     _trainingYear = widget.initialTrainingYear;
     _themePreset = widget.initialThemePreset;
-    _notificationScheduler = widget.notificationScheduler ??
-        const FlutterLocalNotificationScheduler();
+    _notificationScheduler =
+        widget.notificationScheduler ?? FlutterLocalNotificationScheduler();
     _appShortcutService = AppShortcutService();
+    _reportCoordinator = ReportEnhancementCoordinator(
+      entryStorage: widget.dailyEntryStorage,
+      templateStorage: widget.templateStorage,
+      cache: widget.aiReportCache,
+      enhancer: OpenRouterReportEnhancer(config: widget.openRouterConfig),
+      config: widget.openRouterConfig,
+    );
+    _reportResolver = ResolvedReportResolver(
+      cache: widget.aiReportCache,
+      templateStorage: widget.templateStorage,
+      config: widget.openRouterConfig,
+    );
+  }
+
+  @override
+  void dispose() {
+    _reportCoordinator.dispose();
+    super.dispose();
   }
 
   Future<void> _completeOnboarding({
@@ -119,6 +148,11 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     await widget.dailyEntryStorage.clearAll();
     await widget.templateStorage.clearAll();
     await const DefaultActivityStateStorage().clearAll();
+    try {
+      await _reportCoordinator.clearAll();
+    } catch (_) {
+      // The optional cache cannot block deletion of primary local data.
+    }
     await ProfileStorage.clearAll();
 
     if (mounted) {
@@ -152,6 +186,9 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               onDataCleared: _resetAll,
               notificationScheduler: _notificationScheduler,
               appShortcutService: _appShortcutService,
+              reportCoordinator: _reportCoordinator,
+              reportResolver: _reportResolver,
+              aiReportCache: widget.aiReportCache,
               trainingYear: _trainingYear,
               onProfileChanged: _profileChanged,
               themePreset: _themePreset,
@@ -182,6 +219,9 @@ class MainShell extends StatefulWidget {
   final Future<void> Function(ThemePreset) onThemeChanged;
   final AppClock clock;
   final AppShortcutService appShortcutService;
+  final ReportEnhancementCoordinator? reportCoordinator;
+  final ResolvedReportResolver? reportResolver;
+  final AiReportCache aiReportCache;
 
   const MainShell({
     super.key,
@@ -191,6 +231,9 @@ class MainShell extends StatefulWidget {
     required this.onDataCleared,
     required this.notificationScheduler,
     required this.appShortcutService,
+    this.reportCoordinator,
+    this.reportResolver,
+    this.aiReportCache = const DisabledAiReportCache(),
     this.trainingYear,
     this.onProfileChanged,
     required this.themePreset,
@@ -207,6 +250,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _weekRefreshSignal = 0;
   int _templateRefreshSignal = 0;
   String? _notificationInitializationError;
+  bool _isReconcilingNotifications = false;
   late DateTime _currentDate;
 
   @override
@@ -216,6 +260,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     _currentDate = _normalizedDate(widget.clock());
     _initializeNotifications();
     _initializeAppShortcuts();
+    widget.reportCoordinator?.resumePending();
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkTodayEntry());
   }
 
@@ -231,6 +276,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _refreshCurrentDate();
       _checkTodayEntry();
+      _reconcileNotifications();
     }
   }
 
@@ -259,6 +305,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       final initialPayload =
           await widget.notificationScheduler.initialize(_handleNotificationTap);
       _handleNotificationTap(initialPayload);
+      await _reconcileNotifications();
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -266,6 +313,27 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               'Reminder konnten nicht initialisiert werden. Prüfe App-Berechtigungen oder starte die App neu.';
         });
       }
+    }
+  }
+
+  Future<void> _reconcileNotifications() async {
+    if (_isReconcilingNotifications) return;
+    _isReconcilingNotifications = true;
+    try {
+      final settings = await ReminderStorage.load();
+      await widget.notificationScheduler.schedule(settings);
+      if (mounted && _notificationInitializationError != null) {
+        setState(() => _notificationInitializationError = null);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _notificationInitializationError =
+              'Android konnte die Erinnerungsplanung noch nicht reparieren. Öffne das Profil und tippe auf „Neu planen“.';
+        });
+      }
+    } finally {
+      _isReconcilingNotifications = false;
     }
   }
 
@@ -330,6 +398,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             protectBackNavigation: _currentIndex == 0,
             currentDate: _currentDate,
             trainingYear: widget.trainingYear,
+            reportCoordinator: widget.reportCoordinator,
+            reportResolver: widget.reportResolver,
           ),
           WeekScreen(
             storage: widget.dailyEntryStorage,
@@ -339,6 +409,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             templateRefreshSignal: _templateRefreshSignal,
             currentDate: _currentDate,
             onNavigateToToday: () => setState(() => _currentIndex = 0),
+            reportCoordinator: widget.reportCoordinator,
+            reportResolver: widget.reportResolver,
           ),
           TemplatesScreen(
             storage: widget.templateStorage,
@@ -357,6 +429,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             onProfileChanged: widget.onProfileChanged,
             themePreset: widget.themePreset,
             onThemeChanged: widget.onThemeChanged,
+            aiReportCache: widget.aiReportCache,
           ),
         ],
       ),

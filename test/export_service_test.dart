@@ -2,6 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:berichtsheft_merker/core/activity_utils.dart';
+import 'package:berichtsheft_merker/core/ai/ai_report_cache.dart';
+import 'package:berichtsheft_merker/core/ai/in_memory_ai_report_cache.dart';
+import 'package:berichtsheft_merker/core/ai/report_payload_builder.dart';
 import 'package:berichtsheft_merker/core/constants.dart';
 import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
@@ -201,6 +205,47 @@ void main() {
       expect(serialized['adhocActivities'], [
         {'id': 'adhoc_1', 'title': 'Sonderaufgabe'},
       ]);
+    });
+
+    test('gültiger KI-Bericht wird ohne Request- oder Secretdaten exportiert',
+        () async {
+      final e = entry(
+        selectedActivities: ['wareneingang_01'],
+        note: 'Sichtbare Notiz',
+      );
+      final request = const ReportPayloadBuilder().build(
+        e,
+        activityTitlesForEntry(e, const []),
+      )!;
+      final cache = InMemoryAiReportCache(
+        initialRecords: [
+          AiReportRecord(
+            entryId: e.id,
+            sourceFingerprint: request.sourceFingerprint,
+            modelId: 'provider/model',
+            promptVersion: reportPromptVersion,
+            status: AiReportStatus.success,
+            report:
+                'Ich habe den Wareneingang geprüft. Danach habe ich die Ware eingelagert.',
+            attempts: 1,
+            updatedAt: DateTime(2026, 6, 18, 17),
+          ),
+        ],
+      );
+
+      final json = await ExportService.generateJson(
+        InMemoryDailyEntryStorage(initialEntries: [e]),
+        InMemoryActivityTemplateStorage(),
+        aiReportCache: cache,
+      );
+      final serialized =
+          (jsonDecode(json)['entries'] as List).single as Map<String, dynamic>;
+      final ai = serialized['aiReport'] as Map<String, dynamic>;
+
+      expect(ai['modelId'], 'provider/model');
+      expect(ai['sourceFingerprint'], request.sourceFingerprint);
+      expect(json, isNot(contains('private-test-key')));
+      expect(json, isNot(contains('Authorization')));
     });
 
     test('JSON ist mit 2-Leerzeichen-Einrückung formatiert', () async {

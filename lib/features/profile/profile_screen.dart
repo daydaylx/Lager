@@ -1,6 +1,7 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import '../../app/theme.dart';
+import '../../core/ai/ai_report_cache.dart';
 import '../../core/constants.dart';
 import '../../core/models/reminder_settings.dart';
 import '../../core/profile_storage.dart';
@@ -25,6 +26,7 @@ class ProfileScreen extends StatefulWidget {
   final ProfileSubmitCallback? onProfileChanged;
   final ThemePreset themePreset;
   final Future<void> Function(ThemePreset)? onThemeChanged;
+  final AiReportCache aiReportCache;
 
   const ProfileScreen({
     super.key,
@@ -36,6 +38,7 @@ class ProfileScreen extends StatefulWidget {
     this.onProfileChanged,
     this.themePreset = ThemePreset.lagerTeal,
     this.onThemeChanged,
+    this.aiReportCache = const DisabledAiReportCache(),
   });
 
   @override
@@ -50,21 +53,22 @@ class _ProfileScreenState extends State<ProfileScreen>
   late final NotificationScheduler _scheduler;
   late final ProfileReminderController _reminderController;
   bool _isReminderSaving = false;
+  bool _isReminderTesting = false;
   bool _isDeleting = false;
   bool _isExporting = false;
   String? _reminderError;
-  bool _notificationsBlockedBySystem = false;
+  ReminderRuntimeStatus _reminderStatus = ReminderRuntimeStatus.disabled;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _scheduler = widget.notificationScheduler ??
-        const FlutterLocalNotificationScheduler();
+    _scheduler =
+        widget.notificationScheduler ?? FlutterLocalNotificationScheduler();
     _reminderController = ProfileReminderController(scheduler: _scheduler);
     _loadProfile();
     _loadReminderSettings();
-    _checkNotificationPermission();
+    _refreshReminderStatus();
   }
 
   @override
@@ -76,20 +80,17 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkNotificationPermission();
+      _reconcileReminder();
     }
   }
 
-  Future<void> _checkNotificationPermission() async {
-    final result = await _reminderController.checkPermission(
-      settings: _reminderSettings,
-      currentError: _reminderError,
-    );
-    if (result == null || !mounted) return;
-    setState(() {
-      _notificationsBlockedBySystem = result.notificationsBlockedBySystem;
-      _reminderError = result.error;
-    });
+  Future<void> _refreshReminderStatus() async {
+    try {
+      final status = await _scheduler.inspect(_reminderSettings);
+      if (mounted) setState(() => _reminderStatus = status);
+    } catch (_) {
+      // Loading and explicit repair expose actionable errors to the user.
+    }
   }
 
   Future<void> _openNotificationSettings() async {
@@ -148,23 +149,24 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadReminderSettings() async {
-    final result = await _reminderController.load(
-      notificationsBlockedBySystem: _notificationsBlockedBySystem,
-    );
+    final result = await _reminderController.load();
     if (!mounted) return;
     final loadedSettings = result.settings;
     setState(() {
       if (loadedSettings case final settings?) {
         _reminderSettings = settings;
       }
+      if (result.status case final status?) {
+        _reminderStatus = status;
+      }
       _reminderError = result.error;
     });
-    if (loadedSettings?.enabled ?? false) {
-      await _checkNotificationPermission();
-    }
   }
 
-  Future<void> _saveAndReschedule(ReminderSettings settings) async {
+  Future<void> _saveAndReschedule(
+    ReminderSettings settings, {
+    bool requestPermissions = false,
+  }) async {
     if (_isReminderSaving) return;
     final previous = _reminderSettings;
     setState(() {
@@ -175,14 +177,15 @@ class _ProfileScreenState extends State<ProfileScreen>
     final result = await _reminderController.saveAndReschedule(
       previous: previous,
       next: settings,
+      requestPermissions: requestPermissions,
     );
     if (!mounted) return;
     setState(() {
       _reminderSettings = result.settings;
       _isReminderSaving = false;
       _reminderError = result.error;
-      if (result.notificationsBlockedBySystem case final blocked?) {
-        _notificationsBlockedBySystem = blocked;
+      if (result.status case final status?) {
+        _reminderStatus = status;
       }
     });
   }
@@ -190,6 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _toggleReminder(bool value) async {
     await _applyReminderEdit(
       _reminderController.toggleEnabled(_reminderSettings, value),
+      requestPermissions: value,
     );
   }
 
@@ -208,13 +212,77 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Future<void> _applyReminderEdit(ReminderSettingsEdit edit) async {
+  Future<void> _applyReminderEdit(
+    ReminderSettingsEdit edit, {
+    bool requestPermissions = false,
+  }) async {
     if (edit.error case final error?) {
       setState(() => _reminderError = error);
       return;
     }
     if (edit.settings case final settings?) {
-      await _saveAndReschedule(settings);
+      await _saveAndReschedule(
+        settings,
+        requestPermissions: requestPermissions,
+      );
+    }
+  }
+
+  Future<void> _reconcileReminder() async {
+    if (_isReminderSaving || !_reminderSettings.enabled) {
+      await _refreshReminderStatus();
+      return;
+    }
+    setState(() {
+      _isReminderSaving = true;
+      _reminderError = null;
+    });
+    final result = await _reminderController.reconcile(_reminderSettings);
+    if (!mounted) return;
+    setState(() {
+      _isReminderSaving = false;
+      _reminderError = result.error;
+      if (result.status case final status?) _reminderStatus = status;
+    });
+  }
+
+  Future<void> _requestReminderPermissions() async {
+    if (_isReminderSaving) return;
+    setState(() {
+      _isReminderSaving = true;
+      _reminderError = null;
+    });
+    final result =
+        await _reminderController.requestPermissions(_reminderSettings);
+    if (!mounted) return;
+    setState(() {
+      _isReminderSaving = false;
+      _reminderError = result.error;
+      if (result.status case final status?) _reminderStatus = status;
+    });
+  }
+
+  Future<void> _sendReminderTest() async {
+    if (_isReminderTesting) return;
+    setState(() {
+      _isReminderTesting = true;
+      _reminderError = null;
+    });
+    final result = await _reminderController.sendTest(_reminderSettings);
+    if (!mounted) return;
+    setState(() {
+      _isReminderTesting = false;
+      _reminderStatus = result.status;
+      _reminderError = result.error;
+    });
+    if (result.error == null && !result.status.isPermissionBlocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Testbenachrichtigung wurde gesendet. Prüfe auch das Benachrichtigungsfeld.',
+          ),
+        ),
+      );
     }
   }
 
@@ -225,6 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       await ExportService.share(
         widget.dailyEntryStorage,
         widget.templateStorage,
+        aiReportCache: widget.aiReportCache,
       );
     } catch (_) {
       if (mounted) {
@@ -324,10 +393,14 @@ class _ProfileScreenState extends State<ProfileScreen>
         const SizedBox(height: 24),
         ReminderSection(
           settings: _reminderSettings,
+          status: _reminderStatus,
           error: _reminderError ?? widget.notificationInitializationError,
           isSaving: _isReminderSaving,
-          isPermissionBlocked: _notificationsBlockedBySystem,
+          isTesting: _isReminderTesting,
           onOpenSettings: _openNotificationSettings,
+          onRequestPermissions: _requestReminderPermissions,
+          onRepair: _reconcileReminder,
+          onTest: _sendReminderTest,
           onToggle: _toggleReminder,
           onChangeTime: _changeTime,
           onToggleWeekday: _toggleWeekday,

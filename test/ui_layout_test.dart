@@ -3,6 +3,7 @@ import 'package:berichtsheft_merker/core/constants.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
+import 'package:berichtsheft_merker/core/services/notification_service.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/onboarding/onboarding_screen.dart';
@@ -195,6 +196,7 @@ void main() {
             dailyEntryStorage: InMemoryDailyEntryStorage(),
             templateStorage: InMemoryActivityTemplateStorage(),
             onDataCleared: () async {},
+            notificationScheduler: NoOpNotificationScheduler(),
           ),
           textScale: 1.5,
         ),
@@ -292,6 +294,7 @@ void main() {
           dailyEntryStorage: InMemoryDailyEntryStorage(),
           templateStorage: InMemoryActivityTemplateStorage(),
           onDataCleared: () async {},
+          notificationScheduler: NoOpNotificationScheduler(),
         )),
       );
       await tester.pumpAndSettle();
@@ -347,6 +350,7 @@ void main() {
           dailyEntryStorage: InMemoryDailyEntryStorage(),
           templateStorage: InMemoryActivityTemplateStorage(),
           onDataCleared: () async {},
+          notificationScheduler: NoOpNotificationScheduler(),
         )),
       );
       await tester.pumpAndSettle();
