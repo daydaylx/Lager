@@ -19,12 +19,17 @@ Stand: 2026-08-14 (optionale OpenRouter-Berichtsnachbearbeitung implementiert, o
   tatsächlich gültiger Cache-Bericht trägt „KI-optimiert“, und Kopieren/Export
   verwenden denselben Text. WeekScreen löst selbst keine Anfragen aus.
 - Verifiziert: `flutter pub get`, `flutter analyze` (0 Issues), `flutter test`
-  (300 bestanden) und Debug-APK erfolgreich. Repo-Hygiene konnte im Harness
-  nicht ausgeführt werden (System-/Secret-Grenze); das kanonische
-  `project_check verify` ist nicht konfiguriert, weil `.pi/verify.json` fehlt.
-- Offen: Erst nach dem nachträglichen Setzen von Modell-ID, privatem Key und
-  Budget ZDR-/Endpoint-Prüfung, privater signierter Release-Build und
-  Android-Gerätetest; keine Key-aktivierte APK oder Konfiguration veröffentlichen.
+  (300 bestanden) und Debug-APK erfolgreich. Repo-Hygiene nachgeholt:
+  `node_modules/` und `.pi-subagents/` sind jetzt gitignored, der
+  Phase-27-Arbeitsstand ist committet.
+- Privater signierter Release-Build läuft über
+  `scripts/build_private_release.sh` (liest `config/openrouter.private.json`).
+  Der Build ohne `--dart-define` bleibt der veröffentlichbare Standard ohne
+  Netzwerkfunktion.
+- Offen: ZDR-/Endpoint-Prüfung und Android-Gerätetest nach dem Setzen des
+  Budgets; das kanonische `project_check verify` ist weiterhin nicht
+  konfiguriert, weil `.pi/verify.json` fehlt. Die key-aktivierte APK und das
+  Build-Skript-Ergebnis dürfen nicht veröffentlicht werden.
 
 ---
 
