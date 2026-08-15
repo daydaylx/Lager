@@ -11,7 +11,7 @@ Stand: 2026-08-14 (optionale OpenRouter-Berichtsnachbearbeitung implementiert, o
   startet kein Netzwerkrequest.
 - Die neue Core-Grenze umfasst Compile-Time-Konfiguration, Positivlisten-
   Payload, strikte JSON-Validierung, isolierten HTTP-Transport,
-  ZDR-/`data_collection: deny`-/`require_parameters`-Regeln, getrennten
+  ZDR- und `data_collection: deny`-Regeln, getrennten
   `ai_reports`-Hive-Cache und einen deduplizierten Hintergrundkoordinator.
   `privateNote`, Profil, IDs und Zeitstempel können den Request nicht
   erreichen; der Cache wird bei Edit, Undo und Gesamtlöschung bereinigt.
@@ -21,14 +21,18 @@ Stand: 2026-08-14 (optionale OpenRouter-Berichtsnachbearbeitung implementiert, o
 - Verifiziert: `flutter pub get`, `flutter analyze` (0 Issues), `flutter test`
   (300 bestanden) und Debug-APK erfolgreich. Repo-Hygiene nachgeholt:
   `node_modules/` und `.pi-subagents/` sind jetzt gitignored, der
-  Phase-27-Arbeitsstand ist committet.
+  Phase-27-Arbeitsstand ist committet. Live-Smoke-Test gegen die echte
+  OpenRouter-API über `scripts/smoke_openrouter.sh`: Endpoint, Modell-ID,
+  ZDR-Routing und Antwort-Validierung funktionieren; dafür wurde
+  `require_parameters: true` entfernt (verursachte HTTP 404 „No endpoints
+  found“ für das konfigurierte Modell).
 - Privater signierter Release-Build läuft über
   `scripts/build_private_release.sh` (liest `config/openrouter.private.json`).
   Der Build ohne `--dart-define` bleibt der veröffentlichbare Standard ohne
   Netzwerkfunktion.
-- Offen: ZDR-/Endpoint-Prüfung und Android-Gerätetest nach dem Setzen des
-  Budgets; das kanonische `project_check verify` ist weiterhin nicht
-  konfiguriert, weil `.pi/verify.json` fehlt. Die key-aktivierte APK und das
+- Offen: Android-Gerätetest der key-aktivierten APK; das kanonische
+  `project_check verify` ist weiterhin nicht konfiguriert, weil
+  `.pi/verify.json` fehlt. Die key-aktivierte APK und das
   Build-Skript-Ergebnis dürfen nicht veröffentlicht werden.
 
 ---

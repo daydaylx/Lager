@@ -278,8 +278,10 @@ Danach manueller Gerätetest:
   Payload noch Logs oder Test-Fixtures erreichen.
 - Ohne vollständige private `--dart-define`-Konfiguration bleibt die Funktion
   deaktiviert; lokaler Save und Bericht dürfen nie warten oder fehlschlagen.
-- ZDR, `data_collection: "deny"` und `require_parameters: true` gelten für
-  jeden Request; kein Modell-Fallback und kein Request aus WeekScreen.
+- ZDR und `data_collection: "deny"` gelten für jeden Request; kein
+  Modell-Fallback und kein Request aus WeekScreen. `require_parameters`
+  wurde entfernt, weil es für das konfigurierte Modell zu HTTP 404
+  ("No endpoints found") führte.
 - KI-Daten bleiben getrennt von `DailyEntry`; Edit, Undo, Löschung und
   Neustart dürfen keine veraltete Antwort sichtbar machen.
 

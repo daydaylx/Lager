@@ -123,7 +123,6 @@ Gib keine Überschrift, Liste, Markdown oder Vorbemerkung aus.''';
               'provider': {
                 'zdr': true,
                 'data_collection': 'deny',
-                'require_parameters': true,
                 'allow_fallbacks': true,
               },
             }),
