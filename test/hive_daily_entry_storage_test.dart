@@ -22,6 +22,7 @@ void main() {
       id: DailyEntry.idForDate(date),
       date: date,
       dayType: DayType.betrieb,
+      department: 'Textil',
       areas: const [TrainingArea.wareneingang],
       selectedActivities: const ['wareneingang_01', 'sicherheit_02'],
       specialFlags: const [
@@ -51,6 +52,7 @@ void main() {
       expect(loadedEntry!.id, DailyEntry.idForDate(date));
       expect(loadedEntry.date, date);
       expect(loadedEntry.dayType, DayType.betrieb);
+      expect(loadedEntry.department, 'Textil');
       expect(loadedEntry.areas, [TrainingArea.wareneingang]);
       expect(
         loadedEntries.map((entry) => entry.id),

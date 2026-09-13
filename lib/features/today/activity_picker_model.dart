@@ -1,4 +1,5 @@
 import '../../core/data/default_activities.dart';
+import '../../core/domain/domain.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/training_area.dart';
@@ -24,6 +25,7 @@ class ActivityPickerModel {
   final List<ActivityTemplate> selectedActivities;
   final List<ActivityTemplate> frequentActivities;
   final List<ActivityTemplate> recommendedActivities;
+  final String? recommendationContext;
   final List<ActivityPickerGroup> groups;
   final List<String> unavailableSelectedIds;
   final int visibleActivityCount;
@@ -34,6 +36,7 @@ class ActivityPickerModel {
     required this.selectedActivities,
     required this.frequentActivities,
     required this.recommendedActivities,
+    this.recommendationContext,
     required this.groups,
     required this.unavailableSelectedIds,
     required this.visibleActivityCount,
@@ -51,12 +54,32 @@ class ActivityPickerModel {
     required int? trainingYear,
     required Map<String, bool> defaultOverrides,
     required List<AdhocActivity> adhocActivities,
+    TrainingOccupation occupation = TrainingOccupation.fachkraftLagerlogistik,
+    String? wahlqualifikation,
   }) {
-    final categories = _categoriesFor(dayType, selectedAreas);
+    final occupationConfig = OccupationRegistry.configFor(occupation);
+    final categories = _categoriesFor(dayType, selectedAreas, occupationConfig);
     final effectiveDefaults = [
       for (final activity in defaultActivities)
         _applyOverride(activity, defaultOverrides),
     ];
+    final availableDefaults = effectiveDefaults.where((activity) {
+      if (!occupationConfig.isActivityInOccupation(activity.id)) return false;
+      if (activity.category == ActivityCategory.berufsschule &&
+          occupation == TrainingOccupation.verkaeufer) {
+        return occupationConfig.schoolTopicIds.contains(activity.id) &&
+            _sellerSchoolTopicForYear(activity.id, trainingYear);
+      }
+      return occupationConfig.activityCategories.contains(activity.category);
+    }).map((activity) {
+      if (occupation == TrainingOccupation.verkaeufer &&
+          activity.category == ActivityCategory.berufsschule) {
+        // Berufsschulthemen werden nach Jahr angeboten; ihr Katalogstatus
+        // beschreibt nicht, ob sie im betrieblichen Quick-Access erscheinen.
+        return activity.copyWith(isActive: true);
+      }
+      return activity;
+    }).toList(growable: false);
     final adhocTemplates = [
       for (final adhoc in adhocActivities)
         ActivityTemplate(
@@ -83,24 +106,46 @@ class ActivityPickerModel {
         .whereType<ActivityTemplate>()
         .toList(growable: false);
     final hasSearch = searchQuery.trim().isNotEmpty;
+    final pickerActivitiesById = {
+      for (final activity in availableDefaults) activity.id: activity,
+      for (final activity in customTemplates)
+        if (occupationConfig.isActivityInOccupation(activity.id))
+          activity.id: activity,
+      for (final activity in adhocTemplates) activity.id: activity,
+    };
     final frequentActivities = hasSearch
         ? const <ActivityTemplate>[]
         : computeFrequentActivities(
             categories,
-            activitiesById,
+            pickerActivitiesById,
             frequentActivityIds,
             selectedActivityIds,
           );
     final frequentIds = frequentActivities.map((a) => a.id).toSet();
+    final selectedWahlqualifikation = wahlqualifikation == null
+        ? null
+        : WahlqualifikationDetails.fromStorageKey(wahlqualifikation);
+    final preferredKeywords = selectedWahlqualifikation == null
+        ? const <String>[]
+        : (occupationConfig
+                .wahlqualifikationKeywords[selectedWahlqualifikation] ??
+            const <String>[]);
     final recommendedActivities = !hasSearch && trainingYear != null
         ? computeRecommendedActivities(
             categories,
-            activitiesById,
+            pickerActivitiesById,
             selectedActivityIds,
             frequentIds,
             trainingYear,
+            preferredKeywords: preferredKeywords,
           )
         : const <ActivityTemplate>[];
+    final recommendationContext = occupation == TrainingOccupation.verkaeufer &&
+            selectedWahlqualifikation != null
+        ? 'Wahlqualifikation: ${selectedWahlqualifikation.label}'
+        : trainingYear == null
+            ? null
+            : '$trainingYear. Ausbildungsjahr';
     final hiddenQuickAccessIds = {
       ...frequentIds,
       ...recommendedActivities.map((a) => a.id),
@@ -130,12 +175,17 @@ class ActivityPickerModel {
 
     for (final category in categories) {
       final defaults = _sortSelectedFirst(
-        effectiveDefaults
+        availableDefaults
             .where(
               (activity) =>
                   activity.category == category &&
-                  (activity.isActive ||
-                      selectedActivityIds.contains(activity.id)) &&
+                  _isDefaultVisible(
+                    activity,
+                    occupation,
+                    occupationConfig,
+                    defaultOverrides,
+                    selectedActivityIds,
+                  ) &&
                   _showInCategoryGroup(
                     activity,
                     hiddenQuickAccessIds,
@@ -151,6 +201,7 @@ class ActivityPickerModel {
         customTemplates
             .where(
               (activity) =>
+                  occupationConfig.isActivityInOccupation(activity.id) &&
                   activity.category == category &&
                   (activity.isActive ||
                       selectedActivityIds.contains(activity.id)) &&
@@ -191,6 +242,7 @@ class ActivityPickerModel {
       selectedActivities: selectedActivities,
       frequentActivities: frequentActivities,
       recommendedActivities: recommendedActivities,
+      recommendationContext: recommendationContext,
       groups: groups,
       unavailableSelectedIds: unavailableSelectedIds,
       visibleActivityCount: visibleActivityCount,
@@ -209,18 +261,46 @@ class ActivityPickerModel {
     return activity.copyWith(isActive: override);
   }
 
+  static bool _isDefaultVisible(
+    ActivityTemplate activity,
+    TrainingOccupation occupation,
+    OccupationConfig config,
+    Map<String, bool> overrides,
+    Set<String> selectedIds,
+  ) {
+    if (selectedIds.contains(activity.id)) return true;
+    if (!activity.isActive) return false;
+    if (occupation != TrainingOccupation.verkaeufer) return true;
+    // Berufsschulthemen werden fachlich über das Ausbildungsjahr begrenzt,
+    // nicht über den betrieblichen Quick-Access-Katalog.
+    if (activity.category == ActivityCategory.berufsschule) return true;
+    return config.quickAccessActivityIds.contains(activity.id) ||
+        overrides[activity.id] == true;
+  }
+
   static List<ActivityCategory> _categoriesFor(
     DayType dayType,
     Set<TrainingArea> selectedAreas,
+    OccupationConfig config,
   ) {
     return switch (dayType) {
       DayType.betrieb => <ActivityCategory>{
-          ...selectedAreas.map((a) => a.activityCategory),
-          ActivityCategory.sicherheit,
+          ...config.categoriesForAreas(selectedAreas),
+          if (config.occupation == TrainingOccupation.verkaeufer)
+            ActivityCategory.allgemein,
+          if (config.occupation != TrainingOccupation.verkaeufer)
+            ActivityCategory.sicherheit,
         }.toList(growable: false),
       DayType.berufsschule => [ActivityCategory.berufsschule],
       _ => <ActivityCategory>[],
     };
+  }
+
+  static bool _sellerSchoolTopicForYear(String id, int? year) {
+    if (year == null) return true;
+    final number = int.tryParse(id.split('_').last);
+    if (number == null) return true;
+    return year == 1 ? number <= 8 : number >= 9;
   }
 
   static bool _matchesActivitySearch(

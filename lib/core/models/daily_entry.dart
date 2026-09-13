@@ -7,6 +7,11 @@ class DailyEntry {
   final String id;
   final DateTime date;
   final DayType dayType;
+
+  /// Optionale Verkäufer-Kontextangabe wie „Textil“ oder „Kasse“.
+  /// Darf keine Kundennamen, Kaufdaten oder Identifikationsnummern enthalten.
+  final String? department;
+
   final List<TrainingArea> areas;
   final List<String> selectedActivities;
   final List<SpecialFlag> specialFlags;
@@ -29,6 +34,7 @@ class DailyEntry {
     required this.id,
     required this.date,
     required this.dayType,
+    this.department,
     required this.areas,
     required this.selectedActivities,
     required this.specialFlags,

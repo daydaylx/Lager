@@ -192,6 +192,54 @@ void main() {
     expect(find.byKey(const ValueKey('training_year_3')), findsNothing);
   });
 
+  testWidgets('Verkäuferprofil zeigt Jahre und Wahlqualifikationen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: false,
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('onboarding_continue')));
+    await tester.pumpAndSettle();
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey(TrainingOccupationValues.verkaeufer)),
+    );
+
+    expect(find.byKey(const ValueKey('training_year_1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_3')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('wahlqualifikation_beratungVonKunden')),
+      findsOneWidget,
+    );
+
+    await tapVisible(tester, find.byKey(const ValueKey('training_year_1')));
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('wahlqualifikation_beratungVonKunden')),
+    );
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('profile_submit_button')),
+    );
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString(PreferenceKeys.trainingOccupation),
+      TrainingOccupationValues.verkaeufer,
+    );
+    expect(preferences.getInt(PreferenceKeys.trainingYear), 1);
+    expect(
+      preferences.getString(PreferenceKeys.wahlqualifikation),
+      'beratungVonKunden',
+    );
+  });
+
   testWidgets('ungültiges altes Ausbildungsjahr muss korrigiert werden', (
     WidgetTester tester,
   ) async {

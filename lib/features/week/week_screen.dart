@@ -155,7 +155,8 @@ class _WeekScreenState extends State<WeekScreen> {
         GestureDetector(
           onHorizontalDragEnd: (details) {
             final velocity = details.primaryVelocity ?? 0;
-            if (velocity > 300 && _selectedWeekStart.isBefore(_currentWeekStart)) {
+            if (velocity > 300 &&
+                _selectedWeekStart.isBefore(_currentWeekStart)) {
               _changeWeek(7); // Swipe right → nächste Woche
             } else if (velocity < -300) {
               _changeWeek(-7); // Swipe left → vorherige Woche
@@ -305,7 +306,7 @@ class _WeekScreenState extends State<WeekScreen> {
 
     return switch (entry.dayType) {
       DayType.betrieb =>
-        '${entry.areas.isEmpty ? 'Betrieb' : entry.areas.map((a) => a.label).join(', ')} · ${_activityCountLabel(entry)}',
+        '${entry.department == null ? '' : '${entry.department} · '}${entry.areas.isEmpty ? 'Betrieb' : entry.areas.map((a) => a.label).join(', ')} · ${_activityCountLabel(entry)}',
       DayType.berufsschule => _topicCountLabel(entry.selectedActivities.length),
       DayType.frei ||
       DayType.urlaub ||
@@ -696,7 +697,8 @@ class _DayCard extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 76),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
                     Container(
@@ -722,7 +724,8 @@ class _DayCard extends StatelessWidget {
                                     Flexible(
                                       child: Text(
                                         formatDayDate(date),
-                                        style: theme.textTheme.titleSmall?.copyWith(
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
                                           fontWeight: FontWeight.w700,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -737,13 +740,17 @@ class _DayCard extends StatelessWidget {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: theme.colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: theme
+                                              .colorScheme.primaryContainer,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           'Heute',
-                                          style: theme.textTheme.labelSmall?.copyWith(
-                                            color: theme.colorScheme.onPrimaryContainer,
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                            color: theme
+                                                .colorScheme.onPrimaryContainer,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -776,7 +783,8 @@ class _DayCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (onTap != null) const Icon(Icons.chevron_right, size: 20),
+                    if (onTap != null)
+                      const Icon(Icons.chevron_right, size: 20),
                   ],
                 ),
               ),

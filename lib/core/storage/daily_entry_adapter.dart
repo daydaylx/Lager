@@ -30,6 +30,7 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
         fields[2] as String,
         'DailyEntry.dayType',
       ),
+      department: fields[11] as String?,
       areas: switch (fields[3]) {
         final List list => readPersistedEnumList(
             TrainingArea.values,
@@ -80,7 +81,7 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
   @override
   void write(BinaryWriter writer, DailyEntry entry) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(entry.id)
       ..writeByte(1)
@@ -106,6 +107,8 @@ class DailyEntryAdapter extends TypeAdapter<DailyEntry> {
         entry.adhocActivities
             .map((a) => <String>[a.id, a.title])
             .toList(growable: false),
-      );
+      )
+      ..writeByte(11)
+      ..write(entry.department);
   }
 }

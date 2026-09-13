@@ -1,3 +1,5 @@
+import 'domain/domain.dart';
+
 // Versionskonstante statt PackageInfo: kein zusätzliches Plugin, deterministisch
 // in Tests, CI-Fehler bei Drift (test/version_consistency_test.dart).
 const String kAppVersion = '1.0.0';
@@ -16,6 +18,7 @@ class PreferenceKeys {
   static const String profileCompany = 'profile_company';
   static const String trainingOccupation = 'training_occupation';
   static const String trainingYear = 'training_year';
+  static const String wahlqualifikation = 'wahlqualifikation';
   static const String reminderEnabled = 'reminder_enabled';
   static const String reminderTimes = 'reminder_times';
   static const String reminderWeekdays = 'reminder_weekdays';
@@ -23,38 +26,51 @@ class PreferenceKeys {
   static const String defaultActivityOverrides = 'default_activity_overrides';
 }
 
+/// Kompatibilitäts-Layer: Liefert Storage-Keys für alle Berufe.
+///
+/// Neu: Delegiert an [TrainingOccupation] Enum.
 class TrainingOccupationValues {
   static const String fachlagerist = 'fachlagerist';
   static const String fachkraftLagerlogistik = 'fachkraft_lagerlogistik';
-
+  static const String verkaeufer = 'verkaeufer';
   static const List<String> all = [
     fachlagerist,
     fachkraftLagerlogistik,
+    verkaeufer,
   ];
+
+  /// Konvertiert Storage-Key in TrainingOccupation Enum.
+  static TrainingOccupation? parse(String? key) {
+    if (key == null) return null;
+    return TrainingOccupationDetails.fromStorageKey(key);
+  }
 }
 
-/// Lesbarer Ausbildungsberuf für einen gespeicherten occupation-String (#57).
+/// Lesbarer Ausbildungsberuf für einen gespeicherten occupation-String.
 extension TrainingOccupationLabel on String? {
-  String get occupationLabel => switch (this) {
-        TrainingOccupationValues.fachlagerist => 'Fachlagerist/in',
-        TrainingOccupationValues.fachkraftLagerlogistik =>
-          'Fachkraft für Lagerlogistik',
-        _ => 'Ausbildung noch nicht ausgewählt',
-      };
+  String get occupationLabel {
+    final occupation = TrainingOccupationValues.parse(this);
+    if (occupation == null) return 'Ausbildung noch nicht ausgewählt';
+    return occupation.label;
+  }
 }
 
+/// Gültige Ausbildungsjahre pro Beruf.
+///
+/// Neu: Delegiert an [TrainingOccupation] Enum.
 class TrainingYearValues {
   static const List<int> all = [1, 2, 3];
 
   static List<int> forOccupation(String? occupation) {
-    return switch (occupation) {
-      TrainingOccupationValues.fachlagerist => const [1, 2],
-      TrainingOccupationValues.fachkraftLagerlogistik => all,
-      _ => all,
-    };
+    final parsed = TrainingOccupationValues.parse(occupation);
+    if (parsed == null) return all;
+    return parsed.validYears;
   }
 
   static bool isValidForOccupation(int? year, String? occupation) {
-    return year != null && forOccupation(occupation).contains(year);
+    if (year == null) return false;
+    final parsed = TrainingOccupationValues.parse(occupation);
+    if (parsed == null) return all.contains(year);
+    return parsed.isValidYear(year);
   }
 }

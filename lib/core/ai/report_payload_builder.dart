@@ -29,12 +29,13 @@ class ReportPayloadBuilder {
         .toList(growable: false)
       ..sort();
     final areas = entry.areas.map((area) => area.label).toList()..sort();
-    final specialFlags =
-        entry.specialFlags.map((flag) => flag.label).toList()..sort();
+    final specialFlags = entry.specialFlags.map((flag) => flag.label).toList()
+      ..sort();
     final reportNote = _normalized(entry.reportNote);
     final localReport = DailyReportGenerator.generate(entry, activityTitles);
     final facts = <String, Object?>{
       'dayType': entry.dayType.label,
+      'department': _normalized(entry.department),
       'areas': areas,
       'activities': activities,
       'specialFlags': specialFlags,

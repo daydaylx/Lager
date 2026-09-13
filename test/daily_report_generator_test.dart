@@ -8,6 +8,7 @@ import 'package:berichtsheft_merker/core/report/daily_report_generator.dart';
 DailyEntry _entry({
   DayType dayType = DayType.betrieb,
   List<TrainingArea> areas = const [TrainingArea.wareneingang],
+  String? department,
   List<String> activities = const [],
   List<SpecialFlag> flags = const [],
   String? note,
@@ -18,6 +19,7 @@ DailyEntry _entry({
     id: DailyEntry.idForDate(date),
     date: date,
     dayType: dayType,
+    department: department,
     areas: dayType == DayType.betrieb ? areas : const [],
     selectedActivities: activities,
     specialFlags: flags,
@@ -34,6 +36,8 @@ const _titles = {
   'wareneingang_03': 'Artikel eingelagert',
   'berufsschule_01': 'Lagerwirtschaft Grundlagen',
   'berufsschule_02': 'Sicherheitsunterweisung',
+  'verkauf_beratung_03': 'Kunden zu Produkten beraten',
+  'verkauf_kasse_02': 'Waren kassiert',
 };
 
 void main() {
@@ -46,6 +50,37 @@ void main() {
       expect(result, contains('Wareneingang'));
       expect(result, contains('Ware angenommen'));
       expect(result, isNot(contains('wareneingang_01')));
+    });
+
+    test('Verkäufer-Bereich und Tätigkeiten werden als Bericht aufgelöst', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          areas: const [TrainingArea.kundenberatung],
+          activities: const ['verkauf_beratung_03', 'verkauf_kasse_02'],
+        ),
+        _titles,
+      );
+
+      expect(result, contains('Im Verkauf'));
+      expect(result, contains('Kundenberatung'));
+      expect(result, contains('Kunden zu Produkten beraten'));
+      expect(result, contains('Waren kassiert'));
+      expect(result, isNot(contains('verkauf_beratung_03')));
+    });
+
+    test('Verkäufer-Bericht nutzt die optionale Abteilung', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          department: 'Textil',
+          areas: const [TrainingArea.verkaufsflaeche],
+          activities: const ['verkauf_beratung_03'],
+        ),
+        _titles,
+      );
+
+      expect(result, contains('In der Abteilung Textil'));
+      expect(result, contains('Verkaufsfläche'));
+      expect(result, isNot(contains('private')));
     });
 
     test('area + 3 bekannte Tätigkeiten — natürliche Listenformatierung', () {

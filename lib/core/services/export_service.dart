@@ -29,6 +29,7 @@ class ExportService {
       serializedEntries.add({
         'date': entry.id,
         'dayType': entry.dayType.name,
+        'department': entry.department,
         'areas': entry.areas.map((area) => area.name).toList(),
         'selectedActivities': entry.selectedActivities,
         'specialFlags': entry.specialFlags.map((flag) => flag.name).toList(),
@@ -51,6 +52,7 @@ class ExportService {
         'company': profile.company,
         'occupation': profile.occupation,
         'trainingYear': profile.trainingYear,
+        'wahlqualifikation': profile.wahlqualifikation,
       },
       'entries': serializedEntries,
       'customActivities': customs

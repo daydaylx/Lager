@@ -8,9 +8,10 @@ Profil, Onboarding, Reminder und Theme-Preset liegen in SharedPreferences.
 Abgeleitete optionale KI-Berichte liegen getrennt in einer eigenen Hive-Box und
 verändern weder `DailyEntry` noch seinen Adapter.
 
-Vollständiger historischer Tätigkeitskatalog (132 stabile IDs):
-`lib/core/data/default_activities.dart`. Davon sind 123 fachlich passende
-Standardtätigkeiten auswählbar; 38 sind in der Werksvorgabe direkt aktiv.
+Vollständiger Tätigkeitskatalog in `lib/core/data/default_activities.dart`:
+132 unveränderte Lagerlogistik-IDs plus 138 Verkäufer-IDs im ausschließlich
+`verkauf_*`-Namespace. Verkäufer-Berufsschulthemen werden im Picker auf Jahr 1
+bzw. 2 begrenzt; historische Einträge und eigene Tätigkeiten bleiben auflösbar.
 
 ---
 
@@ -37,6 +38,14 @@ enum TrainingArea {
   versand,
   inventur,
   retouren,
+  verkaufsflaeche,
+  kundenberatung,
+  kasse,
+  warenpraesentation,
+  wareneingangVerkauf,
+  lagerBestand,
+  reklamationService,
+  werbungVerkaufsfoerderung,
 }
 
 enum ActivityCategory {
@@ -51,6 +60,16 @@ enum ActivityCategory {
   retouren,
   berufsschule,
   sicherheit,     // Ordnung/Qualität/Unterweisung (persistierter Enum-Name)
+  verkaufsflaeche,
+  kundenberatung,
+  kasse,
+  warenpraesentation,
+  wareneingangVerkauf,
+  lagerBestand,
+  reklamationService,
+  werbungVerkaufsfoerderung,
+  preis,
+  allgemein,
 }
 
 enum SpecialFlag {
@@ -80,6 +99,7 @@ class DailyEntry {
   final String id;                        // Datum im Format yyyy-MM-dd
   final DateTime date;                    // Datum des Eintrags
   final DayType dayType;                  // Tagtyp
+  final String? department;               // optionale Verkäufer-Abteilung/Warengruppe
   final List<TrainingArea> areas;         // nur wenn dayType == betrieb
   final List<String> selectedActivities;  // IDs aus ActivityTemplate
   final List<SpecialFlag> specialFlags;   // Besonderheiten
@@ -112,13 +132,15 @@ typedef StoredProfile = ({
   String? company,
   String? occupation,
   int? trainingYear,
+  String? wahlqualifikation,
   bool onboardingCompleted,
 });
 ```
 
-Es gibt bewusst keine persistierte `UserProfile`-Klasse und keinen
-`TrainingOccupation`-Enum. Ausbildungsberufe werden als stabile String-Werte aus
-`TrainingOccupationValues` gespeichert.
+Es gibt bewusst keine persistierte `UserProfile`-Klasse. Der
+`TrainingOccupation`-Enum und die `Wahlqualifikation` werden als stabile
+String-Werte in SharedPreferences gespeichert; bestehende Lagerprofile bleiben
+ohne Wahlqualifikation gültig.
 
 Gültige Ausbildungsberufe:
 
@@ -126,6 +148,7 @@ Gültige Ausbildungsberufe:
 | ----------- | --------- | -------------------------- |
 | `fachlagerist` | Fachlagerist/in | 1, 2 |
 | `fachkraft_lagerlogistik` | Fachkraft für Lagerlogistik | 1, 2, 3 |
+| `verkaeufer` | Verkäufer/in | 1, 2 |
 
 ---
 
@@ -142,7 +165,12 @@ lib/core/
     activity_category.dart
     special_flag.dart
   data/
-    default_activities.dart    ← 132 stabile IDs, davon 123 auswählbar
+    default_activities.dart    ← Lagerkatalog + Verkäuferkatalog
+    verkaeufer_activities.dart ← 138 `verkauf_*`-IDs, davon 20 Schul-Themen
+  domain/
+    occupation.dart            ← Berufe, Jahre und Wahlqualifikationen
+    occupation_config.dart     ← Berufskonfiguration
+    occupation_registry.dart   ← zentrale Registry
   ai/
     ai_report_cache.dart
     hive_ai_report_cache.dart
@@ -183,7 +211,10 @@ Hive-CE-Boxen:
 `DailyEntry` verwendet einen handgeschriebenen Adapter mit dauerhaft reserviertem
 `typeId: 0`. Enum-Werte werden als Namen gespeichert, damit keine zusätzlichen
 Enum-Adapter benötigt werden. Das aktuelle `areas`-Feld liest auch ältere
-Einträge mit einem einzelnen gespeicherten Bereich.
+Einträge mit einem einzelnen gespeicherten Bereich. Das optionale Feld
+`department` wird als neues Hive-Feld 11 gespeichert; bei älteren Einträgen
+fehlt es und wird als `null` gelesen. Es wird nur für Betriebstage aus dem
+Tagesentwurf übernommen.
 Gespeicherte Enum-Strings werden über zentrale Parser gelesen; unbekannte Werte
 werfen eine lesbare `FormatException` statt eines unklaren `byName`-Fehlers.
 
@@ -195,7 +226,9 @@ lokalen Bericht nie blockieren.
 
 `DailyEntryStorage.loadAll()` liefert die lokal gespeicherten Einträge für
 abgeleitete UI-Funktionen wie „Häufig genutzt"; es speichert keine zusätzlichen
-Zähler.
+Zähler. `department` ist eine kurze freiwillige Kontextangabe (z. B. „Textil"
+oder „Kasse") und darf keine Kundennamen, Kaufdaten oder Identifikationsnummern
+enthalten.
 
 `ActivityTemplate` verwendet `typeId: 1`. Die Felder `isActive` und
 `subcategory` sind rückwärtskompatibel: Fehlt `isActive`, wird `true`
@@ -210,7 +243,8 @@ angeboten.
 **SharedPreferences-Schlüssel:**
 
 - Profil und Onboarding: `onboarding_completed`, `profile_name`,
-  `profile_company`, `training_occupation`, `training_year`
+  `profile_company`, `training_occupation`, `training_year`,
+  `wahlqualifikation`
 - Reminder: `reminder_enabled`, `reminder_times`, `reminder_weekdays`
 - Darstellung: `theme_preset`
 
@@ -247,3 +281,9 @@ Kanonische vollständige Liste mit stabilen IDs:
 | Retouren           | Retoure erfassen, Retourengrund, Prüfung bereitstellen          |
 | Berufsschule       | Lernfeld, Ladungssicherung, Warenwirtschaft, Qualitätsgrundlagen |
 | Ordnung/Qualität/Unterweisung | 5S, Qualitätsprüfung, Qualitätsmangel melden, Unterweisung |
+
+Für Verkäufer/innen ergänzt `verkaeufer_activities.dart` die Bereiche
+Verkaufsfläche, Kundenberatung, Kasse, Warenpräsentation, Warenannahme,
+Lager/Bestand, Reklamation/Service und Werbung/Verkaufsförderung. Die vier
+Wahlqualifikationen beeinflussen die Empfehlungssortierung; sie ändern keine
+IDs oder Hive-TypeIDs.

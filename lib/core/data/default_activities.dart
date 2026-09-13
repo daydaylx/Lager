@@ -1,5 +1,10 @@
+// Der historische Katalog bleibt als unveränderte Datenliste dokumentiert;
+// der kombinierte Katalog enthält zusätzlich die berufsspezifische Laufzeitliste.
+// ignore_for_file: prefer_const_constructors
+
 import '../enums/activity_category.dart';
 import '../models/activity_template.dart';
+import 'verkaeufer_activities.dart' hide ActivityTemplate;
 
 /// Vollständiger Standardkatalog der Lagerlogistik-Tätigkeiten.
 ///
@@ -13,7 +18,7 @@ import '../models/activity_template.dart';
 /// aktiv. Weitere fachlich passende Einträge können im Vorlagen-Screen
 /// aktiviert werden. Passive Pflichtaussagen und Angaben, die bereits über
 /// Besonderheiten abgedeckt sind, gehören nicht zur auswählbaren Liste.
-const List<ActivityTemplate> defaultActivities = [
+final List<ActivityTemplate> defaultActivities = [
   // --- Wareneingang (aktiv: 01, 05, 06, 11) ---
   ActivityTemplate(
     id: 'wareneingang_01',
@@ -825,6 +830,7 @@ const List<ActivityTemplate> defaultActivities = [
     category: ActivityCategory.sicherheit,
     isActive: false,
   ),
+  ...verkaeuferActivities,
 ];
 
 /// Historische Katalogeinträge, die keine eigenständige, berichtsfähige

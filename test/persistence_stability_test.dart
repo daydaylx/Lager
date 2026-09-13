@@ -43,6 +43,14 @@ void main() {
         'versand',
         'inventur',
         'retouren',
+        'verkaufsflaeche',
+        'kundenberatung',
+        'kasse',
+        'warenpraesentation',
+        'wareneingangVerkauf',
+        'lagerBestand',
+        'reklamationService',
+        'werbungVerkaufsfoerderung',
       ];
       expect(TrainingArea.values.map((e) => e.name).toList(), expected);
     });
@@ -76,6 +84,16 @@ void main() {
         'retouren',
         'berufsschule',
         'sicherheit',
+        'verkaufsflaeche',
+        'kundenberatung',
+        'kasse',
+        'warenpraesentation',
+        'wareneingangVerkauf',
+        'lagerBestand',
+        'reklamationService',
+        'werbungVerkaufsfoerderung',
+        'preis',
+        'allgemein',
       ];
       expect(ActivityCategory.values.map((e) => e.name).toList(), expected);
     });
@@ -138,7 +156,7 @@ void main() {
     });
 
     test('IDs folgen dem erwarteten Muster <kategorie>_<nn>', () {
-      final idPattern = RegExp(r'^[a-z]+_\d{2}$');
+      final idPattern = RegExp(r'^[a-z]+(?:_[a-z]+)?_\d{2}$');
       for (final activity in defaultActivities) {
         expect(
           idPattern.hasMatch(activity.id),

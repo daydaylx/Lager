@@ -98,6 +98,46 @@ void main() {
           (await ProfileStorage.load()).occupation, 'fachkraft_lagerlogistik');
     });
 
+    test('Verkäufer akzeptiert nur Ausbildungsjahr 1 und 2', () async {
+      await ProfileStorage.save(
+        occupation: 'verkaeufer',
+        trainingYear: 1,
+        wahlqualifikation: 'beratungVonKunden',
+      );
+      await ProfileStorage.save(
+        occupation: 'verkaeufer',
+        trainingYear: 2,
+        wahlqualifikation: 'kassensystemdatenKundenservice',
+      );
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'verkaeufer',
+          trainingYear: 3,
+          wahlqualifikation: 'beratungVonKunden',
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        (await ProfileStorage.load()).wahlqualifikation,
+        'kassensystemdatenKundenservice',
+      );
+    });
+
+    test('Verkäufer benötigt genau eine gültige Wahlqualifikation', () async {
+      expect(
+        () => ProfileStorage.save(occupation: 'verkaeufer', trainingYear: 1),
+        throwsArgumentError,
+      );
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'verkaeufer',
+          trainingYear: 1,
+          wahlqualifikation: 'unbekannt',
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('Fachlagerist mit 3. Jahr wirft ArgumentError', () async {
       expect(
         () => ProfileStorage.save(occupation: 'fachlagerist', trainingYear: 3),
@@ -148,6 +188,7 @@ void main() {
         company: 'ACME',
         occupation: occupation,
         trainingYear: trainingYear,
+        wahlqualifikation: null,
         onboardingCompleted: onboardingCompleted,
       );
     }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
+import '../../core/domain/domain.dart';
 
 typedef ProfileSubmitCallback = Future<void> Function({
   String? name,
   String? company,
   required String occupation,
   required int trainingYear,
+  String? wahlqualifikation,
 });
 
 class ProfileForm extends StatefulWidget {
@@ -13,6 +15,7 @@ class ProfileForm extends StatefulWidget {
   final String? initialCompany;
   final String? initialOccupation;
   final int? initialTrainingYear;
+  final String? initialWahlqualifikation;
   final String submitLabel;
   final IconData submitIcon;
   final String? successMessage;
@@ -24,6 +27,7 @@ class ProfileForm extends StatefulWidget {
     this.initialCompany,
     this.initialOccupation,
     this.initialTrainingYear,
+    this.initialWahlqualifikation,
     required this.submitLabel,
     required this.submitIcon,
     this.successMessage,
@@ -39,6 +43,7 @@ class _ProfileFormState extends State<ProfileForm> {
   late final TextEditingController _companyController;
   String? _selectedOccupation;
   int? _selectedTrainingYear;
+  String? _selectedWahlqualifikation;
   bool _isSaving = false;
 
   @override
@@ -48,6 +53,7 @@ class _ProfileFormState extends State<ProfileForm> {
     _companyController = TextEditingController(text: widget.initialCompany);
     _selectedOccupation = widget.initialOccupation;
     _selectedTrainingYear = widget.initialTrainingYear;
+    _selectedWahlqualifikation = widget.initialWahlqualifikation;
   }
 
   @override
@@ -72,6 +78,7 @@ class _ProfileFormState extends State<ProfileForm> {
         company: _optionalText(_companyController.text),
         occupation: _selectedOccupation!,
         trainingYear: _selectedTrainingYear!,
+        wahlqualifikation: _selectedWahlqualifikation,
       );
 
       if (mounted) {
@@ -103,11 +110,18 @@ class _ProfileFormState extends State<ProfileForm> {
         TrainingYearValues.forOccupation(_selectedOccupation);
     final hasInvalidTrainingYear = _selectedTrainingYear != null &&
         !allowedTrainingYears.contains(_selectedTrainingYear);
+    final isVerkaeufer =
+        _selectedOccupation == TrainingOccupationValues.verkaeufer;
     final canSubmit = _selectedOccupation != null &&
         TrainingYearValues.isValidForOccupation(
           _selectedTrainingYear,
           _selectedOccupation,
         ) &&
+        (!isVerkaeufer ||
+            WahlqualifikationDetails.fromStorageKey(
+                  _selectedWahlqualifikation ?? '',
+                ) !=
+                null) &&
         !_isSaving;
 
     return Column(
@@ -159,6 +173,45 @@ class _ProfileFormState extends State<ProfileForm> {
           selectedValue: _selectedOccupation,
           onSelected: _selectOccupation,
         ),
+        const SizedBox(height: 12),
+        _OccupationOption(
+          title: 'Verkäufer/in',
+          value: TrainingOccupationValues.verkaeufer,
+          selectedValue: _selectedOccupation,
+          onSelected: _selectOccupation,
+        ),
+        if (isVerkaeufer) ...[
+          const SizedBox(height: 24),
+          Text(
+            'Welche Wahlqualifikation hast du?',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Die Auswahl priorisiert passende Tätigkeiten, blendet andere aber nicht aus.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...Wahlqualifikation.values.map(
+            (value) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: RadioListTile<String>(
+                key: ValueKey('wahlqualifikation_${value.storageKey}'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(value.label),
+                value: value.storageKey,
+                groupValue: _selectedWahlqualifikation,
+                onChanged: (selected) => setState(
+                  () => _selectedWahlqualifikation = selected,
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         Text(
           'In welchem Ausbildungsjahr bist du?',
@@ -226,7 +279,12 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 
   void _selectOccupation(String occupation) {
-    setState(() => _selectedOccupation = occupation);
+    setState(() {
+      _selectedOccupation = occupation;
+      if (occupation != TrainingOccupationValues.verkaeufer) {
+        _selectedWahlqualifikation = null;
+      }
+    });
   }
 
   void _selectTrainingYear(int trainingYear) {

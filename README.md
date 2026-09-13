@@ -1,12 +1,15 @@
-# Berichtsheft-Merker Lagerlogistik
+# Berichtsheft-Merker
 
-Private Android-App als Gedächtnisstütze für Auszubildende in der Lagerlogistik.
+Private Android-App als Gedächtnisstütze für Auszubildende in der Lagerlogistik
+und im Einzelhandel.
 
 Die App hilft dabei, täglich kurz festzuhalten, was getan wurde — damit das schriftliche Berichtsheft am Wochenende leichter geführt werden kann. Sie ersetzt kein offizielles Berichtsheft.
 
 ## Zielgruppe
 
-Auszubildende im Bereich Lagerlogistik (Fachlagerist/in, Fachkraft für Lagerlogistik).
+Auszubildende in den unterstützten Profilen Fachlagerist/in, Fachkraft für
+Lagerlogistik und Verkäufer/in. Für Verkäufer/innen stehen Ausbildungsjahre 1
+und 2 sowie eine von vier Wahlqualifikationen zur Verfügung.
 
 ## Technik
 

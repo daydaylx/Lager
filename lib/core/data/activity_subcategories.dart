@@ -62,6 +62,16 @@ String? activitySubcategory(ActivityTemplate activity) {
         14 => 'Unterweisung',
         _ => 'Sicherheit',
       },
+    ActivityCategory.verkaufsflaeche ||
+    ActivityCategory.kundenberatung ||
+    ActivityCategory.kasse ||
+    ActivityCategory.warenpraesentation ||
+    ActivityCategory.wareneingangVerkauf ||
+    ActivityCategory.lagerBestand ||
+    ActivityCategory.reklamationService ||
+    ActivityCategory.werbungVerkaufsfoerderung ||
+    ActivityCategory.preis ||
+    ActivityCategory.allgemein => null,
   };
 }
 

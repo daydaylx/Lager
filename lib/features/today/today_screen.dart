@@ -6,6 +6,7 @@ import '../../core/ai/report_enhancement_coordinator.dart';
 import '../../core/ai/resolved_report.dart';
 import '../../core/data/default_activities.dart';
 import '../../core/data/lager_jokes.dart';
+import '../../core/domain/domain.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/enums/special_flag.dart';
@@ -37,6 +38,8 @@ class TodayScreen extends StatefulWidget {
   final DateTime? date;
   final DateTime? currentDate;
   final int? trainingYear;
+  final String? occupation;
+  final String? wahlqualifikation;
   final int templateRefreshSignal;
   final bool protectBackNavigation;
   final ReportEnhancementCoordinator? reportCoordinator;
@@ -50,6 +53,8 @@ class TodayScreen extends StatefulWidget {
     this.date,
     this.currentDate,
     this.trainingYear,
+    this.occupation,
+    this.wahlqualifikation,
     this.templateRefreshSignal = 0,
     this.protectBackNavigation = true,
     this.reportCoordinator,
@@ -63,6 +68,7 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   final TextEditingController _reportNoteController = TextEditingController();
   final TextEditingController _privateNoteController = TextEditingController();
+  final TextEditingController _departmentController = TextEditingController();
   final TextEditingController _activitySearchController =
       TextEditingController();
   final Set<String> _selectedActivityIds = {};
@@ -101,6 +107,12 @@ class _TodayScreenState extends State<TodayScreen> {
 
   DateTime get _today => _activeDate;
 
+  TrainingOccupation get _occupation =>
+      TrainingOccupationDetails.fromStorageKey(widget.occupation ?? '') ??
+      TrainingOccupation.fachkraftLagerlogistik;
+
+  bool get _isSeller => _occupation == TrainingOccupation.verkaeufer;
+
   bool get _isToday {
     final now = widget.currentDate ?? DateTime.now();
     return _today == DateTime(now.year, now.month, now.day);
@@ -109,6 +121,7 @@ class _TodayScreenState extends State<TodayScreen> {
   TodayEntryDraft get _draft => TodayEntryDraft(
         date: _today,
         dayType: _selectedDayType,
+        department: _departmentController.text,
         selectedAreas: _selectedAreas,
         selectedActivityIds: _selectedActivityIds,
         selectedSpecialFlags: _selectedSpecialFlags,
@@ -151,6 +164,7 @@ class _TodayScreenState extends State<TodayScreen> {
     _activeDate = _widgetDate;
     _reportNoteController.addListener(_markChanged);
     _privateNoteController.addListener(_markChanged);
+    _departmentController.addListener(_markChanged);
     widget.reportCoordinator?.addListener(_handleReportUpdate);
     _loadEntry();
     _loadTemplates();
@@ -178,6 +192,9 @@ class _TodayScreenState extends State<TodayScreen> {
       ..removeListener(_markChanged)
       ..dispose();
     _privateNoteController
+      ..removeListener(_markChanged)
+      ..dispose();
+    _departmentController
       ..removeListener(_markChanged)
       ..dispose();
     super.dispose();
@@ -256,9 +273,8 @@ class _TodayScreenState extends State<TodayScreen> {
         stepContext: todayFlowStepContext(
           step: _flowStep,
           dayType: _selectedDayType,
-          selectedAreaLabels: _selectedAreas
-              .map((area) => area.label)
-              .toList(growable: false),
+          selectedAreaLabels:
+              _selectedAreas.map((area) => area.label).toList(growable: false),
         ),
         onRefresh: _loadEntry,
       );
@@ -272,6 +288,7 @@ class _TodayScreenState extends State<TodayScreen> {
         date: _today,
         status: _entryStatus,
         dayType: entry.dayType,
+        department: entry.department,
         areas: entry.areas.map((area) => area.label).toList(growable: false),
         activities: entry.selectedActivities
             .map((id) => titles[id] ?? 'Nicht verfügbare Tätigkeit')
@@ -294,6 +311,9 @@ class _TodayScreenState extends State<TodayScreen> {
     final reviewContent = _flowStep == TodayFlowStep.review
         ? TodayReviewContent(
             dayType: _selectedDayType,
+            department: _departmentController.text.trim().isEmpty
+                ? null
+                : _departmentController.text.trim(),
             areas: _selectedAreas
                 .map((area) => area.label)
                 .toList(growable: false),
@@ -304,6 +324,9 @@ class _TodayScreenState extends State<TodayScreen> {
             details: SpecialFlagsAndNoteSection(
               selectedDayType: _selectedDayType,
               savedEntryId: _savedEntry?.id,
+              showSellerContext:
+                  _isSeller && _selectedDayType == DayType.betrieb,
+              departmentController: _departmentController,
               isExpanded: _optionalSectionExpanded,
               onExpansionChanged: (expanded) =>
                   setState(() => _optionalSectionExpanded = expanded),
@@ -377,6 +400,10 @@ class _TodayScreenState extends State<TodayScreen> {
       isToday: _isToday,
       selectedActivityCount: _selectedActivityIds.length,
       supportsActivities: _selectedDayType.supportsActivities,
+      availableAreas: OccupationRegistry.configFor(
+        TrainingOccupationDetails.fromStorageKey(widget.occupation ?? '') ??
+            TrainingOccupation.fachkraftLagerlogistik,
+      ).areas,
       onRefresh: _loadEntry,
     );
   }
@@ -520,6 +547,8 @@ class _TodayScreenState extends State<TodayScreen> {
       frequentActivityIds: _frequentActivityIds,
       searchQuery: _activitySearchQuery,
       trainingYear: widget.trainingYear,
+      occupation: _occupation,
+      wahlqualifikation: widget.wahlqualifikation,
       defaultOverrides: _defaultOverrides,
       adhocActivities: _adhocActivities.entries
           .map((e) => AdhocActivity(id: e.key, title: e.value))
@@ -579,6 +608,9 @@ class _TodayScreenState extends State<TodayScreen> {
     });
     _activitySearchController.clear();
 
+    if (dayType != DayType.betrieb) {
+      _departmentController.clear();
+    }
     if (dayType.isAbsence) {
       _reportNoteController.clear();
       _privateNoteController.clear();
@@ -658,7 +690,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
     if (result.saveAsTemplate) {
       final template = ActivityTemplate(
-        id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+        id: '${widget.occupation == TrainingOccupation.verkaeufer.storageKey ? 'verkauf_custom' : 'custom'}_${DateTime.now().millisecondsSinceEpoch}',
         title: result.title,
         category: result.category,
         isCustom: true,
@@ -772,6 +804,9 @@ class _TodayScreenState extends State<TodayScreen> {
     final saved = _savedEntry;
     if (saved == null) return true;
     if (saved.dayType != _selectedDayType) return true;
+    final savedDepartment = saved.department?.trim() ?? '';
+    final currentDepartment = _departmentController.text.trim();
+    if (savedDepartment != currentDepartment) return true;
     if (!setEquals(saved.areas.toSet(), _selectedAreas)) return true;
     if (!setEquals(saved.selectedActivities.toSet(), _selectedActivityIds)) {
       return true;
@@ -906,6 +941,7 @@ class _TodayScreenState extends State<TodayScreen> {
     _isApplyingEntry = true;
     _reportNoteController.text = entry?.reportNote ?? '';
     _privateNoteController.text = entry?.privateNote ?? '';
+    _departmentController.text = entry?.department ?? '';
 
     setState(() {
       _savedEntry = entry;
@@ -945,9 +981,7 @@ class _TodayScreenState extends State<TodayScreen> {
     if (entry == null || resolver == null) return;
     try {
       final resolved = await resolver.resolve(entry);
-      if (mounted &&
-          _savedEntry?.id == entry.id &&
-          !_hasUnsavedChanges) {
+      if (mounted && _savedEntry?.id == entry.id && !_hasUnsavedChanges) {
         setState(() => _resolvedSavedReport = resolved);
       }
     } catch (_) {
@@ -1096,7 +1130,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Lagerlogistik-Witz des Tages',
+                    'Witz des Tages',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1186,6 +1220,7 @@ class _TodayScreenState extends State<TodayScreen> {
         _selectedAreas
           ..clear()
           ..addAll(yesterday.areas);
+        _departmentController.text = yesterday.department ?? '';
         _selectedActivityIds
           ..clear()
           ..addAll(yesterday.selectedActivities);

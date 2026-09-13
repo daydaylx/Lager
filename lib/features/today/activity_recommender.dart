@@ -8,8 +8,9 @@ List<ActivityTemplate> computeRecommendedActivities(
   Map<String, ActivityTemplate> activitiesById,
   Set<String> selectedIds,
   Set<String> excludedIds,
-  int trainingYear,
-) {
+  int trainingYear, {
+  List<String> preferredKeywords = const [],
+}) {
   final categorySet = categories.toSet();
   final candidates = activitiesById.values.indexed.where((entry) {
     final activity = entry.$2;
@@ -17,17 +18,35 @@ List<ActivityTemplate> computeRecommendedActivities(
         activity.isActive &&
         !selectedIds.contains(activity.id) &&
         !excludedIds.contains(activity.id) &&
-        trainingYearPriority(activity, trainingYear) == 0;
+        (trainingYearPriority(activity, trainingYear) == 0 ||
+            matchesAny(activity.title.toLowerCase(), preferredKeywords));
   }).toList(growable: false);
 
   candidates.sort((a, b) {
-    final priorityA = trainingYearPriority(a.$2, trainingYear);
-    final priorityB = trainingYearPriority(b.$2, trainingYear);
+    final priorityA = _combinedPriority(
+      a.$2,
+      trainingYear,
+      preferredKeywords,
+    );
+    final priorityB = _combinedPriority(
+      b.$2,
+      trainingYear,
+      preferredKeywords,
+    );
     if (priorityA != priorityB) return priorityA.compareTo(priorityB);
     return a.$1.compareTo(b.$1);
   });
 
   return candidates.take(4).map((entry) => entry.$2).toList(growable: false);
+}
+
+int _combinedPriority(
+  ActivityTemplate activity,
+  int trainingYear,
+  List<String> preferredKeywords,
+) {
+  final preferred = matchesAny(activity.title.toLowerCase(), preferredKeywords);
+  return preferred ? 0 : trainingYearPriority(activity, trainingYear) + 1;
 }
 
 int trainingYearPriority(ActivityTemplate activity, int trainingYear) {

@@ -7,6 +7,8 @@ import '../../../shared/widgets/app_ui.dart';
 class SpecialFlagsAndNoteSection extends StatefulWidget {
   final DayType selectedDayType;
   final String? savedEntryId;
+  final bool showSellerContext;
+  final TextEditingController departmentController;
   final bool isExpanded;
   final ValueChanged<bool> onExpansionChanged;
   final Set<SpecialFlag> selectedSpecialFlags;
@@ -18,6 +20,8 @@ class SpecialFlagsAndNoteSection extends StatefulWidget {
     super.key,
     required this.selectedDayType,
     required this.savedEntryId,
+    this.showSellerContext = false,
+    required this.departmentController,
     required this.isExpanded,
     required this.onExpansionChanged,
     required this.selectedSpecialFlags,
@@ -69,13 +73,34 @@ class _SpecialFlagsAndNoteSectionState
         ),
         const SizedBox(height: 12),
         _buildSpecialFlags(),
+        if (widget.showSellerContext) ...[
+          const SizedBox(height: 24),
+          const AppSectionHeader(
+            title: 'Abteilung oder Warengruppe',
+            badge: 'Optional',
+            badgeRequired: false,
+            description:
+                'Zum Beispiel Textil oder Kasse – bitte keine Kundennamen oder Kaufdaten.',
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('daily_department_field'),
+            controller: widget.departmentController,
+            maxLength: 60,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'z. B. Textil, Elektro oder Kasse',
+              counterText: '',
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         const AppSectionHeader(
           title: 'Notiz fürs Berichtsheft',
           badge: 'Optional',
           badgeRequired: false,
-          description:
-              'Öffentlich – erscheint im Berichtshefttext.',
+          description: 'Öffentlich – erscheint im Berichtshefttext.',
         ),
         const SizedBox(height: 12),
         TextField(

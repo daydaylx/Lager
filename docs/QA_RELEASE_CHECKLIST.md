@@ -72,12 +72,24 @@ Sie ersetzt keine automatisierten Tests, sondern ergänzt sie.
 - [ ] Notiz wird im Tagesbericht korrekt eingebunden (als „Notiz: …")
 - [ ] Problem-Flag + Notiz → Bericht enthält „Ein Problem wurde notiert: …"
 
-### 3.6 Suche und häufig genutzt
+### 3.6 Verkäuferprofil
+
+- [ ] Verkäufer/in im Profil mit Ausbildungsjahr 1 oder 2 und Wahlqualifikation anlegen
+- [ ] Verkäufer-Bereiche (Beratung, Kasse, Verkaufsfläche, Präsentation) zeigen passende Tätigkeiten
+- [ ] Empfehlung trägt die gewählte Wahlqualifikation und bleibt weich; Suche zeigt weitere Tätigkeiten
+- [ ] Bei einem Verkäufer-Betriebstag ist „Abteilung / Warengruppe" optional erfassbar
+- [ ] Hinweis zu Kundennamen, Kaufdaten und Identifikationsnummern sichtbar
+- [ ] Abteilung erscheint in Tagesübersicht und Verkäufer-Bericht
+- [ ] Wechsel zu Berufsschule oder Abwesenheit entfernt die Abteilung aus dem neuen Eintrag
+- [ ] Verkäufer-Bericht enthält keine private Notiz oder Kundendaten
+- [ ] JSON-Export enthält die Abteilung, aber keine privaten Berichtsdaten außer dem ausdrücklich exportierten `privateNote`
+
+### 3.7 Suche und häufig genutzt
 
 - [ ] Suchfeld filtert Tätigkeiten korrekt
 - [ ] Häufig genutzte Tätigkeiten erscheinen oben (nach einigen gespeicherten Tagen)
 
-### 3.7 Tageswechsel nach Pause
+### 3.8 Tageswechsel nach Pause
 
 - [ ] App nach Mitternacht wieder öffnen → Banner „Ein neuer Tag hat begonnen“
 - [ ] Offene Eingaben bleiben dem alten Tag zugeordnet

@@ -112,18 +112,21 @@ class _ProfileScreenState extends State<ProfileScreen>
     String? company,
     required String occupation,
     required int trainingYear,
+    String? wahlqualifikation,
   }) async {
     await ProfileStorage.save(
       name: name,
       company: company,
       occupation: occupation,
       trainingYear: trainingYear,
+      wahlqualifikation: wahlqualifikation,
     );
     await widget.onProfileChanged?.call(
       name: name,
       company: company,
       occupation: occupation,
       trainingYear: trainingYear,
+      wahlqualifikation: wahlqualifikation,
     );
   }
 

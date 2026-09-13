@@ -32,6 +32,7 @@ class BerichtsheftApp extends StatefulWidget {
   final String? initialCompany;
   final String? initialOccupation;
   final int? initialTrainingYear;
+  final String? initialWahlqualifikation;
   final NotificationScheduler? notificationScheduler;
   final AiReportCache aiReportCache;
   final OpenRouterConfig openRouterConfig;
@@ -48,6 +49,7 @@ class BerichtsheftApp extends StatefulWidget {
     this.initialCompany,
     this.initialOccupation,
     this.initialTrainingYear,
+    this.initialWahlqualifikation,
     this.notificationScheduler,
     this.aiReportCache = const DisabledAiReportCache(),
     this.openRouterConfig = OpenRouterConfig.disabled,
@@ -65,6 +67,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   String? _company;
   String? _occupation;
   int? _trainingYear;
+  String? _wahlqualifikation;
   late final NotificationScheduler _notificationScheduler;
   late final AppShortcutService _appShortcutService;
   late final ReportEnhancementCoordinator _reportCoordinator;
@@ -79,6 +82,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     _company = widget.initialCompany;
     _occupation = widget.initialOccupation;
     _trainingYear = widget.initialTrainingYear;
+    _wahlqualifikation = widget.initialWahlqualifikation;
     _themePreset = widget.initialThemePreset;
     _notificationScheduler =
         widget.notificationScheduler ?? FlutterLocalNotificationScheduler();
@@ -108,12 +112,14 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     String? company,
     required String occupation,
     required int trainingYear,
+    String? wahlqualifikation,
   }) async {
     await ProfileStorage.save(
       name: name,
       company: company,
       occupation: occupation,
       trainingYear: trainingYear,
+      wahlqualifikation: wahlqualifikation,
       completeOnboarding: true,
     );
 
@@ -124,6 +130,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
         _company = company;
         _occupation = occupation;
         _trainingYear = trainingYear;
+        _wahlqualifikation = wahlqualifikation;
       });
     }
   }
@@ -133,6 +140,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     String? company,
     required String occupation,
     required int trainingYear,
+    String? wahlqualifikation,
   }) async {
     if (!mounted) return;
     setState(() {
@@ -140,6 +148,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
       _company = company;
       _occupation = occupation;
       _trainingYear = trainingYear;
+      _wahlqualifikation = wahlqualifikation;
     });
   }
 
@@ -162,6 +171,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
         _company = null;
         _occupation = null;
         _trainingYear = null;
+        _wahlqualifikation = null;
         _themePreset = ThemePreset.lagerTeal;
       });
     }
@@ -190,6 +200,8 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               reportResolver: _reportResolver,
               aiReportCache: widget.aiReportCache,
               trainingYear: _trainingYear,
+              occupation: _occupation,
+              wahlqualifikation: _wahlqualifikation,
               onProfileChanged: _profileChanged,
               themePreset: _themePreset,
               onThemeChanged: _onThemeChanged,
@@ -214,6 +226,8 @@ class MainShell extends StatefulWidget {
   final Future<void> Function() onDataCleared;
   final NotificationScheduler notificationScheduler;
   final int? trainingYear;
+  final String? occupation;
+  final String? wahlqualifikation;
   final ProfileSubmitCallback? onProfileChanged;
   final ThemePreset themePreset;
   final Future<void> Function(ThemePreset) onThemeChanged;
@@ -235,6 +249,8 @@ class MainShell extends StatefulWidget {
     this.reportResolver,
     this.aiReportCache = const DisabledAiReportCache(),
     this.trainingYear,
+    this.occupation,
+    this.wahlqualifikation,
     this.onProfileChanged,
     required this.themePreset,
     required this.onThemeChanged,
@@ -398,6 +414,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             protectBackNavigation: _currentIndex == 0,
             currentDate: _currentDate,
             trainingYear: widget.trainingYear,
+            occupation: widget.occupation,
+            wahlqualifikation: widget.wahlqualifikation,
             reportCoordinator: widget.reportCoordinator,
             reportResolver: widget.reportResolver,
           ),
@@ -416,6 +434,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             storage: widget.templateStorage,
             defaultActivityStateStorage: widget.defaultActivityStateStorage,
             dailyEntryStorage: widget.dailyEntryStorage,
+            occupation: widget.occupation,
             onTemplatesChanged: () {
               setState(() => _templateRefreshSignal++);
             },

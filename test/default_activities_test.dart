@@ -6,7 +6,7 @@ void main() {
   test('Standard-Tätigkeitskatalog enthält eindeutige IDs', () {
     final ids = defaultActivities.map((activity) => activity.id).toSet();
 
-    expect(defaultActivities, hasLength(132));
+    expect(defaultActivities, hasLength(270));
     expect(ids, hasLength(defaultActivities.length));
     for (final category in ActivityCategory.values) {
       expect(
@@ -18,10 +18,10 @@ void main() {
 
     // Historische IDs bleiben erhalten; fachlich ungeeignete Altvorlagen sind
     // weder im Vorlagen-Screen noch für neue Einträge auswählbar.
-    expect(selectableDefaultActivities, hasLength(123));
+    expect(selectableDefaultActivities, hasLength(261));
     expect(
       selectableDefaultActivities.where((activity) => activity.isActive).length,
-      38,
+      95,
     );
     expect(
       defaultActivities

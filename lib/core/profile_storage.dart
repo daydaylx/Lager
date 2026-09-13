@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
+import 'domain/domain.dart';
 import 'storage/preferences_write.dart';
 
 typedef StoredProfile = ({
@@ -7,6 +8,7 @@ typedef StoredProfile = ({
   String? company,
   String? occupation,
   int? trainingYear,
+  String? wahlqualifikation,
   bool onboardingCompleted,
 });
 
@@ -18,6 +20,8 @@ class ProfileStorage {
       company: preferences.getString(PreferenceKeys.profileCompany),
       occupation: preferences.getString(PreferenceKeys.trainingOccupation),
       trainingYear: preferences.getInt(PreferenceKeys.trainingYear),
+      wahlqualifikation:
+          preferences.getString(PreferenceKeys.wahlqualifikation),
       onboardingCompleted:
           preferences.getBool(PreferenceKeys.onboardingCompleted) ?? false,
     );
@@ -29,7 +33,10 @@ class ProfileStorage {
         TrainingYearValues.isValidForOccupation(
           profile.trainingYear,
           profile.occupation,
-        );
+        ) &&
+        (profile.occupation != TrainingOccupationValues.verkaeufer ||
+            WahlqualifikationDetails.fromStorageKey(profile.wahlqualifikation ?? '') !=
+                null);
   }
 
   static Future<void> save({
@@ -37,6 +44,7 @@ class ProfileStorage {
     String? company,
     required String occupation,
     required int trainingYear,
+    String? wahlqualifikation,
     bool completeOnboarding = false,
   }) async {
     if (!TrainingYearValues.isValidForOccupation(trainingYear, occupation)) {
@@ -44,6 +52,16 @@ class ProfileStorage {
         trainingYear,
         'trainingYear',
         'Ausbildungsjahr passt nicht zum Ausbildungsberuf.',
+      );
+    }
+    final occupationValue = TrainingOccupationValues.parse(occupation);
+    if (occupationValue == TrainingOccupation.verkaeufer &&
+        WahlqualifikationDetails.fromStorageKey(wahlqualifikation ?? '') ==
+            null) {
+      throw ArgumentError.value(
+        wahlqualifikation,
+        'wahlqualifikation',
+        'Verkäufer/in benötigt eine Wahlqualifikation.',
       );
     }
     final preferences = await SharedPreferences.getInstance();
@@ -63,6 +81,13 @@ class ProfileStorage {
     );
     await _requireWrite(
       preferences.setInt(PreferenceKeys.trainingYear, trainingYear),
+    );
+    await _writeOptionalString(
+      preferences,
+      key: PreferenceKeys.wahlqualifikation,
+      value: occupationValue == TrainingOccupation.verkaeufer
+          ? wahlqualifikation
+          : null,
     );
 
     if (completeOnboarding) {

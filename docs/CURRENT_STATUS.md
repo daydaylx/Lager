@@ -1,10 +1,63 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-08-14 (optionale OpenRouter-Berichtsnachbearbeitung implementiert, ohne private Konfiguration deaktiviert)
+Stand: 2026-08-15 (Verkäufer-Alltagserweiterungen ergänzt)
 
 ---
 
-## Letzte Änderung: Phase 27 – Optionale OpenRouter-Berichtsnachbearbeitung
+## Letzte Änderung: Verkäufer-Alltagserweiterungen
+
+- Tageseinträge können optional eine kurze Verkäufer-Abteilung/Warengruppe
+  (`department`) wie „Textil" oder „Kasse" enthalten. Das Hive-Feld ist
+  rückwärtskompatibel; alte Einträge lesen `null`.
+- Die Angabe wird nur bei Verkäufer-Betriebstagen angeboten, in der Tages-
+  übersicht und Wochenzusammenfassung berücksichtigt sowie im JSON-Export
+  ausgegeben. Der UI-Hinweis warnt vor Kundennamen, Kaufdaten und IDs.
+- Verkäufer-Berichte verwenden den Abteilungskontext und berufsspezifische
+  Formulierungen. Private Notizen bleiben außerhalb von Bericht und KI-Payload.
+- Die Picker-Empfehlung benennt bei Verkäuferprofilen die Wahlqualifikation
+  sichtbar; die Auswahl bleibt über Suche und Kategorien vollständig.
+- Verifiziert: `flutter analyze` 0 Issues; vollständiger Testlauf mit 320 Tests
+  grün. Der Debug-APK-Build war in dieser Umgebung auch mit ARM64-Ziel nach
+  300 Sekunden nicht abgeschlossen (Gradle/D8 wurde nur durch das Timeout
+  unterbrochen; kein APK-Ausgabepfad entstand). Manueller Verkäufer-
+  Release-Test bleibt offen.
+
+---
+
+## Letzte Änderung: Berufsspezifisches Verkäuferprofil
+
+- `TrainingOccupation.verkaeufer` ergänzt: Ausbildungsjahre 1 und 2 sowie vier
+  Wahlqualifikationen; Lagerprofile und persistierte Enum-/Hive-Verträge bleiben
+  kompatibel.
+- Zentrale `OccupationRegistry` steuert Verkäufer-Bereiche, Kategorien,
+  `verkauf_*`-Katalog, Quick-Access, Berufsschulthemen und WQ-Empfehlungen.
+- 138 additive Verkäufer-Tätigkeiten inklusive 20 Berufsschulthemen ergänzt.
+  Berufsschulthemen werden im Picker jahrgangsbezogen angeboten; historische
+  Lager- und Custom-IDs bleiben für gespeicherte Einträge auflösbar.
+- Profilbearbeitung, Onboarding, Tages-/Vorlagenpicker, Berichtsgenerator und
+  JSON-Export unterstützen das Verkäuferprofil. Der Export enthält die
+  Wahlqualifikation; ein Import existiert weiterhin nicht.
+- Verifiziert: `flutter analyze` 0 Issues; gezielte Picker-, Profil-,
+  Katalog-, Bericht- und Exporttests grün. Der vollständige Testlauf ist mit
+  311 Tests bestanden.
+
+---
+
+## Letzte Änderung: Allgemeine Belohnungswitze überarbeitet (Inhalt Phase 20i)
+
+- Alle 300 Witze in `lib/core/data/lager_jokes.dart` wurden vollständig durch
+  freundlichere, allgemeinere Alltags-, Sprach-, Technik-, Essen-, Wetter-,
+  Freizeit- und Dialogwitze ersetzt; konkrete Berufsthemen dominieren nicht mehr.
+- Auswahllogik (`jokeForDate`), Sheet-UI, Widget-Keys und Anzahl (300)
+  bleiben unverändert; `CODEMAP.md` beschreibt die Sammlung entsprechend.
+- Qualitäts-Guards bleiben aktiv: keine Duplikate, kein Rand-Leerraum,
+  Maximallänge 160 Zeichen pro Witz.
+- Verifiziert: Sammlungstest `test/lager_jokes_test.dart` mit 14 Tests und der
+  vollständige Flutter-Testlauf mit 312 Tests bestanden.
+
+---
+
+## Vorherige Änderung: Phase 27 – Optionale OpenRouter-Berichtsnachbearbeitung
 
 - `DailyReportGenerator` bleibt jederzeit der lokale, sofort sichtbare Fallback.
   Ohne `config/openrouter.private.json` und vollständige `--dart-define`-Werte
@@ -212,7 +265,7 @@ Stand: 2026-08-14 (optionale OpenRouter-Berichtsnachbearbeitung implementiert, o
 ## Vorherige Änderung: Speicher-Witz-Sheet
 
 - Nach dem ersten erfolgreichen Speichern eines neuen Tageseintrags erscheint ein
-  ruhiges Material-3-Bottom-Sheet mit lokalem Lagerlogistik-Witz des Tages.
+  ruhiges Material-3-Bottom-Sheet mit lokalem allgemeinem Witz des Tages.
 - Die Witze liegen statisch in `lib/core/data/lager_jokes.dart`; Auswahl ist
   deterministisch pro Kalendertag und robust gegen Uhrzeit-/Sommerzeit-Effekte.
 - Bestehende Einträge zeigen beim Speichern von Änderungen nur eine kurze

@@ -9,12 +9,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 DailyEntry _entry({
   DayType dayType = DayType.betrieb,
+  String? department,
   List<String> activities = const ['activity-internal-id'],
 }) {
   return DailyEntry(
     id: '2026-08-14',
     date: DateTime(2026, 8, 14),
     dayType: dayType,
+    department: department,
     areas: const [TrainingArea.wareneingang],
     selectedActivities: activities,
     specialFlags: const [SpecialFlag.selbststaendig],
@@ -34,11 +36,21 @@ void main() {
     final encoded = jsonEncode(request.payload);
 
     expect(request.payload['dayType'], 'Betrieb');
+    expect(request.payload['department'], isNull);
     expect(request.payload['activities'], ['Wareneingang geprüft']);
     expect(encoded, isNot(contains('Nur privat')));
     expect(encoded, isNot(contains('activity-internal-id')));
     expect(encoded, isNot(contains('2026-08-14')));
     expect(encoded, isNot(contains('createdAt')));
+  });
+
+  test('Verkäufer-Abteilung ist im erlaubten Kontext enthalten', () {
+    final request = builder.build(
+      _entry(department: 'Textil'),
+      titles,
+    )!;
+
+    expect(request.payload['department'], 'Textil');
   });
 
   test('Abwesenheiten lösen keine Nachbearbeitung aus', () {

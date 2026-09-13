@@ -39,6 +39,7 @@ void main() {
     DateTime? date,
     DayType dayType = DayType.betrieb,
     List<TrainingArea> areas = const [],
+    String? department,
     List<String> selectedActivities = const [],
     List<SpecialFlag> specialFlags = const [],
     String? note,
@@ -50,6 +51,7 @@ void main() {
       id: DailyEntry.idForDate(d),
       date: d,
       dayType: dayType,
+      department: department,
       areas: areas,
       selectedActivities: selectedActivities,
       specialFlags: specialFlags,
@@ -86,6 +88,26 @@ void main() {
       expect(profile['company'], 'ACME');
       expect(profile['occupation'], 'fachlagerist');
       expect(profile['trainingYear'], 2);
+      expect(profile['wahlqualifikation'], isNull);
+    });
+
+    test('Verkäuferprofil exportiert die Wahlqualifikation', () async {
+      SharedPreferences.setMockInitialValues({
+        'profile_name': 'Anna',
+        'training_occupation': 'verkaeufer',
+        'training_year': 1,
+        'wahlqualifikation': 'beratungVonKunden',
+        'onboarding_completed': true,
+      });
+      final json = await ExportService.generateJson(
+        InMemoryDailyEntryStorage(),
+        InMemoryActivityTemplateStorage(),
+      );
+      final profile = jsonDecode(json)['profile'] as Map<String, dynamic>;
+
+      expect(profile['occupation'], 'verkaeufer');
+      expect(profile['trainingYear'], 1);
+      expect(profile['wahlqualifikation'], 'beratungVonKunden');
     });
 
     test('Fehlende optionale Profilfelder werden zu null', () async {
@@ -100,6 +122,7 @@ void main() {
       expect(profile['company'], isNull);
       expect(profile['occupation'], isNull);
       expect(profile['trainingYear'], isNull);
+      expect(profile['wahlqualifikation'], isNull);
     });
 
     test('Tageseintrag wird vollständig serialisiert', () async {
@@ -180,6 +203,22 @@ void main() {
       // Inaktive Custom-Tätigkeit wird dennoch exportiert.
       final c = (data['customActivities'] as List).single;
       expect((c as Map<String, dynamic>)['isActive'], isFalse);
+    });
+
+    test('Verkäufer-Abteilung wird im Tageseintrag exportiert', () async {
+      final e = entry(
+        areas: [TrainingArea.verkaufsflaeche],
+        department: 'Textil',
+        selectedActivities: ['verkauf_flaeche_01'],
+      );
+      final json = await ExportService.generateJson(
+        InMemoryDailyEntryStorage(initialEntries: [e]),
+        InMemoryActivityTemplateStorage(),
+      );
+      final serialized =
+          (jsonDecode(json)['entries'] as List).single as Map<String, dynamic>;
+
+      expect(serialized['department'], 'Textil');
     });
 
     test('Vollständiger Export enthält Berichts- und Privatnotiz + Adhoc',

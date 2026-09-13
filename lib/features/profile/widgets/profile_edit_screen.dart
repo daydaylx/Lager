@@ -25,6 +25,7 @@ class ProfileEditScreen extends StatelessWidget {
             initialCompany: profile.company,
             initialOccupation: profile.occupation,
             initialTrainingYear: profile.trainingYear,
+            initialWahlqualifikation: profile.wahlqualifikation,
             submitLabel: 'Profil speichern',
             submitIcon: Icons.save_outlined,
             onSubmit: ({
@@ -32,12 +33,14 @@ class ProfileEditScreen extends StatelessWidget {
               company,
               required occupation,
               required trainingYear,
+              wahlqualifikation,
             }) async {
               await onSave(
                 name: name,
                 company: company,
                 occupation: occupation,
                 trainingYear: trainingYear,
+                wahlqualifikation: wahlqualifikation,
               );
               if (context.mounted) {
                 Navigator.of(context).pop(true);

@@ -7,6 +7,7 @@ import '../../core/models/daily_entry.dart';
 class TodayEntryDraft {
   final DateTime date;
   final DayType dayType;
+  final String department;
   final Set<TrainingArea> selectedAreas;
   final Set<String> selectedActivityIds;
   final Set<SpecialFlag> selectedSpecialFlags;
@@ -17,6 +18,7 @@ class TodayEntryDraft {
   const TodayEntryDraft({
     required this.date,
     required this.dayType,
+    this.department = '',
     required this.selectedAreas,
     required this.selectedActivityIds,
     required this.selectedSpecialFlags,
@@ -54,12 +56,16 @@ class TodayEntryDraft {
     required DateTime timestamp,
     DailyEntry? existingEntry,
   }) {
+    final trimmedDepartment = department.trim();
     final trimmedReportNote = reportNote.trim();
     final trimmedPrivateNote = privateNote.trim();
     return DailyEntry(
       id: DailyEntry.idForDate(date),
       date: date,
       dayType: dayType,
+      department: dayType == DayType.betrieb && trimmedDepartment.isNotEmpty
+          ? trimmedDepartment
+          : null,
       areas: dayType == DayType.betrieb
           ? selectedAreas.toList(growable: false)
           : const [],

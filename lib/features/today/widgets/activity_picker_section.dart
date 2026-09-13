@@ -97,7 +97,9 @@ class ActivityPickerSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: ActivityGroup(
-              title: 'Passend zum $trainingYear. Ausbildungsjahr',
+              title: model.recommendationContext == null
+                  ? 'Passende Tätigkeiten'
+                  : 'Empfohlen: ${model.recommendationContext}',
               activities: model.recommendedActivities,
               selectedActivityIds: model.selectedActivities
                   .map((activity) => activity.id)

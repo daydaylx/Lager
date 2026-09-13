@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/data/activity_subcategories.dart';
 import '../../core/data/default_activities.dart';
+import '../../core/domain/domain.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/models/activity_template.dart';
 import '../../core/storage/default_activity_state_storage.dart';
@@ -13,6 +14,7 @@ class TemplatesScreen extends StatefulWidget {
   final ActivityTemplateStorage storage;
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final DailyEntryStorage? dailyEntryStorage;
+  final String? occupation;
   final VoidCallback? onTemplatesChanged;
 
   const TemplatesScreen({
@@ -20,6 +22,7 @@ class TemplatesScreen extends StatefulWidget {
     required this.storage,
     this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     this.dailyEntryStorage,
+    this.occupation,
     this.onTemplatesChanged,
   });
 
@@ -105,6 +108,13 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     }
   }
 
+  TrainingOccupation get _selectedOccupation =>
+      TrainingOccupationDetails.fromStorageKey(widget.occupation ?? '') ??
+          TrainingOccupation.fachkraftLagerlogistik;
+
+  OccupationConfig get _occupationConfig =>
+      OccupationRegistry.configFor(_selectedOccupation);
+
   bool _isDefaultActive(ActivityTemplate template) {
     return _defaultOverrides[template.id] ?? template.isActive;
   }
@@ -112,7 +122,8 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   List<ActivityTemplate> get _effectiveDefaults {
     return [
       for (final template in selectableDefaultActivities)
-        _isDefaultActive(template) == template.isActive
+        if (_occupationConfig.isActivityInOccupation(template.id))
+          _isDefaultActive(template) == template.isActive
             ? template
             : template.copyWith(isActive: _isDefaultActive(template)),
     ];
@@ -146,6 +157,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     return _customTemplates
         .where(
           (template) =>
+              _occupationConfig.isActivityInOccupation(template.id) &&
               (_selectedCategory == null ||
                   template.category == _selectedCategory) &&
               _matchesSearch(template),
@@ -242,7 +254,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   Future<void> _showAddSheet() async {
     _addController.clear();
     ActivityCategory selectedCategory =
-        _selectedCategory ?? ActivityCategory.values.first;
+        _selectedCategory ?? _occupationConfig.activityCategories.first;
     String? titleError;
 
     await showModalBottomSheet<void>(
@@ -296,7 +308,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   value: selectedCategory,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Kategorie'),
-                  items: ActivityCategory.values
+                  items: _occupationConfig.activityCategories
                       .map(
                         (c) => DropdownMenuItem(
                           value: c,
@@ -332,7 +344,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                     }
                     Navigator.of(ctx).pop();
                     final template = ActivityTemplate(
-                      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+                      id: '${_selectedOccupation == TrainingOccupation.verkaeufer ? 'verkauf_custom' : 'custom'}_${DateTime.now().millisecondsSinceEpoch}',
                       title: title,
                       category: selectedCategory,
                       isCustom: true,
@@ -452,6 +464,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             const SizedBox(height: 4),
           ],
           _CategoryFilter(
+            categories: _occupationConfig.activityCategories.toList(),
             selected: _selectedCategory,
             onSelected: (c) => setState(() => _selectedCategory = c),
           ),
@@ -659,10 +672,15 @@ class _EmptyHint extends StatelessWidget {
 }
 
 class _CategoryFilter extends StatelessWidget {
+  final List<ActivityCategory> categories;
   final ActivityCategory? selected;
   final void Function(ActivityCategory?) onSelected;
 
-  const _CategoryFilter({required this.selected, required this.onSelected});
+  const _CategoryFilter({
+    required this.categories,
+    required this.selected,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -679,7 +697,7 @@ class _CategoryFilter extends StatelessWidget {
               onSelected: (_) => onSelected(null),
             ),
           ),
-          ...ActivityCategory.values.map(
+          ...categories.map(
             (c) => Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(

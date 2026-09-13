@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 TodayEntryDraft _draft({
   DateTime? date,
   DayType dayType = DayType.betrieb,
+  String department = '',
   Set<TrainingArea> areas = const {},
   Set<String> activities = const {},
   Set<SpecialFlag> flags = const {},
@@ -19,6 +20,7 @@ TodayEntryDraft _draft({
   return TodayEntryDraft(
     date: date ?? DateTime(2026, 6, 12),
     dayType: dayType,
+    department: department,
     selectedAreas: areas,
     selectedActivityIds: activities,
     selectedSpecialFlags: flags,
@@ -112,6 +114,17 @@ void main() {
       );
     });
 
+    test('toEntry speichert Verkäufer-Abteilung getrimmt und optional', () {
+      final timestamp = DateTime(2026, 6, 12, 17);
+      final entry = _draft(
+        department: '  Textil  ',
+        areas: {TrainingArea.verkaufsflaeche},
+        activities: {'verkauf_flaeche_01'},
+      ).toEntry(timestamp: timestamp);
+
+      expect(entry.department, 'Textil');
+    });
+
     test('toEntry speichert private Notiz getrennt von Berichtsnotiz', () {
       final timestamp = DateTime(2026, 6, 12, 17);
       final entry = _draft(
@@ -140,6 +153,17 @@ void main() {
         [const AdhocActivity(id: 'adhoc_1', title: 'Sonderaufgabe')],
       );
       expect(entry.selectedActivities, contains('adhoc_1'));
+    });
+
+    test('toEntry entfernt Verkäufer-Abteilung bei Nicht-Betrieb', () {
+      final timestamp = DateTime(2026, 6, 12, 17);
+      final entry = _draft(
+        dayType: DayType.berufsschule,
+        department: 'Textil',
+        activities: {'berufsschule_01'},
+      ).toEntry(timestamp: timestamp);
+
+      expect(entry.department, isNull);
     });
 
     test('toEntry entfernt Bereiche bei Nicht-Betrieb und leere Notiz', () {

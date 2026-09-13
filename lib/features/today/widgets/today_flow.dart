@@ -40,6 +40,7 @@ class TodayCheckInPage extends StatelessWidget {
   final int selectedActivityCount;
   final bool supportsActivities;
   final Future<void> Function()? onRefresh;
+  final List<TrainingArea>? availableAreas;
 
   const TodayCheckInPage({
     super.key,
@@ -69,6 +70,7 @@ class TodayCheckInPage extends StatelessWidget {
     required this.selectedActivityCount,
     required this.supportsActivities,
     this.onRefresh,
+    this.availableAreas,
   });
 
   @override
@@ -77,8 +79,8 @@ class TodayCheckInPage extends StatelessWidget {
       step: step,
       dayType: selectedDayType,
     );
-    final showStepHeader = step != TodayFlowStep.dayType &&
-        step != TodayFlowStep.saved;
+    final showStepHeader =
+        step != TodayFlowStep.dayType && step != TodayFlowStep.saved;
     return SafeArea(
       child: Column(
         children: [
@@ -122,6 +124,7 @@ class TodayCheckInPage extends StatelessWidget {
                         missingItems: missingItems,
                         selectedDayType: selectedDayType,
                         selectedAreas: selectedAreas,
+                        availableAreas: availableAreas,
                         showDuplicateYesterday: showDuplicateYesterday,
                         onSelectDayType: onSelectDayType,
                         onOpenAbsenceSheet: onOpenAbsenceSheet,
@@ -184,6 +187,7 @@ class TodayCheckInPage extends StatelessWidget {
 /// (z. B. Auswahl ändern) neu starten, aber die Animation nicht beim reinen
 /// State-Update (z. B. Bereich umschalten) erneut läuft.
 class _StepBody extends StatelessWidget {
+  final List<TrainingArea>? availableAreas;
   final TodayFlowStep step;
   final String title;
   final DateTime date;
@@ -209,6 +213,7 @@ class _StepBody extends StatelessWidget {
     required this.missingItems,
     required this.selectedDayType,
     required this.selectedAreas,
+    required this.availableAreas,
     required this.showDuplicateYesterday,
     required this.onSelectDayType,
     required this.onOpenAbsenceSheet,
@@ -260,7 +265,7 @@ class _StepBody extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           AreaGrid(
-            areas: TrainingArea.values,
+            areas: availableAreas ?? TrainingArea.values,
             selected: selectedAreas,
             onToggle: onToggleArea,
           ),
@@ -348,9 +353,9 @@ class TodayActivityPickerPage extends StatelessWidget {
                 Text(
                   '$selectedCount gewählt',
                   style: theme.textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -390,6 +395,7 @@ class TodaySavedOverview extends StatelessWidget {
   final DateTime date;
   final TodayEntryStatus status;
   final DayType dayType;
+  final String? department;
   final List<String> areas;
   final List<String> activities;
   final Widget? report;
@@ -403,6 +409,7 @@ class TodaySavedOverview extends StatelessWidget {
     required this.date,
     required this.status,
     required this.dayType,
+    this.department,
     required this.areas,
     required this.activities,
     required this.report,
@@ -435,6 +442,16 @@ class TodaySavedOverview extends StatelessWidget {
                   trailing: const Icon(Icons.edit_outlined),
                   onTap: onEditDayType,
                 ),
+                if (department != null) ...[
+                  const Divider(indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: const Icon(Icons.storefront_outlined),
+                    title: const Text('Abteilung / Warengruppe'),
+                    subtitle: Text(department!),
+                    trailing: const Icon(Icons.edit_outlined),
+                    onTap: onEditDetails,
+                  ),
+                ],
                 if (dayType == DayType.betrieb ||
                     dayType == DayType.berufsschule)
                   const Divider(indent: 16, endIndent: 16),
@@ -488,6 +505,7 @@ class TodaySavedOverview extends StatelessWidget {
 
 class TodayReviewContent extends StatelessWidget {
   final DayType dayType;
+  final String? department;
   final List<String> areas;
   final List<String> activities;
   final Widget details;
@@ -496,6 +514,7 @@ class TodayReviewContent extends StatelessWidget {
   const TodayReviewContent({
     super.key,
     required this.dayType,
+    this.department,
     required this.areas,
     required this.activities,
     required this.details,
@@ -518,6 +537,10 @@ class TodayReviewContent extends StatelessWidget {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     )),
+                if (department != null) ...[
+                  const SizedBox(height: 8),
+                  Text('Abteilung / Warengruppe: $department'),
+                ],
                 if (areas.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(areas.join(', ')),

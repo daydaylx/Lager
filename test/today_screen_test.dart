@@ -16,6 +16,9 @@ Future<void> pumpToday(
   DailyEntryStorage? storage,
   ActivityTemplateStorage? templateStorage,
   DateTime? date,
+  String? occupation,
+  int? trainingYear,
+  String? wahlqualifikation,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -23,6 +26,9 @@ Future<void> pumpToday(
         storage: storage ?? InMemoryDailyEntryStorage(),
         templateStorage: templateStorage ?? InMemoryActivityTemplateStorage(),
         date: date,
+        occupation: occupation,
+        trainingYear: trainingYear,
+        wahlqualifikation: wahlqualifikation,
       ),
     ),
   );
@@ -79,6 +85,48 @@ void main() {
       findsOneWidget,
     );
     expect(await storage.loadByDate(DateTime.now()), isNotNull);
+  });
+
+  testWidgets('Verkäufer kann Abteilung im Tagesbericht ergänzen',
+      (tester) async {
+    final storage = InMemoryDailyEntryStorage();
+    await pumpToday(
+      tester,
+      storage: storage,
+      occupation: 'verkaeufer',
+      trainingYear: 1,
+      wahlqualifikation: 'beratungVonKunden',
+    );
+
+    await tester.tap(find.byKey(const ValueKey('day_type_betrieb')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('area_kundenberatung')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('today_flow_continue')));
+    await tester.pumpAndSettle();
+    final activity = find.byKey(const ValueKey('activity_verkauf_beratung_01'));
+    await tester.scrollUntilVisible(
+      activity,
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(activity);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('today_flow_continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Besonderheiten & Notizen'));
+    await tester.pumpAndSettle();
+
+    expect(
+        find.byKey(const ValueKey('daily_department_field')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('daily_department_field')),
+      'Textil',
+    );
+    await tester.tap(find.byKey(const ValueKey('save_daily_entry')));
+    await tester.pumpAndSettle();
+
+    expect((await storage.loadByDate(DateTime.now()))?.department, 'Textil');
   });
 
   testWidgets('Abbruch der Tätigkeitsauswahl verwirft nur die Arbeitsauswahl',

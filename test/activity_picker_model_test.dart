@@ -1,3 +1,4 @@
+import 'package:berichtsheft_merker/core/domain/domain.dart';
 import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/training_area.dart';
@@ -16,6 +17,8 @@ ActivityPickerModel _model({
   int? trainingYear,
   Map<String, bool> defaultOverrides = const {},
   List<AdhocActivity> adhocActivities = const [],
+  TrainingOccupation occupation = TrainingOccupation.fachkraftLagerlogistik,
+  String? wahlqualifikation,
 }) {
   return ActivityPickerModel.build(
     dayType: dayType,
@@ -27,6 +30,8 @@ ActivityPickerModel _model({
     trainingYear: trainingYear,
     defaultOverrides: defaultOverrides,
     adhocActivities: adhocActivities,
+    occupation: occupation,
+    wahlqualifikation: wahlqualifikation,
   );
 }
 
@@ -59,6 +64,93 @@ void main() {
       expect(model.categories, [ActivityCategory.berufsschule]);
       expect(_groupActivityIds(model), contains('berufsschule_01'));
       expect(_groupActivityIds(model), isNot(contains('wareneingang_01')));
+    });
+
+    test('Verkäufer nutzt nur den Verkäuferkatalog', () {
+      final model = _model(
+        occupation: TrainingOccupation.verkaeufer,
+        areas: const {TrainingArea.verkaufsflaeche},
+        trainingYear: 1,
+        wahlqualifikation: Wahlqualifikation.beratungVonKunden.storageKey,
+      );
+      final ids = _groupActivityIds(model);
+
+      expect(model.categories, [
+        ActivityCategory.verkaufsflaeche,
+        ActivityCategory.allgemein,
+      ]);
+      expect(
+        model.recommendationContext,
+        'Wahlqualifikation: Beratung von Kunden',
+      );
+      expect(ids, contains('verkauf_flaeche_01'));
+      expect(ids, isNot(contains('wareneingang_01')));
+    });
+
+    test('alle Verkäufer-Wahlqualifikationen werden als Kontext angezeigt', () {
+      for (final wahlqualifikation in Wahlqualifikation.values) {
+        final model = _model(
+          occupation: TrainingOccupation.verkaeufer,
+          areas: const {TrainingArea.verkaufsflaeche},
+          trainingYear: 1,
+          wahlqualifikation: wahlqualifikation.storageKey,
+        );
+
+        expect(
+          model.recommendationContext,
+          'Wahlqualifikation: ${wahlqualifikation.label}',
+        );
+      }
+    });
+
+    test('Verkäufer-Berufsschulthemen werden nach Jahr gefiltert', () {
+      final firstYearModel = _model(
+        occupation: TrainingOccupation.verkaeufer,
+        dayType: DayType.berufsschule,
+        areas: const {},
+        trainingYear: 1,
+      );
+      final secondYearModel = _model(
+        occupation: TrainingOccupation.verkaeufer,
+        dayType: DayType.berufsschule,
+        areas: const {},
+        trainingYear: 2,
+      );
+      final firstYear = {
+        ..._groupActivityIds(firstYearModel),
+        ...firstYearModel.recommendedActivities.map((a) => a.id),
+      };
+      final secondYear = {
+        ..._groupActivityIds(secondYearModel),
+        ...secondYearModel.recommendedActivities.map((a) => a.id),
+      };
+
+      expect(firstYear, contains('verkauf_schule_01'));
+      expect(firstYear, contains('verkauf_schule_08'));
+      expect(firstYear, isNot(contains('verkauf_schule_09')));
+      expect(secondYear, contains('verkauf_schule_09'));
+      expect(secondYear, contains('verkauf_schule_20'));
+      expect(secondYear, isNot(contains('verkauf_schule_08')));
+    });
+
+    test('historische Custom-ID bleibt beim Berufswechsel auflösbar', () {
+      final model = _model(
+        occupation: TrainingOccupation.verkaeufer,
+        areas: const {TrainingArea.verkaufsflaeche},
+        selectedIds: const {'custom_old_1'},
+        customTemplates: const [
+          ActivityTemplate(
+            id: 'custom_old_1',
+            title: 'Historische Lagertätigkeit',
+            category: ActivityCategory.wareneingang,
+            isCustom: true,
+          ),
+        ],
+      );
+
+      expect(model.unavailableSelectedIds, isEmpty);
+      expect(model.selectedActivities.single.id, 'custom_old_1');
+      expect(_groupActivityIds(model), isNot(contains('custom_old_1')));
     });
 
     test('Suche filtert aktuelle Kategorien nach Titel und Kategorie', () {

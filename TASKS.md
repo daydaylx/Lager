@@ -328,6 +328,20 @@ Bereits in früheren Phasen implementiert; Phase-17-Einträge waren stale.
 - [x] #33 Unterweisung punktuell über Tätigkeiten/Besonderheiten
 - [x] #36 Ausbildungsjahr-Priorisierung als weiche Empfehlung
 
+### Berufsspezifisches Ausbildungsprofil Verkäufer/in ✅
+
+- [x] Zentrale `OccupationRegistry` für Berufe, Bereiche, Kategorien und Empfehlungen
+- [x] Verkäuferprofil mit Ausbildungsjahren 1 und 2 sowie vier Wahlqualifikationen
+- [x] Additiver Verkäuferkatalog mit 138 stabilen `verkauf_*`-IDs; Lager-IDs und Hive-TypeIDs unverändert
+- [x] Verkäufer-spezifische Bereiche, Berufsschulthemen nach Jahr und Wahlqualifikations-Empfehlungen
+- [x] Historische Einträge und eigene Tätigkeiten bleiben über ihre IDs auflösbar
+- [x] JSON-Export um die Wahlqualifikation ergänzt
+- [x] Verkäufer-Picker, Profilpersistenz und Berichtsgenerator getestet
+- [x] Optionale Verkäufer-Abteilung/Warengruppe im Tagesfluss, Hive, Bericht und Export ergänzt
+- [x] Wahlqualifikation im Tätigkeits-Picker als weiche Empfehlung sichtbar gemacht
+- [x] Verkäufer-spezifische Berichtstexte und Android-UI-Regressionstests ergänzt
+- [x] `flutter analyze` — 0 Issues; vollständiger Testlauf — 320 Tests bestanden
+
 ### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung ✅ (Export erledigt; Import bewusst offen)
 
 - [x] #45 Notification-Initialisierungsfehler sichtbar — in `profile_screen.dart`
@@ -343,6 +357,7 @@ Ziel: Erst nach den obigen Änderungen ernsthaft testen. Vorher ist ein komplett
 - [ ] #37 Manuellen Android-Release-QA-Durchlauf dokumentieren und durchführen.
 - [ ] Offene manuelle Tests aus Phase 8–13 zusammenführen.
 - [ ] Installation, App-Start, Tagesbericht, Woche, Vorlagen, Profil, Reminder, Theme-Persistenz und Datenlöschung prüfen.
+- [ ] Verkäuferprofil: Abteilung/Warengruppe, Wahlqualifikations-Empfehlungen, Verkäufer-Berichte und Export prüfen.
 - [ ] Signierte Release-APK auf echtem Android-Gerät testen.
 - [ ] Ergebnis in QA-Dokumentation festhalten.
 
@@ -423,11 +438,14 @@ erhalten; nur UX/UI. Pro Unterphase ein eigener Analyze/Test/Doku-Zyklus.
 
 ### Phase 20i: Speicher-Witz-Sheet (kein Issue) ✅
 
-- [x] Nach dem **ersten** Speichern eines neuen Tageseintrags erscheint ein ruhiges Material-3-Bottom-Sheet mit lokalem Lagerlogistik-Witz des Tages
+- [x] Nach dem **ersten** Speichern eines neuen Tageseintrags erscheint ein ruhiges Material-3-Bottom-Sheet mit lokalem Alltagswitz des Tages
 - [x] 300 statische Witze in `lib/core/data/lager_jokes.dart`; Auswahl deterministisch pro Kalendertag, robust gegen Uhrzeit/Sommerzeit
 - [x] Bestehende Einträge: SnackBar „Änderungen gespeichert." statt Sheet
 - [x] `flutter analyze` — 0 Issues; `flutter test` — 270/270 bestanden
 - [x] `flutter build apk --debug` — erfolgreich
+- [x] 2026-08-15: alle 300 Witze vollständig auf allgemeinere Alltags-, Sprach-,
+      Technik-, Essen-, Wetter- und Freizeitwitze umgestellt; keine dominierenden
+      Berufsthemen, keine Duplikate, Maximallänge 160 Zeichen; Sammlungstests grün
 
 ---
 

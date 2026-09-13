@@ -41,10 +41,14 @@ class DailyReportGenerator {
     final known = _knownActivityTitles(entry, activityTitles);
 
     if (known.isNotEmpty && entry.areas.isNotEmpty) {
-      return _betriebWithAreasText(entry, known);
+      return _isSellerEntry(entry)
+          ? _sellerWithAreasText(entry, known)
+          : _betriebWithAreasText(entry, known);
     }
     if (known.isNotEmpty) {
-      return _betriebWithoutAreaText(known, entry.date);
+      return _isSellerEntry(entry)
+          ? 'Im Verkauf habe ich ${_formatList(known)} erledigt.'
+          : _betriebWithoutAreaText(known, entry.date);
     }
     if (entry.areas.isNotEmpty) {
       final areaLabel = entry.areas.length == 1
@@ -53,6 +57,40 @@ class DailyReportGenerator {
       return '$areaLabel wurden Tätigkeiten dokumentiert.';
     }
     return 'Heute wurde ein Betriebstag dokumentiert.';
+  }
+
+  static bool _isSellerEntry(DailyEntry entry) {
+    const sellerAreas = {
+      TrainingArea.verkaufsflaeche,
+      TrainingArea.kundenberatung,
+      TrainingArea.kasse,
+      TrainingArea.warenpraesentation,
+      TrainingArea.wareneingangVerkauf,
+      TrainingArea.lagerBestand,
+      TrainingArea.reklamationService,
+      TrainingArea.werbungVerkaufsfoerderung,
+    };
+    return entry.selectedActivities.any((id) => id.startsWith('verkauf_')) ||
+        entry.areas.any(sellerAreas.contains);
+  }
+
+  static String _sellerWithAreasText(
+    DailyEntry entry,
+    List<String> known,
+  ) {
+    final location = entry.areas.length == 1
+        ? 'im Bereich ${entry.areas.first.label}'
+        : 'in den Bereichen ${_formatList(_areaLabels(entry))}';
+    final context = entry.department == null || entry.department!.trim().isEmpty
+        ? 'Im Verkauf'
+        : 'In der Abteilung ${entry.department!.trim()}';
+    final activityList = _formatList(known);
+    return switch (_activityPattern(known, entry.date)) {
+      0 => '$context $location habe ich Kunden betreut und folgende '
+          'Tätigkeiten erledigt: $activityList.',
+      1 => '$context $location habe ich $activityList erledigt.',
+      _ => '$context $location lag mein Schwerpunkt auf $activityList.',
+    };
   }
 
   static String _berufsschuleText(

@@ -350,6 +350,24 @@ Die Klarheit „öffentlich / nur lokal" steht in der Description unter dem
 Titel, nicht im Titel selbst (auf kleinen Displays + Tastatur würde ein
 langer Titel sonst den SaveBar-Bereich verdrängen).
 
+### Verkäuferprofil: Abteilung / Warengruppe
+
+Bei einem Verkäufer-Betriebstag kann zusätzlich eine kurze optionale Angabe
+wie „Textil", „Elektro" oder „Kasse" erfasst werden. Sie dient als Kontext für
+den Bericht und wird in der gespeicherten Tagesübersicht angezeigt.
+
+- Eingabe nur im Verkäuferprofil und nur bei `Betrieb`
+- maximal 60 Zeichen
+- Hinweis: keine Kundennamen, Kaufdaten oder Identifikationsnummern eingeben
+- die Angabe bleibt optional und darf den Speichervorgang nicht blockieren
+- Verkäufer-Berichte verwenden sie als Abteilungskontext; private Notizen
+  bleiben davon getrennt
+
+Die Verkäufer-Empfehlungsgruppe wird – wenn eine Wahlqualifikation vorhanden
+ist – mit „Empfohlen: Wahlqualifikation: …" beschriftet. Die Empfehlung ist
+weich: alle anderen gültigen Tätigkeiten bleiben über Suche und Kategorien
+wählbar.
+
 ---
 
 ## 14. Speichern-Button

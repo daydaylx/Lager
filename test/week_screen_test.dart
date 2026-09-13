@@ -23,6 +23,7 @@ DailyEntry entryFor(
   DateTime date, {
   DayType dayType = DayType.betrieb,
   List<TrainingArea> areas = const [TrainingArea.wareneingang],
+  String? department,
   List<String> activities = const ['wareneingang_01'],
   List<SpecialFlag> specialFlags = const [],
   String? note,
@@ -31,6 +32,7 @@ DailyEntry entryFor(
     id: DailyEntry.idForDate(date),
     date: date,
     dayType: dayType,
+    department: department,
     areas: dayType == DayType.betrieb ? areas : const [],
     selectedActivities: dayType.supportsActivities ? activities : const [],
     specialFlags: specialFlags,
@@ -455,6 +457,30 @@ void main() {
 
       expect(find.text('Lieferung angenommen und geprüft'), findsOneWidget);
       expect(find.text('Vorschlag fürs Berichtsheft'), findsOneWidget);
+    });
+
+    testWidgets('Verkäufer-Abteilung erscheint in der Wochenübersicht', (
+      WidgetTester tester,
+    ) async {
+      final today = normalizedToday();
+      final monday = startOfWeek(today);
+      final storage = InMemoryDailyEntryStorage(
+        initialEntries: [
+          entryFor(
+            monday,
+            areas: const [TrainingArea.verkaufsflaeche],
+            department: 'Textil',
+            activities: const ['verkauf_flaeche_01'],
+          ),
+        ],
+      );
+
+      await pumpWeek(tester, storage: storage, initialDate: today);
+      expect(find.textContaining('Textil · Verkaufsfläche'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('show_week_summary')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('In der Abteilung Textil'), findsOneWidget);
     });
 
     testWidgets('Kopieren-Button pro Tag vorhanden und zeigt Snackbar', (

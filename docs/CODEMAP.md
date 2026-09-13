@@ -1,6 +1,6 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker Lagerlogistik". Aktueller Arbeitsstand:
+Flutter Android-App „Berichtsheft-Merker" für Lagerlogistik und Verkäufer/innen. Aktueller Arbeitsstand:
 `docs/CURRENT_STATUS.md`.
 
 ---
@@ -45,8 +45,8 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | Datei                          | Inhalt                                                                      |
 | ------------------------------ | --------------------------------------------------------------------------- |
 | `enums/day_type.dart`          | `DayType` — Betrieb, Berufsschule, Frei, Urlaub, Krank, Feiertag, Sonstiges |
-| `enums/training_area.dart`     | `TrainingArea` — 8 Lagerbereiche                                            |
-| `enums/activity_category.dart` | `ActivityCategory` — 10 Kategorien                                          |
+| `enums/training_area.dart`     | `TrainingArea` — 8 Lager- und 8 Verkaufsbereiche                             |
+| `enums/activity_category.dart` | `ActivityCategory` — Lager-, Verkaufs-, Preis- und allgemeine Kategorien     |
 | `enums/special_flag.dart`      | `SpecialFlag` — 7 Lern-Flags (unter Anleitung, selbstständig …)             |
 
 ### Models
@@ -72,6 +72,16 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `storage/reminder_storage.dart`               | Reminder-Einstellungen in SharedPreferences            |
 | `storage/theme_preset_storage.dart`           | Gewähltes ThemePreset in SharedPreferences             |
 | `storage/preferences_write.dart`              | Prüft SharedPreferences-Schreibergebnisse              |
+
+### Berufsspezifische Domain-Konfiguration
+
+| Datei | Inhalt |
+| --- | --- |
+| `domain/occupation.dart` | Persistente Berufe, zulässige Ausbildungsjahre und vier Wahlqualifikationen |
+| `domain/occupation_config.dart` | Bereiche, Kategorien, Prefix, Schul-Themen und Empfehlungsregeln je Beruf |
+| `domain/occupation_registry.dart` | Zentrale Registry für Lagerlogistik und Verkäufer/in |
+| `data/verkaeufer_activities.dart` | 138 additive Verkäufer-Tätigkeiten mit `verkauf_*`-IDs |
+| `data/default_activities.dart` | Unveränderter Lagerkatalog plus Verkäufer-Katalog |
 
 ### KI-Berichtsnachbearbeitung
 
@@ -100,7 +110,7 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                          |
 | `core/data/default_activities.dart`     | 132 stabile IDs; 123 fachlich auswählbare Tätigkeiten |
 | `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten        |
-| `core/data/lager_jokes.dart`            | 300 lokale Lagerlogistik-Witze, deterministisch pro Kalendertag |
+| `core/data/lager_jokes.dart`            | 300 lokale allgemeine Belohnungswitze, deterministisch pro Kalendertag |
 | `core/ui/day_status_colors.dart`        | Zentrale Statusfarben (saved/open/absence/neutral) |
 
 ---
