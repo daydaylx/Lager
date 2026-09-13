@@ -19,6 +19,16 @@ enum TrainingArea {
   lagerBestand,
   reklamationService,
   werbungVerkaufsfoerderung,
+  materialkunde,
+  raumplanung,
+  kuechenplanung,
+  auftragVertragsabwicklung,
+  lieferungMontage,
+  beschaffung,
+  warenbestandssteuerung,
+  kaufmaennischeSteuerung,
+  onlinehandel,
+  personalOrganisation,
 }
 
 extension TrainingAreaDetails on TrainingArea {
@@ -39,6 +49,16 @@ extension TrainingAreaDetails on TrainingArea {
         TrainingArea.lagerBestand => 'Lager / Bestand',
         TrainingArea.reklamationService => 'Reklamation / Service',
         TrainingArea.werbungVerkaufsfoerderung => 'Werbung / Verkaufsförderung',
+        TrainingArea.materialkunde => 'Materialkunde',
+        TrainingArea.raumplanung => 'Raumplanung',
+        TrainingArea.kuechenplanung => 'Küchenplanung',
+        TrainingArea.auftragVertragsabwicklung => 'Auftrag / Vertrag',
+        TrainingArea.lieferungMontage => 'Lieferung / Montage',
+        TrainingArea.beschaffung => 'Beschaffung',
+        TrainingArea.warenbestandssteuerung => 'Warenbestandssteuerung',
+        TrainingArea.kaufmaennischeSteuerung => 'Kaufmännische Steuerung',
+        TrainingArea.onlinehandel => 'Onlinehandel',
+        TrainingArea.personalOrganisation => 'Personal / Organisation',
       };
 
   ActivityCategory get activityCategory => switch (this) {
@@ -59,6 +79,20 @@ extension TrainingAreaDetails on TrainingArea {
         TrainingArea.reklamationService => ActivityCategory.reklamationService,
         TrainingArea.werbungVerkaufsfoerderung =>
           ActivityCategory.werbungVerkaufsfoerderung,
+        TrainingArea.materialkunde => ActivityCategory.materialkunde,
+        TrainingArea.raumplanung => ActivityCategory.raumplanung,
+        TrainingArea.kuechenplanung => ActivityCategory.kuechenplanung,
+        TrainingArea.auftragVertragsabwicklung =>
+          ActivityCategory.auftragVertragsabwicklung,
+        TrainingArea.lieferungMontage => ActivityCategory.lieferungMontage,
+        TrainingArea.beschaffung => ActivityCategory.beschaffung,
+        TrainingArea.warenbestandssteuerung =>
+          ActivityCategory.warenbestandssteuerung,
+        TrainingArea.kaufmaennischeSteuerung =>
+          ActivityCategory.kaufmaennischeSteuerung,
+        TrainingArea.onlinehandel => ActivityCategory.onlinehandel,
+        TrainingArea.personalOrganisation =>
+          ActivityCategory.personalOrganisation,
       };
 
   IconData get icon => switch (this) {
@@ -78,6 +112,16 @@ extension TrainingAreaDetails on TrainingArea {
         TrainingArea.lagerBestand => Icons.inventory_2_outlined,
         TrainingArea.reklamationService => Icons.assignment_return_outlined,
         TrainingArea.werbungVerkaufsfoerderung => Icons.campaign_outlined,
+        TrainingArea.materialkunde => Icons.category_outlined,
+        TrainingArea.raumplanung => Icons.space_dashboard_outlined,
+        TrainingArea.kuechenplanung => Icons.kitchen_outlined,
+        TrainingArea.auftragVertragsabwicklung => Icons.assignment_outlined,
+        TrainingArea.lieferungMontage => Icons.local_shipping_outlined,
+        TrainingArea.beschaffung => Icons.shopping_cart_outlined,
+        TrainingArea.warenbestandssteuerung => Icons.inventory_2_outlined,
+        TrainingArea.kaufmaennischeSteuerung => Icons.analytics_outlined,
+        TrainingArea.onlinehandel => Icons.devices_other_outlined,
+        TrainingArea.personalOrganisation => Icons.groups_outlined,
       };
 
   String get subtitle => switch (this) {
@@ -97,5 +141,15 @@ extension TrainingAreaDetails on TrainingArea {
         TrainingArea.lagerBestand => 'Bestände prüfen & pflegen',
         TrainingArea.reklamationService => 'Umtausch & Kundenanliegen',
         TrainingArea.werbungVerkaufsfoerderung => 'Werben & Verkauf fördern',
+        TrainingArea.materialkunde => 'Materialien & Qualität erklären',
+        TrainingArea.raumplanung => 'Räume planen & Varianten vergleichen',
+        TrainingArea.kuechenplanung => 'Küchen planen & abstimmen',
+        TrainingArea.auftragVertragsabwicklung => 'Aufträge prüfen & bearbeiten',
+        TrainingArea.lieferungMontage => 'Lieferung & Service begleiten',
+        TrainingArea.beschaffung => 'Bedarf & Beschaffung nachvollziehen',
+        TrainingArea.warenbestandssteuerung => 'Bestände & Warenbewegungen',
+        TrainingArea.kaufmaennischeSteuerung => 'Kennzahlen & Wirtschaftlichkeit',
+        TrainingArea.onlinehandel => 'Online- & Filialangebote',
+        TrainingArea.personalOrganisation => 'Team & Arbeitsorganisation',
       };
 }

@@ -342,6 +342,18 @@ Bereits in früheren Phasen implementiert; Phase-17-Einträge waren stale.
 - [x] Verkäufer-spezifische Berichtstexte und Android-UI-Regressionstests ergänzt
 - [x] `flutter analyze` — 0 Issues; vollständiger Testlauf — 320 Tests bestanden
 
+### Berufsspezifisches Ausbildungsprofil Kaufmann/-frau im Einzelhandel ✅
+
+- [x] Eigenständiger dreijähriger Beruf mit acht Wahlqualifikationen ergänzt
+- [x] Optionales Branchenprofil „Möbel & Einrichtung“ mit eigenen Bereichen
+  und umfangreichem, nicht betriebsinternem Tätigkeitskatalog ergänzt
+- [x] Jahrgangs-, Branchen- und Wahlqualifikationsfilter sowie Empfehlungen
+  integriert; Berufsschulthemen bleiben gekennzeichnet
+- [x] Onboarding, Profilbearbeitung, Today-/Vorlagenpicker, Bericht und
+  JSON-Export rückwärtskompatibel verdrahtet
+- [x] Bestehende Berufe, IDs, Storage-Keys und Hive-TypeIDs unverändert
+- [x] Fachliche Abdeckung und neue Profil-/Picker-/Bericht-/Exporttests ergänzt
+
 ### Phase 18: Reminder-/Alltagskomfort und lokale Sicherung ✅ (Export erledigt; Import bewusst offen)
 
 - [x] #45 Notification-Initialisierungsfehler sichtbar — in `profile_screen.dart`

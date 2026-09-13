@@ -40,6 +40,8 @@ class TodayScreen extends StatefulWidget {
   final int? trainingYear;
   final String? occupation;
   final String? wahlqualifikation;
+  final List<String> wahlqualifikationen;
+  final String? industryProfile;
   final int templateRefreshSignal;
   final bool protectBackNavigation;
   final ReportEnhancementCoordinator? reportCoordinator;
@@ -55,6 +57,8 @@ class TodayScreen extends StatefulWidget {
     this.trainingYear,
     this.occupation,
     this.wahlqualifikation,
+    this.wahlqualifikationen = const [],
+    this.industryProfile,
     this.templateRefreshSignal = 0,
     this.protectBackNavigation = true,
     this.reportCoordinator,
@@ -111,7 +115,14 @@ class _TodayScreenState extends State<TodayScreen> {
       TrainingOccupationDetails.fromStorageKey(widget.occupation ?? '') ??
       TrainingOccupation.fachkraftLagerlogistik;
 
-  bool get _isSeller => _occupation == TrainingOccupation.verkaeufer;
+  bool get _isRetailOccupation =>
+      _occupation == TrainingOccupation.verkaeufer ||
+      _occupation == TrainingOccupation.kaufmannEinzelhandel;
+
+  IndustryProfile? get _industryProfile {
+    final raw = widget.industryProfile;
+    return raw == null ? null : IndustryProfileDetails.fromStorageKey(raw);
+  }
 
   bool get _isToday {
     final now = widget.currentDate ?? DateTime.now();
@@ -325,7 +336,7 @@ class _TodayScreenState extends State<TodayScreen> {
               selectedDayType: _selectedDayType,
               savedEntryId: _savedEntry?.id,
               showSellerContext:
-                  _isSeller && _selectedDayType == DayType.betrieb,
+                  _isRetailOccupation && _selectedDayType == DayType.betrieb,
               departmentController: _departmentController,
               isExpanded: _optionalSectionExpanded,
               onExpansionChanged: (expanded) =>
@@ -400,10 +411,9 @@ class _TodayScreenState extends State<TodayScreen> {
       isToday: _isToday,
       selectedActivityCount: _selectedActivityIds.length,
       supportsActivities: _selectedDayType.supportsActivities,
-      availableAreas: OccupationRegistry.configFor(
-        TrainingOccupationDetails.fromStorageKey(widget.occupation ?? '') ??
-            TrainingOccupation.fachkraftLagerlogistik,
-      ).areas,
+      availableAreas: OccupationRegistry.configFor(_occupation).areasFor(
+        _industryProfile,
+      ),
       onRefresh: _loadEntry,
     );
   }
@@ -549,6 +559,8 @@ class _TodayScreenState extends State<TodayScreen> {
       trainingYear: widget.trainingYear,
       occupation: _occupation,
       wahlqualifikation: widget.wahlqualifikation,
+      wahlqualifikationen: widget.wahlqualifikationen,
+      industryProfile: _industryProfile,
       defaultOverrides: _defaultOverrides,
       adhocActivities: _adhocActivities.entries
           .map((e) => AdhocActivity(id: e.key, title: e.value))

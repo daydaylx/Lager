@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'domain/domain.dart';
@@ -9,6 +11,8 @@ typedef StoredProfile = ({
   String? occupation,
   int? trainingYear,
   String? wahlqualifikation,
+  List<String> wahlqualifikationen,
+  String? industryProfile,
   bool onboardingCompleted,
 });
 
@@ -22,21 +26,35 @@ class ProfileStorage {
       trainingYear: preferences.getInt(PreferenceKeys.trainingYear),
       wahlqualifikation:
           preferences.getString(PreferenceKeys.wahlqualifikation),
+      wahlqualifikationen: _loadWahlqualifikationen(preferences),
+      industryProfile: _loadIndustryProfile(preferences),
       onboardingCompleted:
           preferences.getBool(PreferenceKeys.onboardingCompleted) ?? false,
     );
   }
 
   static bool isOnboardingComplete(StoredProfile profile) {
-    return profile.onboardingCompleted &&
-        TrainingOccupationValues.all.contains(profile.occupation) &&
-        TrainingYearValues.isValidForOccupation(
+    final occupation = TrainingOccupationValues.parse(profile.occupation);
+    if (!profile.onboardingCompleted ||
+        occupation == null ||
+        !TrainingYearValues.isValidForOccupation(
           profile.trainingYear,
           profile.occupation,
-        ) &&
-        (profile.occupation != TrainingOccupationValues.verkaeufer ||
-            WahlqualifikationDetails.fromStorageKey(profile.wahlqualifikation ?? '') !=
-                null);
+        )) {
+      return false;
+    }
+    if (occupation == TrainingOccupation.verkaeufer) {
+      return WahlqualifikationDetails.fromStorageKey(
+            profile.wahlqualifikation ?? '',
+          ) !=
+          null;
+    }
+    if (occupation == TrainingOccupation.kaufmannEinzelhandel) {
+      return _hasValidEinzelhandelWahlqualifikationen(
+        profile.wahlqualifikationen,
+      );
+    }
+    return true;
   }
 
   static Future<void> save({
@@ -45,6 +63,8 @@ class ProfileStorage {
     required String occupation,
     required int trainingYear,
     String? wahlqualifikation,
+    List<String> wahlqualifikationen = const [],
+    String? industryProfile,
     bool completeOnboarding = false,
   }) async {
     if (!TrainingYearValues.isValidForOccupation(trainingYear, occupation)) {
@@ -62,6 +82,30 @@ class ProfileStorage {
         wahlqualifikation,
         'wahlqualifikation',
         'Verkäufer/in benötigt eine Wahlqualifikation.',
+      );
+    }
+    final normalizedEinzelhandelWahlqualifikationen =
+        _normalizeEinzelhandelWahlqualifikationen(wahlqualifikationen);
+    if (occupationValue == TrainingOccupation.kaufmannEinzelhandel &&
+        !_hasValidEinzelhandelWahlqualifikationen(
+          normalizedEinzelhandelWahlqualifikationen,
+        )) {
+      throw ArgumentError.value(
+        wahlqualifikationen,
+        'wahlqualifikationen',
+        'Kaufmann/-frau im Einzelhandel benötigt drei passende Wahlqualifikationen, darunter eine der ersten drei.',
+      );
+    }
+    final parsedIndustry = industryProfile == null
+        ? null
+        : IndustryProfileDetails.fromStorageKey(industryProfile);
+    if (parsedIndustry != null &&
+        (occupationValue == null ||
+            !parsedIndustry.supportsOccupation(occupationValue))) {
+      throw ArgumentError.value(
+        industryProfile,
+        'industryProfile',
+        'Das Branchenprofil passt nicht zum Ausbildungsberuf.',
       );
     }
     final preferences = await SharedPreferences.getInstance();
@@ -82,13 +126,33 @@ class ProfileStorage {
     await _requireWrite(
       preferences.setInt(PreferenceKeys.trainingYear, trainingYear),
     );
-    await _writeOptionalString(
-      preferences,
-      key: PreferenceKeys.wahlqualifikation,
-      value: occupationValue == TrainingOccupation.verkaeufer
-          ? wahlqualifikation
-          : null,
-    );
+
+    if (occupationValue == TrainingOccupation.verkaeufer) {
+      await _writeOptionalString(
+        preferences,
+        key: PreferenceKeys.wahlqualifikation,
+        value: wahlqualifikation,
+      );
+      await _remove(preferences, PreferenceKeys.wahlqualifikationen);
+      await _remove(preferences, PreferenceKeys.industryProfile);
+    } else if (occupationValue == TrainingOccupation.kaufmannEinzelhandel) {
+      await _remove(preferences, PreferenceKeys.wahlqualifikation);
+      await _requireWrite(
+        preferences.setString(
+          PreferenceKeys.wahlqualifikationen,
+          jsonEncode(normalizedEinzelhandelWahlqualifikationen),
+        ),
+      );
+      await _writeOptionalString(
+        preferences,
+        key: PreferenceKeys.industryProfile,
+        value: parsedIndustry?.storageKey,
+      );
+    } else {
+      await _remove(preferences, PreferenceKeys.wahlqualifikation);
+      await _remove(preferences, PreferenceKeys.wahlqualifikationen);
+      await _remove(preferences, PreferenceKeys.industryProfile);
+    }
 
     if (completeOnboarding) {
       await _requireWrite(
@@ -105,6 +169,53 @@ class ProfileStorage {
     );
   }
 
+  static List<String> _loadWahlqualifikationen(
+    SharedPreferences preferences,
+  ) {
+    final raw = preferences.getString(PreferenceKeys.wahlqualifikationen);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return _normalizeEinzelhandelWahlqualifikationen(
+        decoded.whereType<String>().toList(growable: false),
+      );
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static String? _loadIndustryProfile(SharedPreferences preferences) {
+    final raw = preferences.getString(PreferenceKeys.industryProfile);
+    if (raw == null) return null;
+    return IndustryProfileDetails.fromStorageKey(raw)?.storageKey;
+  }
+
+  static List<String> _normalizeEinzelhandelWahlqualifikationen(
+    Iterable<String> keys,
+  ) {
+    final valid = <String>{};
+    for (final key in keys) {
+      if (EinzelhandelWahlqualifikationDetails.fromStorageKey(key) != null) {
+        valid.add(key);
+      }
+    }
+    return valid.toList(growable: false)..sort();
+  }
+
+  static bool _hasValidEinzelhandelWahlqualifikationen(
+    Iterable<String> keys,
+  ) {
+    final normalized = _normalizeEinzelhandelWahlqualifikationen(keys);
+    if (normalized.length != 3) return false;
+    const requiredGroup = {
+      'beratungKomplexeSituationen',
+      'beschaffungWaren',
+      'warenbestandssteuerung',
+    };
+    return normalized.any(requiredGroup.contains);
+  }
+
   static Future<void> _writeOptionalString(
     SharedPreferences preferences, {
     required String key,
@@ -115,6 +226,13 @@ class ProfileStorage {
           ? preferences.remove(key)
           : preferences.setString(key, value),
     );
+  }
+
+  static Future<void> _remove(
+    SharedPreferences preferences,
+    String key,
+  ) async {
+    await _requireWrite(preferences.remove(key));
   }
 
   static Future<void> _requireWrite(Future<bool> operation) async {

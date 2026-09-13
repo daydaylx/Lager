@@ -124,6 +124,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
         initialOccupation: profile.occupation,
         initialTrainingYear: profile.trainingYear,
         initialWahlqualifikation: profile.wahlqualifikation,
+        initialWahlqualifikationen: profile.wahlqualifikationen,
+        initialIndustryProfile: profile.industryProfile,
         initialThemePreset: data.themePreset,
         aiReportCache: data.aiReportCache,
         openRouterConfig: data.openRouterConfig,

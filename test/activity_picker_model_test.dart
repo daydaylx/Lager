@@ -19,6 +19,8 @@ ActivityPickerModel _model({
   List<AdhocActivity> adhocActivities = const [],
   TrainingOccupation occupation = TrainingOccupation.fachkraftLagerlogistik,
   String? wahlqualifikation,
+  List<String> wahlqualifikationen = const [],
+  IndustryProfile? industryProfile,
 }) {
   return ActivityPickerModel.build(
     dayType: dayType,
@@ -32,6 +34,8 @@ ActivityPickerModel _model({
     adhocActivities: adhocActivities,
     occupation: occupation,
     wahlqualifikation: wahlqualifikation,
+    wahlqualifikationen: wahlqualifikationen,
+    industryProfile: industryProfile,
   );
 }
 
@@ -101,6 +105,43 @@ void main() {
           'Wahlqualifikation: ${wahlqualifikation.label}',
         );
       }
+    });
+
+    test('Kaufmann zeigt im Möbelprofil die branchenspezifischen Bereiche', () {
+      final model = _model(
+        occupation: TrainingOccupation.kaufmannEinzelhandel,
+        areas: const {TrainingArea.kuechenplanung},
+        trainingYear: 3,
+        industryProfile: IndustryProfile.moebelEinrichtung,
+        wahlqualifikationen: const [
+          'beratungKomplexeSituationen',
+          'onlinehandel',
+          'marketingmassnahmen',
+        ],
+      );
+
+      expect(model.categories, contains(ActivityCategory.kuechenplanung));
+      expect(
+        {
+          ..._groupActivityIds(model),
+          ...model.recommendedActivities.map((activity) => activity.id),
+        },
+        contains('einzelhandel_moebel_kueche_01'),
+      );
+      expect(model.recommendationContext, contains('Möbel & Einrichtung'));
+    });
+
+    test('Kaufmann blendet Möbelaktivitäten ohne Branchenprofil aus', () {
+      final model = _model(
+        occupation: TrainingOccupation.kaufmannEinzelhandel,
+        areas: const {TrainingArea.kundenberatung},
+        trainingYear: 3,
+      );
+
+      expect(
+        _groupActivityIds(model),
+        isNot(contains('einzelhandel_moebel_kueche_01')),
+      );
     });
 
     test('Verkäufer-Berufsschulthemen werden nach Jahr gefiltert', () {

@@ -9,9 +9,12 @@ Abgeleitete optionale KI-Berichte liegen getrennt in einer eigenen Hive-Box und
 verändern weder `DailyEntry` noch seinen Adapter.
 
 Vollständiger Tätigkeitskatalog in `lib/core/data/default_activities.dart`:
-132 unveränderte Lagerlogistik-IDs plus 138 Verkäufer-IDs im ausschließlich
-`verkauf_*`-Namespace. Verkäufer-Berufsschulthemen werden im Picker auf Jahr 1
-bzw. 2 begrenzt; historische Einträge und eigene Tätigkeiten bleiben auflösbar.
+132 unveränderte Lagerlogistik-IDs plus den bestehenden Verkäuferkatalog sowie
+zusätzliche Kaufmann-/Möbel-IDs. Neue IDs liegen ausschließlich in den
+`einzelhandel_*`- und `einzelhandel_moebel_*`-Namespaces. Kaufmann-Inhalte und
+Berufsschulthemen werden nach Jahr, Wahlqualifikation und optionalem
+Branchenprofil gefiltert; historische Einträge und eigene Tätigkeiten bleiben
+auflösbar.
 
 ---
 
@@ -133,14 +136,20 @@ typedef StoredProfile = ({
   String? occupation,
   int? trainingYear,
   String? wahlqualifikation,
+  List<String> wahlqualifikationen,
+  String? industryProfile,
   bool onboardingCompleted,
 });
 ```
 
 Es gibt bewusst keine persistierte `UserProfile`-Klasse. Der
-`TrainingOccupation`-Enum und die `Wahlqualifikation` werden als stabile
+`TrainingOccupation`-Enum und die Wahlqualifikationen werden als stabile
 String-Werte in SharedPreferences gespeichert; bestehende Lagerprofile bleiben
-ohne Wahlqualifikation gültig.
+ohne Wahlqualifikation gültig. Verkäufer/innen speichern weiterhin genau eine
+Wahlqualifikation. Kaufleute speichern genau drei gültige
+`EinzelhandelWahlqualifikation`-Werte als JSON-Liste; mindestens eine stammt aus
+der ersten offiziellen Gruppe. `industryProfile` ist optional und wird aktuell
+nur für Kaufleute im Einzelhandel mit `moebel_einrichtung` gespeichert.
 
 Gültige Ausbildungsberufe:
 
@@ -149,6 +158,7 @@ Gültige Ausbildungsberufe:
 | `fachlagerist` | Fachlagerist/in | 1, 2 |
 | `fachkraft_lagerlogistik` | Fachkraft für Lagerlogistik | 1, 2, 3 |
 | `verkaeufer` | Verkäufer/in | 1, 2 |
+| `kaufmann_einzelhandel` | Kaufmann/-frau im Einzelhandel | 1, 2, 3 |
 
 ---
 
@@ -165,12 +175,16 @@ lib/core/
     activity_category.dart
     special_flag.dart
   data/
-    default_activities.dart    ← Lagerkatalog + Verkäuferkatalog
-    verkaeufer_activities.dart ← 138 `verkauf_*`-IDs, davon 20 Schul-Themen
+    default_activities.dart              ← kombinierter Standardkatalog
+    verkaeufer_activities.dart            ← bestehende `verkauf_*`-IDs
+    einzelhandel_activities.dart          ← Kaufmann-/Jahr-3-/Schulthemen
+    einzelhandel_moebel_activities.dart   ← optionales Möbelprofil
   domain/
     occupation.dart            ← Berufe, Jahre und Wahlqualifikationen
     occupation_config.dart     ← Berufskonfiguration
-    occupation_registry.dart   ← zentrale Registry
+    occupation_registry.dart   ← zentrale Registry für alle Berufe/Branchen
+    industry_profile.dart      ← optionale Branchenprofile
+    activity_catalog_metadata.dart ← Jahr-/Branchen-/WQ-Filter ohne Hive-Schema
   ai/
     ai_report_cache.dart
     hive_ai_report_cache.dart
@@ -244,7 +258,7 @@ angeboten.
 
 - Profil und Onboarding: `onboarding_completed`, `profile_name`,
   `profile_company`, `training_occupation`, `training_year`,
-  `wahlqualifikation`
+  `wahlqualifikation`, `wahlqualifikationen`, `industry_profile`
 - Reminder: `reminder_enabled`, `reminder_times`, `reminder_weekdays`
 - Darstellung: `theme_preset`
 
@@ -284,6 +298,9 @@ Kanonische vollständige Liste mit stabilen IDs:
 
 Für Verkäufer/innen ergänzt `verkaeufer_activities.dart` die Bereiche
 Verkaufsfläche, Kundenberatung, Kasse, Warenpräsentation, Warenannahme,
-Lager/Bestand, Reklamation/Service und Werbung/Verkaufsförderung. Die vier
-Wahlqualifikationen beeinflussen die Empfehlungssortierung; sie ändern keine
-IDs oder Hive-TypeIDs.
+Lager/Bestand, Reklamation/Service und Werbung/Verkaufsförderung. Der
+Kaufmannkatalog ergänzt kaufmännische Steuerung, Beschaffung, Bestand,
+Onlinehandel, Personal sowie Berufsschulthemen des dritten Jahres. Das optionale
+Möbelprofil ergänzt Beratung, Materialkunde, Raum-/Küchenplanung, Auftrag,
+Lieferung/Montage und Nachbetreuung. Wahlqualifikationen und Branche beeinflussen
+nur Filter und Empfehlungssortierung; sie ändern keine IDs oder Hive-TypeIDs.

@@ -15,6 +15,7 @@ class TemplatesScreen extends StatefulWidget {
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final DailyEntryStorage? dailyEntryStorage;
   final String? occupation;
+  final String? industryProfile;
   final VoidCallback? onTemplatesChanged;
 
   const TemplatesScreen({
@@ -23,6 +24,7 @@ class TemplatesScreen extends StatefulWidget {
     this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     this.dailyEntryStorage,
     this.occupation,
+    this.industryProfile,
     this.onTemplatesChanged,
   });
 
@@ -115,6 +117,11 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   OccupationConfig get _occupationConfig =>
       OccupationRegistry.configFor(_selectedOccupation);
 
+  IndustryProfile? get _selectedIndustryProfile {
+    final raw = widget.industryProfile;
+    return raw == null ? null : IndustryProfileDetails.fromStorageKey(raw);
+  }
+
   bool _isDefaultActive(ActivityTemplate template) {
     return _defaultOverrides[template.id] ?? template.isActive;
   }
@@ -122,11 +129,28 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
   List<ActivityTemplate> get _effectiveDefaults {
     return [
       for (final template in selectableDefaultActivities)
-        if (_occupationConfig.isActivityInOccupation(template.id))
+        if (_occupationConfig.isActivityInOccupation(template.id) &&
+            (activityMetadataFor(template.id).industryProfileKeys.isEmpty ||
+                activityMetadataFor(template.id).isForIndustry(
+                  _selectedIndustryProfile,
+                )))
           _isDefaultActive(template) == template.isActive
             ? template
             : template.copyWith(isActive: _isDefaultActive(template)),
     ];
+  }
+
+  List<ActivityCategory> get _visibleCategories {
+    final categories = <ActivityCategory>{
+      ..._effectiveDefaults.map((template) => template.category),
+      ..._customTemplates
+          .where((template) =>
+              _occupationConfig.isActivityInOccupation(template.id))
+          .map((template) => template.category),
+    };
+    return _occupationConfig.activityCategories
+        .where(categories.contains)
+        .toList(growable: false);
   }
 
   List<ActivityTemplate> get _filteredActiveDefaults {
@@ -253,8 +277,10 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
 
   Future<void> _showAddSheet() async {
     _addController.clear();
+    final categories = _visibleCategories;
+    if (categories.isEmpty) return;
     ActivityCategory selectedCategory =
-        _selectedCategory ?? _occupationConfig.activityCategories.first;
+        _selectedCategory ?? categories.first;
     String? titleError;
 
     await showModalBottomSheet<void>(
@@ -308,7 +334,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                   value: selectedCategory,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Kategorie'),
-                  items: _occupationConfig.activityCategories
+                  items: categories
                       .map(
                         (c) => DropdownMenuItem(
                           value: c,
@@ -344,7 +370,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
                     }
                     Navigator.of(ctx).pop();
                     final template = ActivityTemplate(
-                      id: '${_selectedOccupation == TrainingOccupation.verkaeufer ? 'verkauf_custom' : 'custom'}_${DateTime.now().millisecondsSinceEpoch}',
+                      id: '${_selectedOccupation == TrainingOccupation.verkaeufer ? 'verkauf_custom' : _selectedOccupation == TrainingOccupation.kaufmannEinzelhandel ? 'einzelhandel_custom' : 'custom'}_${DateTime.now().millisecondsSinceEpoch}',
                       title: title,
                       category: selectedCategory,
                       isCustom: true,
@@ -464,7 +490,7 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
             const SizedBox(height: 4),
           ],
           _CategoryFilter(
-            categories: _occupationConfig.activityCategories.toList(),
+            categories: _visibleCategories,
             selected: _selectedCategory,
             onSelected: (c) => setState(() => _selectedCategory = c),
           ),

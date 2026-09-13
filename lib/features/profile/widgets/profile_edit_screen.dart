@@ -6,11 +6,13 @@ import '../../../shared/widgets/profile_form.dart';
 class ProfileEditScreen extends StatelessWidget {
   final StoredProfile profile;
   final ProfileSubmitCallback onSave;
+  final ExtendedProfileSubmitCallback? onSaveExtended;
 
   const ProfileEditScreen({
     super.key,
     required this.profile,
     required this.onSave,
+    this.onSaveExtended,
   });
 
   @override
@@ -26,6 +28,8 @@ class ProfileEditScreen extends StatelessWidget {
             initialOccupation: profile.occupation,
             initialTrainingYear: profile.trainingYear,
             initialWahlqualifikation: profile.wahlqualifikation,
+            initialWahlqualifikationen: profile.wahlqualifikationen,
+            initialIndustryProfile: profile.industryProfile,
             submitLabel: 'Profil speichern',
             submitIcon: Icons.save_outlined,
             onSubmit: ({
@@ -46,6 +50,30 @@ class ProfileEditScreen extends StatelessWidget {
                 Navigator.of(context).pop(true);
               }
             },
+            onSubmitExtended: onSaveExtended == null
+                ? null
+                : ({
+                    name,
+                    company,
+                    required occupation,
+                    required trainingYear,
+                    wahlqualifikation,
+                    required wahlqualifikationen,
+                    industryProfile,
+                  }) async {
+                    await onSaveExtended!(
+                      name: name,
+                      company: company,
+                      occupation: occupation,
+                      trainingYear: trainingYear,
+                      wahlqualifikation: wahlqualifikation,
+                      wahlqualifikationen: wahlqualifikationen,
+                      industryProfile: industryProfile,
+                    );
+                    if (context.mounted) {
+                      Navigator.of(context).pop(true);
+                    }
+                  },
           ),
         ],
       ),

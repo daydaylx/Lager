@@ -72,6 +72,36 @@ String? activitySubcategory(ActivityTemplate activity) {
     ActivityCategory.werbungVerkaufsfoerderung ||
     ActivityCategory.preis ||
     ActivityCategory.allgemein => null,
+    ActivityCategory.materialkunde => switch (number) {
+        <= 4 => 'Materialien & Oberflächen',
+        <= 8 => 'Polster & Pflege',
+        _ => 'Qualität & Nachhaltigkeit',
+      },
+    ActivityCategory.raumplanung => switch (number) {
+        <= 4 => 'Raummaße & Auswahl',
+        <= 8 => 'Planung & Varianten',
+        _ => 'Software & Anpassung',
+      },
+    ActivityCategory.kuechenplanung => switch (number) {
+        <= 5 => 'Maße & Schränke',
+        <= 9 => 'Material & Geräte',
+        _ => 'Varianten & Angebot',
+      },
+    ActivityCategory.auftragVertragsabwicklung => switch (number) {
+        <= 7 => 'Aufnahme & Prüfung',
+        <= 12 => 'Lieferung & Leistungen',
+        _ => 'Status & Unterlagen',
+      },
+    ActivityCategory.lieferungMontage => switch (number) {
+        <= 4 => 'Status & Termin',
+        <= 8 => 'Mängel & Reklamation',
+        _ => 'Nachbetreuung',
+      },
+    ActivityCategory.beschaffung => 'Bedarf & Bestellung',
+    ActivityCategory.warenbestandssteuerung => 'Bestand & Verfügbarkeit',
+    ActivityCategory.kaufmaennischeSteuerung => 'Kennzahlen & Auswertung',
+    ActivityCategory.onlinehandel => 'Online & Omnichannel',
+    ActivityCategory.personalOrganisation => 'Team & Einsatz',
   };
 }
 

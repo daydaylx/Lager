@@ -1,3 +1,6 @@
+import '../../core/domain/activity_catalog_metadata.dart';
+import '../../core/domain/industry_profile.dart';
+import '../../core/domain/occupation.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
 import '../../core/models/activity_template.dart';
@@ -10,16 +13,28 @@ List<ActivityTemplate> computeRecommendedActivities(
   Set<String> excludedIds,
   int trainingYear, {
   List<String> preferredKeywords = const [],
+  IndustryProfile? industryProfile,
+  List<EinzelhandelWahlqualifikation> einzelhandelWahlqualifikationen =
+      const [],
 }) {
   final categorySet = categories.toSet();
   final candidates = activitiesById.values.indexed.where((entry) {
     final activity = entry.$2;
+    final metadata = activityMetadataFor(activity.id);
+    final industryMatches = metadata.industryProfileKeys.isEmpty ||
+        metadata.isForIndustry(industryProfile);
     return categorySet.contains(activity.category) &&
         activity.isActive &&
         !selectedIds.contains(activity.id) &&
         !excludedIds.contains(activity.id) &&
+        metadata.isAvailableForYear(trainingYear) &&
+        industryMatches &&
         (trainingYearPriority(activity, trainingYear) == 0 ||
-            matchesAny(activity.title.toLowerCase(), preferredKeywords));
+            matchesAny(activity.title.toLowerCase(), preferredKeywords) ||
+            metadata.preferredTrainingYear == trainingYear ||
+            metadata.matchesWahlqualifikation(
+              einzelhandelWahlqualifikationen,
+            ));
   }).toList(growable: false);
 
   candidates.sort((a, b) {
@@ -27,11 +42,15 @@ List<ActivityTemplate> computeRecommendedActivities(
       a.$2,
       trainingYear,
       preferredKeywords,
+      industryProfile,
+      einzelhandelWahlqualifikationen,
     );
     final priorityB = _combinedPriority(
       b.$2,
       trainingYear,
       preferredKeywords,
+      industryProfile,
+      einzelhandelWahlqualifikationen,
     );
     if (priorityA != priorityB) return priorityA.compareTo(priorityB);
     return a.$1.compareTo(b.$1);
@@ -44,9 +63,18 @@ int _combinedPriority(
   ActivityTemplate activity,
   int trainingYear,
   List<String> preferredKeywords,
+  IndustryProfile? industryProfile,
+  List<EinzelhandelWahlqualifikation> einzelhandelWahlqualifikationen,
 ) {
-  final preferred = matchesAny(activity.title.toLowerCase(), preferredKeywords);
-  return preferred ? 0 : trainingYearPriority(activity, trainingYear) + 1;
+  final metadata = activityMetadataFor(activity.id);
+  var priority = trainingYearPriority(activity, trainingYear) + 1;
+  if (metadata.preferredTrainingYear == trainingYear) priority--;
+  if (metadata.isForIndustry(industryProfile)) priority -= 2;
+  if (metadata.matchesWahlqualifikation(einzelhandelWahlqualifikationen)) {
+    priority -= 2;
+  }
+  if (matchesAny(activity.title.toLowerCase(), preferredKeywords)) priority -= 2;
+  return priority < 0 ? 0 : priority;
 }
 
 int trainingYearPriority(ActivityTemplate activity, int trainingYear) {

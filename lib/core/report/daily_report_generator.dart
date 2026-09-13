@@ -41,11 +41,15 @@ class DailyReportGenerator {
     final known = _knownActivityTitles(entry, activityTitles);
 
     if (known.isNotEmpty && entry.areas.isNotEmpty) {
+      if (_isKaufmannEntry(entry)) return _kaufmannWithAreasText(entry, known);
       return _isSellerEntry(entry)
           ? _sellerWithAreasText(entry, known)
           : _betriebWithAreasText(entry, known);
     }
     if (known.isNotEmpty) {
+      if (_isKaufmannEntry(entry)) {
+        return 'Im Einzelhandel habe ich ${_formatList(known)} erledigt.';
+      }
       return _isSellerEntry(entry)
           ? 'Im Verkauf habe ich ${_formatList(known)} erledigt.'
           : _betriebWithoutAreaText(known, entry.date);
@@ -58,6 +62,11 @@ class DailyReportGenerator {
     }
     return 'Heute wurde ein Betriebstag dokumentiert.';
   }
+
+  static bool _isKaufmannEntry(DailyEntry entry) =>
+      entry.selectedActivities.any(
+        (id) => id.startsWith('einzelhandel_'),
+      );
 
   static bool _isSellerEntry(DailyEntry entry) {
     const sellerAreas = {
@@ -72,6 +81,25 @@ class DailyReportGenerator {
     };
     return entry.selectedActivities.any((id) => id.startsWith('verkauf_')) ||
         entry.areas.any(sellerAreas.contains);
+  }
+
+  static String _kaufmannWithAreasText(
+    DailyEntry entry,
+    List<String> known,
+  ) {
+    final location = entry.areas.length == 1
+        ? 'im Bereich ${entry.areas.first.label}'
+        : 'in den Bereichen ${_formatList(_areaLabels(entry))}';
+    final context = entry.department == null || entry.department!.trim().isEmpty
+        ? 'Im Einzelhandel'
+        : 'In der Abteilung ${entry.department!.trim()}';
+    final activityList = _formatList(known);
+    return switch (_activityPattern(known, entry.date)) {
+      0 => '$context $location habe ich Kunden betreut und folgende '
+          'Tätigkeiten erledigt: $activityList.',
+      1 => '$context $location habe ich $activityList erledigt.',
+      _ => '$context $location lag mein Schwerpunkt auf $activityList.',
+    };
   }
 
   static String _sellerWithAreasText(

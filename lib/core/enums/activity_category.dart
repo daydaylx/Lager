@@ -20,6 +20,16 @@ enum ActivityCategory {
   werbungVerkaufsfoerderung,
   preis,
   allgemein,
+  materialkunde,
+  raumplanung,
+  kuechenplanung,
+  auftragVertragsabwicklung,
+  lieferungMontage,
+  beschaffung,
+  warenbestandssteuerung,
+  kaufmaennischeSteuerung,
+  onlinehandel,
+  personalOrganisation,
 }
 
 extension ActivityCategoryLabel on ActivityCategory {
@@ -46,6 +56,18 @@ extension ActivityCategoryLabel on ActivityCategory {
         'Werbung & Verkaufsförderung',
       ActivityCategory.preis => 'Preiskalkulation & Preisauszeichnung',
       ActivityCategory.allgemein => 'Sicherheit & betriebliche Organisation',
+      ActivityCategory.materialkunde => 'Möbel- & Materialkunde',
+      ActivityCategory.raumplanung => 'Raum- & Einrichtungsplanung',
+      ActivityCategory.kuechenplanung => 'Küchenplanung',
+      ActivityCategory.auftragVertragsabwicklung =>
+        'Auftrag & Vertragsabwicklung',
+      ActivityCategory.lieferungMontage => 'Lieferung, Montage & Nachbetreuung',
+      ActivityCategory.beschaffung => 'Beschaffung',
+      ActivityCategory.warenbestandssteuerung => 'Warenbestandssteuerung',
+      ActivityCategory.kaufmaennischeSteuerung =>
+        'Kaufmännische Steuerung & Kontrolle',
+      ActivityCategory.onlinehandel => 'Onlinehandel & Omnichannel',
+      ActivityCategory.personalOrganisation => 'Personal & Organisation',
     };
   }
 }

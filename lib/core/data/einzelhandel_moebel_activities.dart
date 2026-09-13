@@ -1,0 +1,145 @@
+import '../enums/activity_category.dart';
+import '../models/activity_template.dart';
+
+ActivityTemplate einzelhandelMoebelActivity({
+  required String id,
+  required String title,
+  required ActivityCategory category,
+  bool isActive = false,
+}) => ActivityTemplate(
+      id: id,
+      title: title,
+      category: category,
+      isActive: isActive,
+    );
+
+/// Generische Tätigkeiten für den Möbel- und Einrichtungshandel.
+///
+/// Die Formulierungen beschreiben beobachtbare Ausbildungsaufgaben und nennen
+/// bewusst keine betriebsinternen Systeme oder Abläufe.
+final List<ActivityTemplate> einzelhandelMoebelActivities = [
+  // Kundenberatung und Wohnberatung
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_01', title: 'Kunden aktiv angesprochen', category: ActivityCategory.kundenberatung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_02', title: 'Den Kundenbedarf für eine Einrichtung ermittelt', category: ActivityCategory.kundenberatung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_03', title: 'Wünsche zur Einrichtung aufgenommen', category: ActivityCategory.kundenberatung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_04', title: 'Kunden zu Möbeln beraten', category: ActivityCategory.kundenberatung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_05', title: 'Produktalternativen vorgestellt', category: ActivityCategory.kundenberatung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_06', title: 'Unterschiedliche Möbelmodelle verglichen', category: ActivityCategory.kundenberatung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_07', title: 'Kunden zu Farben und Materialien beraten', category: ActivityCategory.kundenberatung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_08', title: 'Kunden bei der Produktauswahl unterstützt', category: ActivityCategory.kundenberatung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_09', title: 'Vor- und Nachteile verschiedener Produkte erläutert', category: ActivityCategory.kundenberatung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_10', title: 'Zu passenden Ergänzungsartikeln beraten', category: ActivityCategory.kundenberatung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_11', title: 'Einen Zusatzverkauf durchgeführt', category: ActivityCategory.kundenberatung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_beratung_12', title: 'Bei einer komplexeren Kaufentscheidung unterstützt', category: ActivityCategory.kundenberatung, isActive: true),
+
+  // Möbel- und Materialkunde
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_01', title: 'Materialeigenschaften verschiedener Möbel erklärt', category: ActivityCategory.materialkunde, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_02', title: 'Holzarten unterschieden', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_03', title: 'Holzwerkstoffe erläutert', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_04', title: 'Oberflächen verglichen', category: ActivityCategory.materialkunde, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_05', title: 'Polstermaterialien verglichen', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_06', title: 'Bezugsstoffe erklärt', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_07', title: 'Lederarten und Lederqualitäten besprochen', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_08', title: 'Pflegehinweise erklärt', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_09', title: 'Qualitätsmerkmale von Möbeln erläutert', category: ActivityCategory.materialkunde, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_10', title: 'Unterschiede verschiedener Konstruktionen erklärt', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_11', title: 'Maße und Abmessungen berücksichtigt', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_12', title: 'Nutzungseigenschaften und Belastbarkeit erläutert', category: ActivityCategory.materialkunde),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_material_13', title: 'Nachhaltige Materialeigenschaften berücksichtigt', category: ActivityCategory.materialkunde),
+
+  // Raum- und Einrichtungsplanung
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_01', title: 'Raummaße aufgenommen', category: ActivityCategory.raumplanung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_02', title: 'Kundenangaben zu Raummaßen geprüft', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_03', title: 'Möbel anhand vorhandener Raummaße ausgewählt', category: ActivityCategory.raumplanung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_04', title: 'Einen Einrichtungsvorschlag erstellt', category: ActivityCategory.raumplanung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_05', title: 'Eine Möbelanordnung geplant', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_06', title: 'Farbkombinationen abgestimmt', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_07', title: 'Einrichtungsvarianten verglichen', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_08', title: 'Kunden bei der Raumgestaltung beraten', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_09', title: 'Eine Planung anhand von Kundenwünschen angepasst', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_10', title: 'Eine Planung mit Einrichtungssoftware erstellt', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_11', title: 'Eine Planung im System gespeichert oder geändert', category: ActivityCategory.raumplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_raumplanung_12', title: 'Eine Alternativplanung erstellt', category: ActivityCategory.raumplanung),
+
+  // Optionaler Küchenbereich
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_01', title: 'Kundenwünsche für eine Küchenplanung aufgenommen', category: ActivityCategory.kuechenplanung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_02', title: 'Küchenmaße berücksichtigt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_03', title: 'Eine Küchenplanung erstellt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_04', title: 'Eine Küchenplanung geändert', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_05', title: 'Schranktypen ausgewählt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_06', title: 'Arbeitsplatten verglichen', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_07', title: 'Fronten und Materialien verglichen', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_08', title: 'Elektrogeräte berücksichtigt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_09', title: 'Die Stauraumplanung berücksichtigt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_10', title: 'Ergonomische Aspekte berücksichtigt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_11', title: 'Verschiedene Küchenvarianten gezeigt', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_12', title: 'Ein Küchenangebot vorbereitet', category: ActivityCategory.kuechenplanung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_kueche_13', title: 'Eine Küchenplanung mit Kunden abgestimmt', category: ActivityCategory.kuechenplanung),
+
+  // Auftrag, Vertrag und Finanzierung
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_01', title: 'Einen Kundenauftrag angelegt', category: ActivityCategory.auftragVertragsabwicklung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_02', title: 'Kundendaten aufgenommen', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_03', title: 'Einen Auftrag auf Vollständigkeit geprüft', category: ActivityCategory.auftragVertragsabwicklung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_04', title: 'Artikelnummern kontrolliert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_05', title: 'Varianten und Ausführungen kontrolliert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_06', title: 'Maße kontrolliert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_07', title: 'Den Lieferumfang geprüft', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_08', title: 'Über Lieferbedingungen informiert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_09', title: 'Einen Liefertermin besprochen', category: ActivityCategory.auftragVertragsabwicklung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_10', title: 'Eine Lieferadresse geprüft', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_11', title: 'Montage- und Zusatzleistungen erläutert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_12', title: 'Einen Auftrag geändert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_13', title: 'Den Auftragsstatus geprüft', category: ActivityCategory.auftragVertragsabwicklung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_14', title: 'Vertragsunterlagen vorbereitet', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_auftrag_15', title: 'Eine Auftragsbestätigung geprüft', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_finanzierung_01', title: 'Verschiedene Zahlungsarten erklärt', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_finanzierung_02', title: 'Über Finanzierungsmöglichkeiten informiert', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_finanzierung_03', title: 'Eine Finanzierungsanfrage vorbereitet', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_finanzierung_04', title: 'Notwendige Kundendaten aufgenommen', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_finanzierung_05', title: 'Unterlagen auf Vollständigkeit geprüft', category: ActivityCategory.auftragVertragsabwicklung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_finanzierung_06', title: 'Kunden an die zuständige Stelle weitergeleitet', category: ActivityCategory.auftragVertragsabwicklung),
+
+  // Lieferung, Montage und Nachbetreuung
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_01', title: 'Den Lieferstatus geprüft', category: ActivityCategory.lieferungMontage, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_02', title: 'Einen Liefertermin abgestimmt', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_03', title: 'Kunden über die Lieferung informiert', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_04', title: 'Eine Montageleistung erläutert', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_05', title: 'Fehlende oder beschädigte Ware aufgenommen', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_06', title: 'Eine Lieferreklamation aufgenommen', category: ActivityCategory.lieferungMontage, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_07', title: 'Reklamationsdaten dokumentiert', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_08', title: 'Eine Ersatzlieferung vorbereitet', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_09', title: 'Die weitere Bearbeitung vorbereitet', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_10', title: 'Kunden über den weiteren Ablauf informiert', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_11', title: 'Rückfragen zu Lieferung oder Montage bearbeitet', category: ActivityCategory.lieferungMontage),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_lieferung_12', title: 'Eine Reklamation mit weiteren Bereichen abgestimmt', category: ActivityCategory.lieferungMontage),
+
+  // Ausstellung, Verkaufsfläche und Warenwirtschaft
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_01', title: 'Die Ausstellung kontrolliert', category: ActivityCategory.warenpraesentation, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_02', title: 'Einen Musterwohnbereich gepflegt', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_03', title: 'Möbel verkaufsfördernd präsentiert', category: ActivityCategory.warenpraesentation, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_04', title: 'Die Dekoration angepasst', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_05', title: 'Die Preisauszeichnung kontrolliert', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_06', title: 'Aktionshinweise angebracht', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_07', title: 'Die Ausstellung nach Vorgaben umgestaltet', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_08', title: 'Ausgestellte Ware auf Beschädigungen geprüft', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_09', title: 'Produktinformationen kontrolliert', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_ausstellung_10', title: 'Eine Aktionsfläche aufgebaut', category: ActivityCategory.warenpraesentation),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_01', title: 'Die Warenverfügbarkeit geprüft', category: ActivityCategory.warenbestandssteuerung, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_02', title: 'Den Lagerbestand eines Artikels geprüft', category: ActivityCategory.warenbestandssteuerung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_03', title: 'Den Bestellstatus geprüft', category: ActivityCategory.warenbestandssteuerung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_04', title: 'Die Lieferfähigkeit geprüft', category: ActivityCategory.warenbestandssteuerung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_05', title: 'Eine Bestandsabweichung nachvollzogen', category: ActivityCategory.warenbestandssteuerung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_06', title: 'Einen Artikel im Warenwirtschaftssystem gesucht', category: ActivityCategory.warenbestandssteuerung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_07', title: 'Produktvarianten im System geprüft', category: ActivityCategory.warenbestandssteuerung),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_bestand_08', title: 'Einen Kundenauftrag mit dem Warenbestand abgeglichen', category: ActivityCategory.warenbestandssteuerung),
+
+  // Onlinehandel und Omnichannel
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_01', title: 'Die Online-Verfügbarkeit eines Artikels geprüft', category: ActivityCategory.onlinehandel, isActive: true),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_02', title: 'Kunden bei einem Onlineangebot unterstützt', category: ActivityCategory.onlinehandel),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_03', title: 'Online- und Filialangebot verglichen', category: ActivityCategory.onlinehandel),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_04', title: 'Eine Onlinebestellung im Zusammenhang mit einer Beratung geprüft', category: ActivityCategory.onlinehandel),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_05', title: 'Produktinformationen im Onlineangebot kontrolliert', category: ActivityCategory.onlinehandel),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_06', title: 'Über verschiedene Bestellwege informiert', category: ActivityCategory.onlinehandel),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_07', title: 'Einen digitalen Kundenkontakt bearbeitet', category: ActivityCategory.onlinehandel),
+  einzelhandelMoebelActivity(id: 'einzelhandel_moebel_online_08', title: 'Einen digitalen Auftrag geprüft', category: ActivityCategory.onlinehandel),
+];

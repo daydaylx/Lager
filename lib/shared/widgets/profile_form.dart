@@ -10,12 +10,25 @@ typedef ProfileSubmitCallback = Future<void> Function({
   String? wahlqualifikation,
 });
 
+typedef ExtendedProfileSubmitCallback = Future<void> Function({
+  String? name,
+  String? company,
+  required String occupation,
+  required int trainingYear,
+  String? wahlqualifikation,
+  required List<String> wahlqualifikationen,
+  String? industryProfile,
+});
+
 class ProfileForm extends StatefulWidget {
   final String? initialName;
   final String? initialCompany;
   final String? initialOccupation;
   final int? initialTrainingYear;
   final String? initialWahlqualifikation;
+  final List<String> initialWahlqualifikationen;
+  final String? initialIndustryProfile;
+  final ExtendedProfileSubmitCallback? onSubmitExtended;
   final String submitLabel;
   final IconData submitIcon;
   final String? successMessage;
@@ -28,6 +41,9 @@ class ProfileForm extends StatefulWidget {
     this.initialOccupation,
     this.initialTrainingYear,
     this.initialWahlqualifikation,
+    this.initialWahlqualifikationen = const [],
+    this.initialIndustryProfile,
+    this.onSubmitExtended,
     required this.submitLabel,
     required this.submitIcon,
     this.successMessage,
@@ -44,6 +60,8 @@ class _ProfileFormState extends State<ProfileForm> {
   String? _selectedOccupation;
   int? _selectedTrainingYear;
   String? _selectedWahlqualifikation;
+  late Set<String> _selectedWahlqualifikationen;
+  String? _selectedIndustryProfile;
   bool _isSaving = false;
 
   @override
@@ -54,6 +72,8 @@ class _ProfileFormState extends State<ProfileForm> {
     _selectedOccupation = widget.initialOccupation;
     _selectedTrainingYear = widget.initialTrainingYear;
     _selectedWahlqualifikation = widget.initialWahlqualifikation;
+    _selectedWahlqualifikationen = widget.initialWahlqualifikationen.toSet();
+    _selectedIndustryProfile = widget.initialIndustryProfile;
   }
 
   @override
@@ -73,13 +93,28 @@ class _ProfileFormState extends State<ProfileForm> {
     setState(() => _isSaving = true);
 
     try {
-      await widget.onSubmit(
-        name: _optionalText(_nameController.text),
-        company: _optionalText(_companyController.text),
-        occupation: _selectedOccupation!,
-        trainingYear: _selectedTrainingYear!,
-        wahlqualifikation: _selectedWahlqualifikation,
-      );
+      final name = _optionalText(_nameController.text);
+      final company = _optionalText(_companyController.text);
+      final extended = widget.onSubmitExtended;
+      if (extended != null) {
+        await extended(
+          name: name,
+          company: company,
+          occupation: _selectedOccupation!,
+          trainingYear: _selectedTrainingYear!,
+          wahlqualifikation: _selectedWahlqualifikation,
+          wahlqualifikationen: _selectedWahlqualifikationen.toList(),
+          industryProfile: _selectedIndustryProfile,
+        );
+      } else {
+        await widget.onSubmit(
+          name: name,
+          company: company,
+          occupation: _selectedOccupation!,
+          trainingYear: _selectedTrainingYear!,
+          wahlqualifikation: _selectedWahlqualifikation,
+        );
+      }
 
       if (mounted) {
         setState(() => _isSaving = false);
@@ -112,6 +147,11 @@ class _ProfileFormState extends State<ProfileForm> {
         !allowedTrainingYears.contains(_selectedTrainingYear);
     final isVerkaeufer =
         _selectedOccupation == TrainingOccupationValues.verkaeufer;
+    final isKaufmann =
+        _selectedOccupation == TrainingOccupationValues.kaufmannEinzelhandel;
+    final hasValidKaufmannWahlqualifikationen =
+        _selectedWahlqualifikationen.length == 3 &&
+            _selectedWahlqualifikationen.any(_isCoreKaufmannWahlqualifikation);
     final canSubmit = _selectedOccupation != null &&
         TrainingYearValues.isValidForOccupation(
           _selectedTrainingYear,
@@ -122,6 +162,7 @@ class _ProfileFormState extends State<ProfileForm> {
                   _selectedWahlqualifikation ?? '',
                 ) !=
                 null) &&
+        (!isKaufmann || hasValidKaufmannWahlqualifikationen) &&
         !_isSaving;
 
     return Column(
@@ -180,6 +221,40 @@ class _ProfileFormState extends State<ProfileForm> {
           selectedValue: _selectedOccupation,
           onSelected: _selectOccupation,
         ),
+        _OccupationOption(
+          title: 'Kaufmann/-frau im Einzelhandel',
+          value: TrainingOccupationValues.kaufmannEinzelhandel,
+          selectedValue: _selectedOccupation,
+          onSelected: _selectOccupation,
+        ),
+        if (isKaufmann) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Branche (optional)',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Brancheninhalte werden nur zusätzlich vorgeschlagen und können später geändert werden.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          FilterChip(
+            key: const ValueKey('industry_profile_moebel_einrichtung'),
+            label: Text(IndustryProfile.moebelEinrichtung.label),
+            selected: _selectedIndustryProfile ==
+                IndustryProfile.moebelEinrichtung.storageKey,
+            onSelected: (selected) => setState(
+              () => _selectedIndustryProfile = selected
+                  ? IndustryProfile.moebelEinrichtung.storageKey
+                  : null,
+            ),
+          ),
+        ],
         if (isVerkaeufer) ...[
           const SizedBox(height: 24),
           Text(
@@ -209,6 +284,49 @@ class _ProfileFormState extends State<ProfileForm> {
                   () => _selectedWahlqualifikation = selected,
                 ),
               ),
+            ),
+          ),
+        ],
+        if (isKaufmann) ...[
+          const SizedBox(height: 24),
+          Text(
+            'Welche Wahlqualifikationen hast du?',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Wähle genau drei aus deinem Ausbildungsvertrag. Mindestens eine der ersten drei muss dabei sein.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...EinzelhandelWahlqualifikation.values.map(
+            (value) => CheckboxListTile(
+              key: ValueKey('einzelhandel_wahlqualifikation_${value.storageKey}'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(value.label),
+              value: _selectedWahlqualifikationen.contains(value.storageKey),
+              onChanged: _selectedWahlqualifikationen.contains(value.storageKey) ||
+                      _selectedWahlqualifikationen.length < 3
+                  ? (selected) => setState(() {
+                      if (selected == true) {
+                        _selectedWahlqualifikationen.add(value.storageKey);
+                      } else {
+                        _selectedWahlqualifikationen.remove(value.storageKey);
+                      }
+                    })
+                  : null,
+            ),
+          ),
+          Text(
+            '${_selectedWahlqualifikationen.length} von 3 ausgewählt',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: hasValidKaufmannWahlqualifikationen
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.error,
             ),
           ),
         ],
@@ -284,7 +402,18 @@ class _ProfileFormState extends State<ProfileForm> {
       if (occupation != TrainingOccupationValues.verkaeufer) {
         _selectedWahlqualifikation = null;
       }
+      if (occupation != TrainingOccupationValues.kaufmannEinzelhandel) {
+        _selectedWahlqualifikationen.clear();
+        _selectedIndustryProfile = null;
+      }
     });
+  }
+
+  bool _isCoreKaufmannWahlqualifikation(String key) {
+    return key ==
+            EinzelhandelWahlqualifikation.beratungKomplexeSituationen.storageKey ||
+        key == EinzelhandelWahlqualifikation.beschaffungWaren.storageKey ||
+        key == EinzelhandelWahlqualifikation.warenbestandssteuerung.storageKey;
   }
 
   void _selectTrainingYear(int trainingYear) {

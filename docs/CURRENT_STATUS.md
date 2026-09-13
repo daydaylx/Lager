@@ -1,6 +1,25 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-08-15 (Verkäufer-Alltagserweiterungen ergänzt)
+Stand: 2026-08-15 (Kaufmann/-frau im Einzelhandel und Möbelprofil ergänzt)
+
+---
+
+## Letzte Änderung: Kaufmann/-frau im Einzelhandel
+
+- Eigenständiges dreijähriges Berufsprofil mit acht Wahlqualifikationen und
+  optionalem Branchenprofil „Möbel & Einrichtung“ ergänzt. Verkäufer/in bleibt
+  unverändert zweijährig mit vier Wahlqualifikationen.
+- Kaufmännische, jahrgangsabhängige Berufsschul- und umfangreiche
+  Möbelhandels-Tätigkeiten ergänzt; neue IDs bleiben in den reservierten
+  `einzelhandel_*`-Namespaces. Empfehlungen berücksichtigen Jahr, Branche und
+  Wahlqualifikation.
+- Onboarding, Profilbearbeitung, Today-/Vorlagenpicker, Bericht und JSON-Export
+  führen die neuen Felder rückwärtskompatibel weiter. Hive-Schemata und alte
+  IDs wurden nicht geändert.
+- Verifiziert: `flutter analyze` 0 Issues; vollständiger Flutter-Testlauf
+  mit 327 Tests grün. Der Lauf zeigt nur die bestehenden Hive-Hinweise zu
+  absichtlich überschriebenen Adaptern in Migrationstests. Der kanonische
+  Das projektlokale Profil `.pi/verify.json` ist eingerichtet; `project_check({profile: "verify"})` läuft für diesen Flutter-Stand grün.
 
 ---
 
@@ -84,8 +103,8 @@ Stand: 2026-08-15 (Verkäufer-Alltagserweiterungen ergänzt)
   Der Build ohne `--dart-define` bleibt der veröffentlichbare Standard ohne
   Netzwerkfunktion.
 - Offen: Android-Gerätetest der key-aktivierten APK; das kanonische
-  `project_check verify` ist weiterhin nicht konfiguriert, weil
-  `.pi/verify.json` fehlt. Die key-aktivierte APK und das
+  Das projektlokale Profil `.pi/verify.json` ist eingerichtet und erfolgreich
+  ausgeführt. Die key-aktivierte APK und das
   Build-Skript-Ergebnis dürfen nicht veröffentlicht werden.
 
 ---

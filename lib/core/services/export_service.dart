@@ -53,6 +53,8 @@ class ExportService {
         'occupation': profile.occupation,
         'trainingYear': profile.trainingYear,
         'wahlqualifikation': profile.wahlqualifikation,
+        'wahlqualifikationen': profile.wahlqualifikationen,
+        'industryProfile': profile.industryProfile,
       },
       'entries': serializedEntries,
       'customActivities': customs

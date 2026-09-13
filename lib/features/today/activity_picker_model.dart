@@ -56,23 +56,46 @@ class ActivityPickerModel {
     required List<AdhocActivity> adhocActivities,
     TrainingOccupation occupation = TrainingOccupation.fachkraftLagerlogistik,
     String? wahlqualifikation,
+    List<String> wahlqualifikationen = const [],
+    IndustryProfile? industryProfile,
   }) {
     final occupationConfig = OccupationRegistry.configFor(occupation);
-    final categories = _categoriesFor(dayType, selectedAreas, occupationConfig);
+    final categories = _categoriesFor(
+      dayType,
+      selectedAreas,
+      occupationConfig,
+      industryProfile,
+    );
     final effectiveDefaults = [
       for (final activity in defaultActivities)
         _applyOverride(activity, defaultOverrides),
     ];
     final availableDefaults = effectiveDefaults.where((activity) {
       if (!occupationConfig.isActivityInOccupation(activity.id)) return false;
-      if (activity.category == ActivityCategory.berufsschule &&
-          occupation == TrainingOccupation.verkaeufer) {
-        return occupationConfig.schoolTopicIds.contains(activity.id) &&
-            _sellerSchoolTopicForYear(activity.id, trainingYear);
+      final metadata = activityMetadataFor(activity.id);
+      if (trainingYear != null &&
+          !metadata.isAvailableForYear(trainingYear)) {
+        return false;
+      }
+      if (metadata.industryProfileKeys.isNotEmpty &&
+          !metadata.isForIndustry(industryProfile)) {
+        return false;
+      }
+      if (activity.category == ActivityCategory.berufsschule) {
+        if (occupation == TrainingOccupation.verkaeufer) {
+          return occupationConfig.schoolTopicIds.contains(activity.id) &&
+              _sellerSchoolTopicForYear(activity.id, trainingYear);
+        }
+        if (occupation == TrainingOccupation.kaufmannEinzelhandel &&
+            activity.id.startsWith('verkauf_schule_')) {
+          return _sellerSchoolTopicForYear(activity.id, trainingYear);
+        }
+        return metadata.isSchoolTopicForYear(trainingYear ?? 1);
       }
       return occupationConfig.activityCategories.contains(activity.category);
     }).map((activity) {
-      if (occupation == TrainingOccupation.verkaeufer &&
+      if ((occupation == TrainingOccupation.verkaeufer ||
+              occupation == TrainingOccupation.kaufmannEinzelhandel) &&
           activity.category == ActivityCategory.berufsschule) {
         // Berufsschulthemen werden nach Jahr angeboten; ihr Katalogstatus
         // beschreibt nicht, ob sie im betrieblichen Quick-Access erscheinen.
@@ -122,14 +145,18 @@ class ActivityPickerModel {
             selectedActivityIds,
           );
     final frequentIds = frequentActivities.map((a) => a.id).toSet();
-    final selectedWahlqualifikation = wahlqualifikation == null
+    final selectedSellerWahlqualifikation = wahlqualifikation == null
         ? null
         : WahlqualifikationDetails.fromStorageKey(wahlqualifikation);
-    final preferredKeywords = selectedWahlqualifikation == null
+    final selectedEinzelhandelWahlqualifikationen = wahlqualifikationen
+        .map(EinzelhandelWahlqualifikationDetails.fromStorageKey)
+        .whereType<EinzelhandelWahlqualifikation>()
+        .toList(growable: false);
+    final preferredKeywords = selectedSellerWahlqualifikation == null
         ? const <String>[]
-        : (occupationConfig
-                .wahlqualifikationKeywords[selectedWahlqualifikation] ??
-            const <String>[]);
+        : (occupationConfig.wahlqualifikationKeywords[
+                  selectedSellerWahlqualifikation] ??
+              const <String>[]);
     final recommendedActivities = !hasSearch && trainingYear != null
         ? computeRecommendedActivities(
             categories,
@@ -138,14 +165,19 @@ class ActivityPickerModel {
             frequentIds,
             trainingYear,
             preferredKeywords: preferredKeywords,
+            industryProfile: industryProfile,
+            einzelhandelWahlqualifikationen:
+                selectedEinzelhandelWahlqualifikationen,
           )
         : const <ActivityTemplate>[];
     final recommendationContext = occupation == TrainingOccupation.verkaeufer &&
-            selectedWahlqualifikation != null
-        ? 'Wahlqualifikation: ${selectedWahlqualifikation.label}'
-        : trainingYear == null
-            ? null
-            : '$trainingYear. Ausbildungsjahr';
+            selectedSellerWahlqualifikation != null
+        ? 'Wahlqualifikation: ${selectedSellerWahlqualifikation.label}'
+        : occupation == TrainingOccupation.kaufmannEinzelhandel
+            ? '${trainingYear ?? 0}. Jahr${industryProfile == null ? '' : ' · ${industryProfile.label}'}'
+            : trainingYear == null
+                ? null
+                : '$trainingYear. Ausbildungsjahr';
     final hiddenQuickAccessIds = {
       ...frequentIds,
       ...recommendedActivities.map((a) => a.id),
@@ -270,7 +302,7 @@ class ActivityPickerModel {
   ) {
     if (selectedIds.contains(activity.id)) return true;
     if (!activity.isActive) return false;
-    if (occupation != TrainingOccupation.verkaeufer) return true;
+    if (!config.compactPicker) return true;
     // Berufsschulthemen werden fachlich über das Ausbildungsjahr begrenzt,
     // nicht über den betrieblichen Quick-Access-Katalog.
     if (activity.category == ActivityCategory.berufsschule) return true;
@@ -282,13 +314,19 @@ class ActivityPickerModel {
     DayType dayType,
     Set<TrainingArea> selectedAreas,
     OccupationConfig config,
+    IndustryProfile? industryProfile,
   ) {
     return switch (dayType) {
       DayType.betrieb => <ActivityCategory>{
-          ...config.categoriesForAreas(selectedAreas),
-          if (config.occupation == TrainingOccupation.verkaeufer)
+          ...config.categoriesForAreas(
+            selectedAreas,
+            industry: industryProfile,
+          ),
+          if (config.occupation == TrainingOccupation.verkaeufer ||
+              config.occupation == TrainingOccupation.kaufmannEinzelhandel)
             ActivityCategory.allgemein,
-          if (config.occupation != TrainingOccupation.verkaeufer)
+          if (config.occupation != TrainingOccupation.verkaeufer &&
+              config.occupation != TrainingOccupation.kaufmannEinzelhandel)
             ActivityCategory.sicherheit,
         }.toList(growable: false),
       DayType.berufsschule => [ActivityCategory.berufsschule],

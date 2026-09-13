@@ -77,11 +77,15 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 
 | Datei | Inhalt |
 | --- | --- |
-| `domain/occupation.dart` | Persistente Berufe, zulässige Ausbildungsjahre und vier Wahlqualifikationen |
+| `domain/occupation.dart` | Persistente Berufe, zulässige Ausbildungsjahre sowie Verkäufer-/Einzelhandels-Wahlqualifikationen |
 | `domain/occupation_config.dart` | Bereiche, Kategorien, Prefix, Schul-Themen und Empfehlungsregeln je Beruf |
-| `domain/occupation_registry.dart` | Zentrale Registry für Lagerlogistik und Verkäufer/in |
-| `data/verkaeufer_activities.dart` | 138 additive Verkäufer-Tätigkeiten mit `verkauf_*`-IDs |
-| `data/default_activities.dart` | Unveränderter Lagerkatalog plus Verkäufer-Katalog |
+| `domain/occupation_registry.dart` | Zentrale Registry für Berufe, Branchenbereiche und Empfehlungen |
+| `data/verkaeufer_activities.dart` | Bestehende additive Verkäufer-Tätigkeiten mit `verkauf_*`-IDs |
+| `data/einzelhandel_activities.dart` | Kaufmännische und Berufsschul-Tätigkeiten mit `einzelhandel_*`-IDs |
+| `data/einzelhandel_moebel_activities.dart` | Möbel-/Einrichtungstätigkeiten mit `einzelhandel_moebel_*`-IDs |
+| `domain/industry_profile.dart` | Optionales Branchenprofil Möbel & Einrichtung |
+| `domain/activity_catalog_metadata.dart` | Nicht persistierte Filter-/Empfehlungsmetadaten |
+| `data/default_activities.dart` | Kombinierter, rückwärtskompatibler Standardkatalog |
 
 ### KI-Berichtsnachbearbeitung
 
@@ -106,9 +110,9 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | Datei                                   | Inhalt                                             |
 | --------------------------------------- | -------------------------------------------------- |
 | `core/constants.dart`                   | `AppStrings` + SharedPreferences-Schlüssel         |
-| `core/profile_storage.dart`             | `StoredProfile` in SharedPreferences               |
+| `core/profile_storage.dart`             | `StoredProfile` mit Berufs-, WQ- und Branchenfeldern in SharedPreferences |
 | `core/week_utils.dart`                  | ISO-Kalenderwochen-Helfer                          |
-| `core/data/default_activities.dart`     | 132 stabile IDs; 123 fachlich auswählbare Tätigkeiten |
+| `core/data/default_activities.dart`     | Kombinierter Standardkatalog mit stabilen Alt- und neuen Einzelhandels-IDs |
 | `core/data/activity_subcategories.dart` | Fachliche Untergruppen für Tätigkeitslisten        |
 | `core/data/lager_jokes.dart`            | 300 lokale allgemeine Belohnungswitze, deterministisch pro Kalendertag |
 | `core/ui/day_status_colors.dart`        | Zentrale Statusfarben (saved/open/absence/neutral) |

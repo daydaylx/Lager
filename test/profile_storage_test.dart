@@ -138,6 +138,62 @@ void main() {
       );
     });
 
+    test('Kaufmann akzeptiert drei Wahlqualifikationen und Branchenprofil',
+        () async {
+      await ProfileStorage.save(
+        occupation: 'kaufmann_einzelhandel',
+        trainingYear: 3,
+        wahlqualifikationen: const [
+          'beratungKomplexeSituationen',
+          'onlinehandel',
+          'marketingmassnahmen',
+        ],
+        industryProfile: 'moebel_einrichtung',
+      );
+      final profile = await ProfileStorage.load();
+      expect(profile.wahlqualifikationen, const [
+        'beratungKomplexeSituationen',
+        'marketingmassnahmen',
+        'onlinehandel',
+      ]);
+      expect(profile.industryProfile, 'moebel_einrichtung');
+    });
+
+    test('Kaufmann benötigt genau drei gültige Wahlqualifikationen', () async {
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'kaufmann_einzelhandel',
+          trainingYear: 1,
+          wahlqualifikationen: const ['onlinehandel'],
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'kaufmann_einzelhandel',
+          trainingYear: 1,
+          wahlqualifikationen: const [
+            'onlinehandel',
+            'marketingmassnahmen',
+            'mitarbeiterfuehrungEntwicklung',
+          ],
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('Möbelprofil wird für Verkäufer abgelehnt', () async {
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'verkaeufer',
+          trainingYear: 1,
+          wahlqualifikation: 'beratungVonKunden',
+          industryProfile: 'moebel_einrichtung',
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('Fachlagerist mit 3. Jahr wirft ArgumentError', () async {
       expect(
         () => ProfileStorage.save(occupation: 'fachlagerist', trainingYear: 3),
@@ -189,6 +245,8 @@ void main() {
         occupation: occupation,
         trainingYear: trainingYear,
         wahlqualifikation: null,
+        wahlqualifikationen: const [],
+        industryProfile: null,
         onboardingCompleted: onboardingCompleted,
       );
     }

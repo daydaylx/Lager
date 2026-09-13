@@ -1,5 +1,6 @@
 import '../enums/activity_category.dart';
 import '../enums/training_area.dart';
+import 'industry_profile.dart';
 import 'occupation.dart';
 import 'occupation_config.dart';
 
@@ -9,6 +10,7 @@ class OccupationRegistry {
     TrainingOccupation.fachlagerist: _lagerConfig,
     TrainingOccupation.fachkraftLagerlogistik: _lagerConfig,
     TrainingOccupation.verkaeufer: _verkaeuferConfig,
+    TrainingOccupation.kaufmannEinzelhandel: _kaufmannEinzelhandelConfig,
   };
 
   static List<TrainingOccupation> get allOccupations =>
@@ -51,7 +53,8 @@ class OccupationRegistry {
       ActivityCategory.berufsschule,
       ActivityCategory.sicherheit,
     },
-    activityIdPrefix: '',
+    activityIdPrefixes: {''},
+    excludedActivityIdPrefixes: {'verkauf_', 'einzelhandel_'},
   );
 
   static const OccupationConfig _verkaeuferConfig = OccupationConfig(
@@ -94,8 +97,8 @@ class OccupationRegistry {
       ActivityCategory.allgemein,
       ActivityCategory.berufsschule,
     },
-    activityIdPrefix: 'verkauf_',
-    // 38 häufige Tätigkeiten bleiben im Tagespicker kompakt sichtbar.
+    activityIdPrefixes: {'verkauf_'},
+    compactPicker: true,
     quickAccessActivityIds: {
       'verkauf_beratung_01',
       'verkauf_beratung_02',
@@ -188,6 +191,98 @@ class OccupationRegistry {
         'verkaufsförder',
         'aktionsfläche',
       ],
+    },
+  );
+
+  static const OccupationConfig _kaufmannEinzelhandelConfig =
+      OccupationConfig(
+    occupation: TrainingOccupation.kaufmannEinzelhandel,
+    areas: [
+      TrainingArea.verkaufsflaeche,
+      TrainingArea.kundenberatung,
+      TrainingArea.kasse,
+      TrainingArea.warenpraesentation,
+      TrainingArea.wareneingangVerkauf,
+      TrainingArea.lagerBestand,
+      TrainingArea.reklamationService,
+      TrainingArea.werbungVerkaufsfoerderung,
+      TrainingArea.beschaffung,
+      TrainingArea.warenbestandssteuerung,
+      TrainingArea.kaufmaennischeSteuerung,
+      TrainingArea.onlinehandel,
+      TrainingArea.personalOrganisation,
+    ],
+    categoriesByArea: {
+      TrainingArea.verkaufsflaeche: [ActivityCategory.verkaufsflaeche],
+      TrainingArea.kundenberatung: [ActivityCategory.kundenberatung],
+      TrainingArea.kasse: [ActivityCategory.kasse, ActivityCategory.preis],
+      TrainingArea.warenpraesentation: [
+        ActivityCategory.warenpraesentation,
+        ActivityCategory.werbungVerkaufsfoerderung,
+      ],
+      TrainingArea.wareneingangVerkauf: [ActivityCategory.wareneingangVerkauf],
+      TrainingArea.lagerBestand: [ActivityCategory.lagerBestand],
+      TrainingArea.reklamationService: [ActivityCategory.reklamationService],
+      TrainingArea.werbungVerkaufsfoerderung: [
+        ActivityCategory.werbungVerkaufsfoerderung,
+      ],
+      TrainingArea.beschaffung: [ActivityCategory.beschaffung],
+      TrainingArea.warenbestandssteuerung: [
+        ActivityCategory.warenbestandssteuerung,
+      ],
+      TrainingArea.kaufmaennischeSteuerung: [
+        ActivityCategory.kaufmaennischeSteuerung,
+      ],
+      TrainingArea.onlinehandel: [ActivityCategory.onlinehandel],
+      TrainingArea.personalOrganisation: [
+        ActivityCategory.personalOrganisation,
+      ],
+    },
+    activityCategories: {
+      ActivityCategory.verkaufsflaeche,
+      ActivityCategory.kundenberatung,
+      ActivityCategory.kasse,
+      ActivityCategory.warenpraesentation,
+      ActivityCategory.wareneingangVerkauf,
+      ActivityCategory.lagerBestand,
+      ActivityCategory.reklamationService,
+      ActivityCategory.werbungVerkaufsfoerderung,
+      ActivityCategory.preis,
+      ActivityCategory.allgemein,
+      ActivityCategory.berufsschule,
+      ActivityCategory.beschaffung,
+      ActivityCategory.warenbestandssteuerung,
+      ActivityCategory.kaufmaennischeSteuerung,
+      ActivityCategory.onlinehandel,
+      ActivityCategory.personalOrganisation,
+      ActivityCategory.materialkunde,
+      ActivityCategory.raumplanung,
+      ActivityCategory.kuechenplanung,
+      ActivityCategory.auftragVertragsabwicklung,
+      ActivityCategory.lieferungMontage,
+    },
+    activityIdPrefixes: {'verkauf_', 'einzelhandel_'},
+    compactPicker: true,
+    supportedIndustryProfiles: {IndustryProfile.moebelEinrichtung},
+    industryAreas: {
+      IndustryProfile.moebelEinrichtung: [
+        TrainingArea.materialkunde,
+        TrainingArea.raumplanung,
+        TrainingArea.kuechenplanung,
+        TrainingArea.auftragVertragsabwicklung,
+        TrainingArea.lieferungMontage,
+      ],
+    },
+    industryCategoriesByArea: {
+      IndustryProfile.moebelEinrichtung: {
+        TrainingArea.materialkunde: [ActivityCategory.materialkunde],
+        TrainingArea.raumplanung: [ActivityCategory.raumplanung],
+        TrainingArea.kuechenplanung: [ActivityCategory.kuechenplanung],
+        TrainingArea.auftragVertragsabwicklung: [
+          ActivityCategory.auftragVertragsabwicklung,
+        ],
+        TrainingArea.lieferungMontage: [ActivityCategory.lieferungMontage],
+      },
     },
   );
 }

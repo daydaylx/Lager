@@ -24,6 +24,7 @@ class ProfileScreen extends StatefulWidget {
   final NotificationScheduler? notificationScheduler;
   final String? notificationInitializationError;
   final ProfileSubmitCallback? onProfileChanged;
+  final ExtendedProfileSubmitCallback? onProfileChangedExtended;
   final ThemePreset themePreset;
   final Future<void> Function(ThemePreset)? onThemeChanged;
   final AiReportCache aiReportCache;
@@ -36,6 +37,7 @@ class ProfileScreen extends StatefulWidget {
     this.notificationScheduler,
     this.notificationInitializationError,
     this.onProfileChanged,
+    this.onProfileChangedExtended,
     this.themePreset = ThemePreset.lagerTeal,
     this.onThemeChanged,
     this.aiReportCache = const DisabledAiReportCache(),
@@ -113,6 +115,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     required String occupation,
     required int trainingYear,
     String? wahlqualifikation,
+    List<String> wahlqualifikationen = const [],
+    String? industryProfile,
   }) async {
     await ProfileStorage.save(
       name: name,
@@ -120,6 +124,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       occupation: occupation,
       trainingYear: trainingYear,
       wahlqualifikation: wahlqualifikation,
+      wahlqualifikationen: wahlqualifikationen,
+      industryProfile: industryProfile,
     );
     await widget.onProfileChanged?.call(
       name: name,
@@ -128,7 +134,31 @@ class _ProfileScreenState extends State<ProfileScreen>
       trainingYear: trainingYear,
       wahlqualifikation: wahlqualifikation,
     );
+    await widget.onProfileChangedExtended?.call(
+      name: name,
+      company: company,
+      occupation: occupation,
+      trainingYear: trainingYear,
+      wahlqualifikation: wahlqualifikation,
+      wahlqualifikationen: wahlqualifikationen,
+      industryProfile: industryProfile,
+    );
   }
+
+  Future<void> _saveLegacyProfile({
+    String? name,
+    String? company,
+    required String occupation,
+    required int trainingYear,
+    String? wahlqualifikation,
+  }) =>
+      _saveProfile(
+        name: name,
+        company: company,
+        occupation: occupation,
+        trainingYear: trainingYear,
+        wahlqualifikation: wahlqualifikation,
+      );
 
   Future<void> _openProfileEditor() async {
     final profile = _profile;
@@ -137,7 +167,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       MaterialPageRoute(
         builder: (context) => ProfileEditScreen(
           profile: profile,
-          onSave: _saveProfile,
+          onSave: _saveLegacyProfile,
+          onSaveExtended: _saveProfile,
         ),
       ),
     );

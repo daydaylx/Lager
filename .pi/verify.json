@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "verify": {
+      "program": "bash",
+      "args": ["scripts/verify.sh"],
+      "cwd": ".",
+      "timeoutMs": 900000,
+      "classification": "required",
+      "required": true,
+      "env": {},
+      "trustRequired": true
+    }
+  }
+}

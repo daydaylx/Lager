@@ -38,6 +38,9 @@ const _titles = {
   'berufsschule_02': 'Sicherheitsunterweisung',
   'verkauf_beratung_03': 'Kunden zu Produkten beraten',
   'verkauf_kasse_02': 'Waren kassiert',
+  'einzelhandel_beratung_01': 'Komplexen Kundenbedarf analysiert',
+  'einzelhandel_moebel_kueche_01':
+      'Kundenwünsche für eine Küchenplanung aufgenommen',
 };
 
 void main() {
@@ -50,6 +53,25 @@ void main() {
       expect(result, contains('Wareneingang'));
       expect(result, contains('Ware angenommen'));
       expect(result, isNot(contains('wareneingang_01')));
+    });
+
+    test('Kaufmann-Bericht benennt Einzelhandel und Möbelbereich', () {
+      final result = DailyReportGenerator.generate(
+        _entry(
+          areas: const [TrainingArea.kuechenplanung],
+          department: 'Küchenplanung',
+          activities: const [
+            'einzelhandel_beratung_01',
+            'einzelhandel_moebel_kueche_01',
+          ],
+        ),
+        _titles,
+      );
+
+      expect(result, contains('Küchenplanung'));
+      expect(result, contains('Komplexen Kundenbedarf analysiert'));
+      expect(result, contains('Kundenwünsche für eine Küchenplanung aufgenommen'));
+      expect(result, isNot(contains('einzelhandel_')));
     });
 
     test('Verkäufer-Bereich und Tätigkeiten werden als Bericht aufgelöst', () {

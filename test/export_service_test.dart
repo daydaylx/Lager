@@ -110,6 +110,28 @@ void main() {
       expect(profile['wahlqualifikation'], 'beratungVonKunden');
     });
 
+    test('Kaufmannprofil exportiert Wahlqualifikationen und Branche', () async {
+      SharedPreferences.setMockInitialValues({
+        'training_occupation': 'kaufmann_einzelhandel',
+        'training_year': 3,
+        'wahlqualifikationen':
+            '["beratungKomplexeSituationen","onlinehandel","marketingmassnahmen"]',
+        'industry_profile': 'moebel_einrichtung',
+      });
+      final json = await ExportService.generateJson(
+        InMemoryDailyEntryStorage(),
+        InMemoryActivityTemplateStorage(),
+      );
+      final profile = jsonDecode(json)['profile'] as Map<String, dynamic>;
+
+      expect(profile['wahlqualifikationen'], [
+        'beratungKomplexeSituationen',
+        'marketingmassnahmen',
+        'onlinehandel',
+      ]);
+      expect(profile['industryProfile'], 'moebel_einrichtung');
+    });
+
     test('Fehlende optionale Profilfelder werden zu null', () async {
       SharedPreferences.setMockInitialValues({});
       final json = await ExportService.generateJson(

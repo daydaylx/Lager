@@ -5,6 +5,8 @@
 import '../enums/activity_category.dart';
 import '../models/activity_template.dart';
 import 'verkaeufer_activities.dart' hide ActivityTemplate;
+import 'einzelhandel_activities.dart';
+import 'einzelhandel_moebel_activities.dart';
 
 /// Vollständiger Standardkatalog der Lagerlogistik-Tätigkeiten.
 ///
@@ -831,6 +833,8 @@ final List<ActivityTemplate> defaultActivities = [
     isActive: false,
   ),
   ...verkaeuferActivities,
+  ...einzelhandelActivities,
+  ...einzelhandelMoebelActivities,
 ];
 
 /// Historische Katalogeinträge, die keine eigenständige, berichtsfähige

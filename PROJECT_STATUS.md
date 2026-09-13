@@ -4,7 +4,7 @@ Zuletzt aktualisiert: 2026-08-14
 
 ## Aktueller Stand
 
-**Phasen 0–20 im Code abgeschlossen. Der Reminder-Stack wurde am 2026-07-19 release-stabil überarbeitet (R8-Fix, atomare V2-Persistenz, exakte Alarme mit Fallback, Laufzeitstatus und sofortige Testfunktion). Phase 21 (Agenten-Qualität) Infrastruktur besteht. Phase 27 ergänzt eine optional deaktivierte OpenRouter-Berichtsnachbearbeitung mit lokalem Fallback; Modell-ID, Key und Budget sind bewusst nicht im Repository gesetzt. Phase 19 (Release-QA) bleibt offen: die vollständige manuelle Geräte-Checkliste ist noch nicht abgeschlossen.**
+**Phasen 0–20 im Code abgeschlossen. Der Reminder-Stack wurde am 2026-07-19 release-stabil überarbeitet (R8-Fix, atomare V2-Persistenz, exakte Alarme mit Fallback, Laufzeitstatus und sofortige Testfunktion). Phase 21 (Agenten-Qualität) Infrastruktur besteht. Phase 27 ergänzt eine optional deaktivierte OpenRouter-Berichtsnachbearbeitung mit lokalem Fallback; Modell-ID, Key und Budget sind bewusst nicht im Repository gesetzt. Das eigenständige Kaufmann/-frau-Profil im Einzelhandel mit optionalem Möbelprofil ist ergänzt und rückwärtskompatibel verdrahtet. Phase 19 (Release-QA) bleibt offen: die vollständige manuelle Geräte-Checkliste ist noch nicht abgeschlossen.**
 
 ### Release-QA-Status (eindeutig)
 
@@ -44,10 +44,10 @@ waren nach dem Umbau erfolgreich.
   - `lib/app/app.dart` — MaterialApp + persistiertes ThemePreset + Onboarding-Gate + NavigationBar Shell
   - `lib/app/theme.dart` — neun Theme-Presets und explizites Material-3-Komponententheme
   - `lib/core/constants.dart` — Text-, SharedPreferences-, Berufs-, Versions- und Ausbildungsjahr-Konstanten
-  - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für das Ausbildungsprofil
-  - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien und Besonderheiten mit UI-Labels
+  - `lib/core/profile_storage.dart` — zentraler SharedPreferences-Zugriff für Beruf, Jahr, Wahlqualifikationen und Branche
+  - `lib/core/enums/` — Tagtypen, Bereiche, Kategorien, Berufe/Wahlqualifikationen und Besonderheiten mit UI-Labels
   - `lib/core/models/` — `DailyEntry`, `ActivityTemplate` und `ReminderSettings`
-  - `lib/core/data/default_activities.dart` — 132 stabile IDs, 123 auswählbare und 38 standardmäßig aktive Tätigkeiten
+  - `lib/core/data/default_activities.dart` — kombinierter Katalog mit 450 stabilen IDs, davon 441 auswählbar und 132 standardmäßig aktiv
   - `lib/core/data/activity_subcategories.dart` — fachliche Untergruppen für Tätigkeiten
   - `lib/core/storage/` — Hive-CE-Adapter, Profil-/Reminder-/Theme-Persistenz und In-Memory-Testspeicher
   - `lib/core/report/daily_report_generator.dart` — deterministische lokale Berichtsvorschläge als verbindlicher Fallback

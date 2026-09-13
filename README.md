@@ -8,8 +8,9 @@ Die App hilft dabei, täglich kurz festzuhalten, was getan wurde — damit das s
 ## Zielgruppe
 
 Auszubildende in den unterstützten Profilen Fachlagerist/in, Fachkraft für
-Lagerlogistik und Verkäufer/in. Für Verkäufer/innen stehen Ausbildungsjahre 1
-und 2 sowie eine von vier Wahlqualifikationen zur Verfügung.
+Lagerlogistik, Verkäufer/in und Kaufmann/-frau im Einzelhandel. Kaufleute im
+Einzelhandel können Ausbildungsjahr 1–3, genau drei von acht Wahlqualifikationen
+und optional das Branchenprofil „Möbel & Einrichtung“ hinterlegen.
 
 ## Technik
 

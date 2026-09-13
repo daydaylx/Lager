@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/profile_form.dart';
 
+Future<void> _ignoreProfileSubmit({
+  String? name,
+  String? company,
+  required String occupation,
+  required int trainingYear,
+  String? wahlqualifikation,
+}) async {}
+
 class OnboardingScreen extends StatefulWidget {
   final String? initialName;
   final String? initialCompany;
   final String? initialOccupation;
   final int? initialTrainingYear;
-  final ProfileSubmitCallback onComplete;
+  final String? initialWahlqualifikation;
+  final List<String> initialWahlqualifikationen;
+  final String? initialIndustryProfile;
+  final ProfileSubmitCallback? onComplete;
+  final ExtendedProfileSubmitCallback? onCompleteExtended;
 
   const OnboardingScreen({
     super.key,
@@ -14,7 +26,11 @@ class OnboardingScreen extends StatefulWidget {
     this.initialCompany,
     this.initialOccupation,
     this.initialTrainingYear,
-    required this.onComplete,
+    this.initialWahlqualifikation,
+    this.initialWahlqualifikationen = const [],
+    this.initialIndustryProfile,
+    this.onComplete,
+    this.onCompleteExtended,
   });
 
   @override
@@ -80,9 +96,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     initialCompany: widget.initialCompany,
                     initialOccupation: widget.initialOccupation,
                     initialTrainingYear: widget.initialTrainingYear,
+                    initialWahlqualifikation: widget.initialWahlqualifikation,
+                    initialWahlqualifikationen:
+                        widget.initialWahlqualifikationen,
+                    initialIndustryProfile: widget.initialIndustryProfile,
+                    onSubmit: widget.onComplete ?? _ignoreProfileSubmit,
+                    onSubmitExtended: widget.onCompleteExtended,
                     submitLabel: 'Loslegen',
                     submitIcon: Icons.arrow_forward,
-                    onSubmit: widget.onComplete,
                   ),
                 ],
               ),
