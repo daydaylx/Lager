@@ -58,7 +58,12 @@ class ActivityPickerModel {
     String? wahlqualifikation,
   }) {
     final occupationConfig = OccupationRegistry.configFor(occupation);
-    final categories = _categoriesFor(dayType, selectedAreas, occupationConfig);
+    final categories = _categoriesFor(
+      dayType,
+      selectedAreas,
+      occupationConfig,
+      occupation,
+    );
     final effectiveDefaults = [
       for (final activity in defaultActivities)
         _applyOverride(activity, defaultOverrides),
@@ -66,13 +71,13 @@ class ActivityPickerModel {
     final availableDefaults = effectiveDefaults.where((activity) {
       if (!occupationConfig.isActivityInOccupation(activity.id)) return false;
       if (activity.category == ActivityCategory.berufsschule &&
-          occupation == TrainingOccupation.verkaeufer) {
+          occupation.usesRetailCatalog) {
         return occupationConfig.schoolTopicIds.contains(activity.id) &&
-            _sellerSchoolTopicForYear(activity.id, trainingYear);
+            _retailSchoolTopicForYear(activity.id, trainingYear);
       }
       return occupationConfig.activityCategories.contains(activity.category);
     }).map((activity) {
-      if (occupation == TrainingOccupation.verkaeufer &&
+      if (occupation.usesRetailCatalog &&
           activity.category == ActivityCategory.berufsschule) {
         // Berufsschulthemen werden nach Jahr angeboten; ihr Katalogstatus
         // beschreibt nicht, ob sie im betrieblichen Quick-Access erscheinen.
@@ -140,7 +145,7 @@ class ActivityPickerModel {
             preferredKeywords: preferredKeywords,
           )
         : const <ActivityTemplate>[];
-    final recommendationContext = occupation == TrainingOccupation.verkaeufer &&
+    final recommendationContext = occupation.usesRetailCatalog &&
             selectedWahlqualifikation != null
         ? 'Wahlqualifikation: ${selectedWahlqualifikation.label}'
         : trainingYear == null
@@ -270,7 +275,7 @@ class ActivityPickerModel {
   ) {
     if (selectedIds.contains(activity.id)) return true;
     if (!activity.isActive) return false;
-    if (occupation != TrainingOccupation.verkaeufer) return true;
+    if (!occupation.usesRetailCatalog) return true;
     // Berufsschulthemen werden fachlich über das Ausbildungsjahr begrenzt,
     // nicht über den betrieblichen Quick-Access-Katalog.
     if (activity.category == ActivityCategory.berufsschule) return true;
@@ -282,21 +287,20 @@ class ActivityPickerModel {
     DayType dayType,
     Set<TrainingArea> selectedAreas,
     OccupationConfig config,
+    TrainingOccupation occupation,
   ) {
     return switch (dayType) {
       DayType.betrieb => <ActivityCategory>{
           ...config.categoriesForAreas(selectedAreas),
-          if (config.occupation == TrainingOccupation.verkaeufer)
-            ActivityCategory.allgemein,
-          if (config.occupation != TrainingOccupation.verkaeufer)
-            ActivityCategory.sicherheit,
+          if (occupation.usesRetailCatalog) ActivityCategory.allgemein,
+          if (!occupation.usesRetailCatalog) ActivityCategory.sicherheit,
         }.toList(growable: false),
       DayType.berufsschule => [ActivityCategory.berufsschule],
       _ => <ActivityCategory>[],
     };
   }
 
-  static bool _sellerSchoolTopicForYear(String id, int? year) {
+  static bool _retailSchoolTopicForYear(String id, int? year) {
     if (year == null) return true;
     final number = int.tryParse(id.split('_').last);
     if (number == null) return true;

@@ -42,8 +42,8 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 ### Mindestchecks nach Änderung
 
 ```bash
-/home/d/flutter/bin/flutter analyze    # muss 0 Issues zeigen
-/home/d/flutter/bin/flutter test
+./.tooling/flutter/bin/flutter analyze    # muss 0 Issues zeigen
+./.tooling/flutter/bin/flutter test
 ```
 
 ---
@@ -75,8 +75,8 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test      # besonders hive_daily_entry_storage_test.dart
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test      # besonders hive_daily_entry_storage_test.dart
 ```
 
 ---
@@ -109,8 +109,8 @@ ausführbare Konfigurationen und relevante Tests zusätzlich lesen, wenn die
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test test/ui_layout_test.dart
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test test/ui_layout_test.dart
 ```
 
 Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
@@ -132,8 +132,8 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test
 ```
 
 ---
@@ -174,9 +174,9 @@ Manueller Test auf Gerät/Emulator wenn Layout-kritisch.
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test
-/home/d/flutter/bin/flutter build apk --debug
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test
+./.tooling/flutter/bin/flutter build apk --debug
 ```
 
 Danach manueller Gerätetest:
@@ -212,9 +212,9 @@ Danach manueller Gerätetest:
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test test/daily_report_generator_test.dart
-/home/d/flutter/bin/flutter test
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test test/daily_report_generator_test.dart
+./.tooling/flutter/bin/flutter test
 ```
 
 ---
@@ -250,8 +250,8 @@ Danach manueller Gerätetest:
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test
 ```
 
 ---
@@ -288,9 +288,37 @@ Danach manueller Gerätetest:
 ### Mindestchecks
 
 ```bash
-/home/d/flutter/bin/flutter pub get
+./.tooling/flutter/bin/flutter pub get
 bash scripts/check_repo_hygiene.sh
-/home/d/flutter/bin/flutter analyze
-/home/d/flutter/bin/flutter test
-/home/d/flutter/bin/flutter build apk --debug
+./.tooling/flutter/bin/flutter analyze
+./.tooling/flutter/bin/flutter test
+./.tooling/flutter/bin/flutter build apk --debug
 ```
+
+---
+
+## Pack 9: Berufsschule und Curriculum
+
+**Aufgabe:** Offline-Curriculum, strukturierte Schultage, Schulaufgaben oder
+Leistungsnachweise ändern.
+
+### Dateien lesen
+
+- `Lager_Schulzeit_Ausbauplan/phasen/29_CURRICULUM.md` und
+  `phasen/30_SCHUL_PERSISTENZ.md` — Scope und Persistenzvertrag
+- `docs/DATA_MODEL.md`, `docs/PRIVACY_CONTEXT.md` — Daten- und Datenschutzregeln
+- `lib/core/domain/curriculum_registry.dart` und `curriculum_unit.dart`
+- `lib/core/school/` — Modelle, Speicher und `SchoolEntryCoordinator`
+- `lib/features/school/` sowie `lib/app/app.dart` und `bootstrap.dart`
+- `test/curriculum_registry_test.dart`, `school_entry_coordinator_test.dart`,
+  `hive_school_data_storage_test.dart` und School-Widget-Tests
+
+### Risiken und Mindestchecks
+
+- `DailyEntry` und sein Hive-Adapter bleiben unverändert; Schulorganisation
+  liegt separat, der Tagesbericht erhält nur einen kompatiblen Snapshot.
+- Persistierte IDs nicht umbenennen. Curriculum-Jahrgänge nur aus offiziellen
+  Quellen übernehmen; nicht belegte allgemeine Fächer nicht erfinden.
+- Private Schulnotizen bleiben lokal und außerhalb der Berichtsnachbearbeitung.
+- Nach jeder Dart-Änderung `flutter analyze` und die relevanten Tests ausführen;
+  anschließend die vollständige Test-Suite.

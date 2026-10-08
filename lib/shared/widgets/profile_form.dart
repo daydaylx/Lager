@@ -8,6 +8,7 @@ typedef ProfileSubmitCallback = Future<void> Function({
   required String occupation,
   required int trainingYear,
   String? wahlqualifikation,
+  List<String>? vertiefungswahlqualifikationen,
 });
 
 class ProfileForm extends StatefulWidget {
@@ -16,6 +17,7 @@ class ProfileForm extends StatefulWidget {
   final String? initialOccupation;
   final int? initialTrainingYear;
   final String? initialWahlqualifikation;
+  final List<String> initialVertiefungswahlqualifikationen;
   final String submitLabel;
   final IconData submitIcon;
   final String? successMessage;
@@ -28,6 +30,7 @@ class ProfileForm extends StatefulWidget {
     this.initialOccupation,
     this.initialTrainingYear,
     this.initialWahlqualifikation,
+    this.initialVertiefungswahlqualifikationen = const [],
     required this.submitLabel,
     required this.submitIcon,
     this.successMessage,
@@ -44,6 +47,8 @@ class _ProfileFormState extends State<ProfileForm> {
   String? _selectedOccupation;
   int? _selectedTrainingYear;
   String? _selectedWahlqualifikation;
+  final Set<EinzelhandelVertiefungsqualifikation>
+      _selectedVertiefungswahlqualifikationen = {};
   bool _isSaving = false;
 
   @override
@@ -54,6 +59,11 @@ class _ProfileFormState extends State<ProfileForm> {
     _selectedOccupation = widget.initialOccupation;
     _selectedTrainingYear = widget.initialTrainingYear;
     _selectedWahlqualifikation = widget.initialWahlqualifikation;
+    _selectedVertiefungswahlqualifikationen.addAll(
+      widget.initialVertiefungswahlqualifikationen
+          .map(EinzelhandelVertiefungsqualifikationDetails.fromStorageKey)
+          .whereType<EinzelhandelVertiefungsqualifikation>(),
+    );
   }
 
   @override
@@ -79,6 +89,11 @@ class _ProfileFormState extends State<ProfileForm> {
         occupation: _selectedOccupation!,
         trainingYear: _selectedTrainingYear!,
         wahlqualifikation: _selectedWahlqualifikation,
+        vertiefungswahlqualifikationen:
+            EinzelhandelVertiefungsqualifikation.values
+                .where(_selectedVertiefungswahlqualifikationen.contains)
+                .map((value) => value.storageKey)
+                .toList(growable: false),
       );
 
       if (mounted) {
@@ -110,18 +125,26 @@ class _ProfileFormState extends State<ProfileForm> {
         TrainingYearValues.forOccupation(_selectedOccupation);
     final hasInvalidTrainingYear = _selectedTrainingYear != null &&
         !allowedTrainingYears.contains(_selectedTrainingYear);
-    final isVerkaeufer =
-        _selectedOccupation == TrainingOccupationValues.verkaeufer;
+    final selectedOccupation =
+        TrainingOccupationValues.parse(_selectedOccupation);
+    final isRetailOccupation = selectedOccupation?.usesRetailCatalog == true;
+    final isKaufmann = selectedOccupation ==
+        TrainingOccupation.kaufmannEinzelhandel;
     final canSubmit = _selectedOccupation != null &&
         TrainingYearValues.isValidForOccupation(
           _selectedTrainingYear,
           _selectedOccupation,
         ) &&
-        (!isVerkaeufer ||
+        (!isRetailOccupation ||
             WahlqualifikationDetails.fromStorageKey(
                   _selectedWahlqualifikation ?? '',
                 ) !=
                 null) &&
+        (!isKaufmann ||
+            EinzelhandelVertiefungsqualifikationDetails.isValidSelection(
+              _selectedVertiefungswahlqualifikationen
+                  .map((value) => value.storageKey),
+            )) &&
         !_isSaving;
 
     return Column(
@@ -180,17 +203,24 @@ class _ProfileFormState extends State<ProfileForm> {
           selectedValue: _selectedOccupation,
           onSelected: _selectOccupation,
         ),
-        if (isVerkaeufer) ...[
+        const SizedBox(height: 12),
+        _OccupationOption(
+          title: 'Kaufmann/Kauffrau im Einzelhandel',
+          value: TrainingOccupationValues.kaufmannEinzelhandel,
+          selectedValue: _selectedOccupation,
+          onSelected: _selectOccupation,
+        ),
+        if (isRetailOccupation) ...[
           const SizedBox(height: 24),
           Text(
-            'Welche Wahlqualifikation hast du?',
+            'Welche Grund-Wahlqualifikation hast du?',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Die Auswahl priorisiert passende Tätigkeiten, blendet andere aber nicht aus.',
+            'Diese Angabe bleibt mit dem bestehenden Verkäuferprofil kompatibel.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -211,6 +241,53 @@ class _ProfileFormState extends State<ProfileForm> {
               ),
             ),
           ),
+        ],
+        if (isKaufmann) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Welche drei Vertiefungswahlqualifikationen hast du?',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Mindestens eine Auswahl muss aus den ersten drei Bereichen stammen.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...EinzelhandelVertiefungsqualifikation.values.map(
+            (value) => CheckboxListTile(
+              key: ValueKey('vertiefung_${value.storageKey}'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: Text(value.label),
+              value: _selectedVertiefungswahlqualifikationen.contains(value),
+              onChanged: _selectedVertiefungswahlqualifikationen
+                          .contains(value) ||
+                      _selectedVertiefungswahlqualifikationen.length < 3
+                  ? (selected) => setState(() {
+                      if (selected == true) {
+                        _selectedVertiefungswahlqualifikationen.add(value);
+                      } else {
+                        _selectedVertiefungswahlqualifikationen.remove(value);
+                      }
+                    })
+                  : null,
+            ),
+          ),
+          if (!EinzelhandelVertiefungsqualifikationDetails.isValidSelection(
+            _selectedVertiefungswahlqualifikationen
+                .map((value) => value.storageKey),
+          ))
+            Text(
+              'Wähle genau drei Vertiefungsbereiche. Mindestens einer der ersten drei muss dabei sein.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
         ],
         const SizedBox(height: 24),
         Text(
@@ -279,10 +356,17 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 
   void _selectOccupation(String occupation) {
+    final wasRetail =
+        TrainingOccupationValues.parse(_selectedOccupation)?.usesRetailCatalog ??
+            false;
+    final nextOccupation = TrainingOccupationValues.parse(occupation);
     setState(() {
       _selectedOccupation = occupation;
-      if (occupation != TrainingOccupationValues.verkaeufer) {
+      if (nextOccupation?.usesRetailCatalog != true || !wasRetail) {
         _selectedWahlqualifikation = null;
+      }
+      if (nextOccupation != TrainingOccupation.kaufmannEinzelhandel) {
+        _selectedVertiefungswahlqualifikationen.clear();
       }
     });
   }

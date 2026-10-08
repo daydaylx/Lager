@@ -9,6 +9,7 @@ typedef StoredProfile = ({
   String? occupation,
   int? trainingYear,
   String? wahlqualifikation,
+  List<String> vertiefungswahlqualifikationen,
   bool onboardingCompleted,
 });
 
@@ -22,21 +23,36 @@ class ProfileStorage {
       trainingYear: preferences.getInt(PreferenceKeys.trainingYear),
       wahlqualifikation:
           preferences.getString(PreferenceKeys.wahlqualifikation),
+      vertiefungswahlqualifikationen: preferences.getStringList(
+            PreferenceKeys.vertiefungswahlqualifikationen,
+          ) ??
+          const <String>[],
       onboardingCompleted:
           preferences.getBool(PreferenceKeys.onboardingCompleted) ?? false,
     );
   }
 
   static bool isOnboardingComplete(StoredProfile profile) {
-    return profile.onboardingCompleted &&
-        TrainingOccupationValues.all.contains(profile.occupation) &&
-        TrainingYearValues.isValidForOccupation(
+    final occupation = TrainingOccupationValues.parse(profile.occupation);
+    if (!profile.onboardingCompleted ||
+        occupation == null ||
+        !TrainingYearValues.isValidForOccupation(
           profile.trainingYear,
           profile.occupation,
-        ) &&
-        (profile.occupation != TrainingOccupationValues.verkaeufer ||
-            WahlqualifikationDetails.fromStorageKey(profile.wahlqualifikation ?? '') !=
-                null);
+        )) {
+      return false;
+    }
+    if (occupation.usesRetailCatalog &&
+        WahlqualifikationDetails.fromStorageKey(
+              profile.wahlqualifikation ?? '',
+            ) ==
+            null) {
+      return false;
+    }
+    return occupation != TrainingOccupation.kaufmannEinzelhandel ||
+        EinzelhandelVertiefungsqualifikationDetails.isValidSelection(
+          profile.vertiefungswahlqualifikationen,
+        );
   }
 
   static Future<void> save({
@@ -45,6 +61,7 @@ class ProfileStorage {
     required String occupation,
     required int trainingYear,
     String? wahlqualifikation,
+    List<String> vertiefungswahlqualifikationen = const [],
     bool completeOnboarding = false,
   }) async {
     if (!TrainingYearValues.isValidForOccupation(trainingYear, occupation)) {
@@ -55,13 +72,30 @@ class ProfileStorage {
       );
     }
     final occupationValue = TrainingOccupationValues.parse(occupation);
-    if (occupationValue == TrainingOccupation.verkaeufer &&
+    if (occupationValue == null) {
+      throw ArgumentError.value(
+        occupation,
+        'occupation',
+        'Unbekannter Ausbildungsberuf.',
+      );
+    }
+    if (occupationValue.usesRetailCatalog &&
         WahlqualifikationDetails.fromStorageKey(wahlqualifikation ?? '') ==
             null) {
       throw ArgumentError.value(
         wahlqualifikation,
         'wahlqualifikation',
-        'Verkäufer/in benötigt eine Wahlqualifikation.',
+        'Einzelhandelsprofile benötigen eine Grund-Wahlqualifikation.',
+      );
+    }
+    if (occupationValue == TrainingOccupation.kaufmannEinzelhandel &&
+        !EinzelhandelVertiefungsqualifikationDetails.isValidSelection(
+          vertiefungswahlqualifikationen,
+        )) {
+      throw ArgumentError.value(
+        vertiefungswahlqualifikationen,
+        'vertiefungswahlqualifikationen',
+        'Kaufmann/Kauffrau benötigt drei gültige Vertiefungswahlqualifikationen, darunter mindestens eine aus den ersten drei.',
       );
     }
     final preferences = await SharedPreferences.getInstance();
@@ -85,9 +119,17 @@ class ProfileStorage {
     await _writeOptionalString(
       preferences,
       key: PreferenceKeys.wahlqualifikation,
-      value: occupationValue == TrainingOccupation.verkaeufer
-          ? wahlqualifikation
-          : null,
+      value: occupationValue.usesRetailCatalog ? wahlqualifikation : null,
+    );
+    await _requireWrite(
+      occupationValue == TrainingOccupation.kaufmannEinzelhandel
+          ? preferences.setStringList(
+              PreferenceKeys.vertiefungswahlqualifikationen,
+              vertiefungswahlqualifikationen,
+            )
+          : preferences.remove(
+              PreferenceKeys.vertiefungswahlqualifikationen,
+            ),
     );
 
     if (completeOnboarding) {

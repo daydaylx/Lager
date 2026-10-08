@@ -15,6 +15,24 @@ void main() {
       expect(profile.occupation, isNull);
       expect(profile.trainingYear, isNull);
       expect(profile.onboardingCompleted, isFalse);
+      expect(profile.vertiefungswahlqualifikationen, isEmpty);
+    });
+
+    test('altes Verkäuferprofil wird ohne Vertiefungsmigration geladen', () async {
+      SharedPreferences.setMockInitialValues({
+        'training_occupation': 'verkaeufer',
+        'training_year': 2,
+        'wahlqualifikation': 'beratungVonKunden',
+        'onboarding_completed': true,
+      });
+
+      final profile = await ProfileStorage.load();
+
+      expect(profile.occupation, 'verkaeufer');
+      expect(profile.trainingYear, 2);
+      expect(profile.wahlqualifikation, 'beratungVonKunden');
+      expect(profile.vertiefungswahlqualifikationen, isEmpty);
+      expect(ProfileStorage.isOnboardingComplete(profile), isTrue);
     });
   });
 
@@ -138,6 +156,71 @@ void main() {
       );
     });
 
+    test('Kaufmann akzeptiert Jahr 1–3 und speichert die Vertiefungen',
+        () async {
+      final vertiefungen = [
+        'beratungVonKundenInKomplexenSituationen',
+        'marketingmassnahmen',
+        'onlinehandel',
+      ];
+      await ProfileStorage.save(
+        occupation: 'kaufmann_einzelhandel',
+        trainingYear: 3,
+        wahlqualifikation: 'beratungVonKunden',
+        vertiefungswahlqualifikationen: vertiefungen,
+        completeOnboarding: true,
+      );
+      final profile = await ProfileStorage.load();
+      expect(profile.trainingYear, 3);
+      expect(profile.vertiefungswahlqualifikationen, vertiefungen);
+      expect(ProfileStorage.isOnboardingComplete(profile), isTrue);
+    });
+
+    test('Kaufmann verlangt drei Vertiefungen mit einer aus den ersten drei',
+        () async {
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'kaufmann_einzelhandel',
+          trainingYear: 1,
+          wahlqualifikation: 'beratungVonKunden',
+          vertiefungswahlqualifikationen: const [
+            'marketingmassnahmen',
+            'onlinehandel',
+            'mitarbeiterfuehrungUndEntwicklung',
+          ],
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'kaufmann_einzelhandel',
+          trainingYear: 1,
+          wahlqualifikation: 'beratungVonKunden',
+          vertiefungswahlqualifikationen: const [
+            'beschaffungVonWaren',
+            'beschaffungVonWaren',
+            'onlinehandel',
+          ],
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('Kaufmann benötigt eine gültige Grund-Wahlqualifikation', () async {
+      expect(
+        () => ProfileStorage.save(
+          occupation: 'kaufmann_einzelhandel',
+          trainingYear: 1,
+          vertiefungswahlqualifikationen: const [
+            'beratungVonKundenInKomplexenSituationen',
+            'marketingmassnahmen',
+            'onlinehandel',
+          ],
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('Fachlagerist mit 3. Jahr wirft ArgumentError', () async {
       expect(
         () => ProfileStorage.save(occupation: 'fachlagerist', trainingYear: 3),
@@ -182,13 +265,16 @@ void main() {
       bool onboardingCompleted = true,
       String? occupation = 'fachlagerist',
       int? trainingYear = 1,
+      String? wahlqualifikation,
+      List<String> vertiefungswahlqualifikationen = const [],
     }) {
       return (
         name: 'Anna',
         company: 'ACME',
         occupation: occupation,
         trainingYear: trainingYear,
-        wahlqualifikation: null,
+        wahlqualifikation: wahlqualifikation,
+        vertiefungswahlqualifikationen: vertiefungswahlqualifikationen,
         onboardingCompleted: onboardingCompleted,
       );
     }
@@ -217,6 +303,35 @@ void main() {
       expect(
         ProfileStorage.isOnboardingComplete(
           profile(occupation: 'fachlagerist', trainingYear: 3),
+        ),
+        isFalse,
+      );
+    });
+
+    test('Kaufmann-Onboarding erfordert gültige Grund- und Vertiefungswahl',
+        () {
+      expect(
+        ProfileStorage.isOnboardingComplete(
+          profile(
+            occupation: 'kaufmann_einzelhandel',
+            trainingYear: 2,
+            wahlqualifikation: 'beratungVonKunden',
+            vertiefungswahlqualifikationen: const [
+              'beratungVonKundenInKomplexenSituationen',
+              'marketingmassnahmen',
+              'onlinehandel',
+            ],
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        ProfileStorage.isOnboardingComplete(
+          profile(
+            occupation: 'kaufmann_einzelhandel',
+            trainingYear: 2,
+            wahlqualifikation: 'beratungVonKunden',
+          ),
         ),
         isFalse,
       );

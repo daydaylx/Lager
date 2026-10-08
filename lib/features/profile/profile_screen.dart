@@ -9,6 +9,7 @@ import '../../core/services/export_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
+import '../../core/school/storage/school_data_storage.dart';
 import '../../shared/widgets/app_ui.dart';
 import '../../shared/widgets/profile_form.dart';
 import 'profile_reminder_controller.dart';
@@ -20,6 +21,8 @@ import 'widgets/reminder_section.dart';
 class ProfileScreen extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final SchoolDataStorage? schoolDataStorage;
+  final VoidCallback? onOpenTemplates;
   final Future<void> Function() onDataCleared;
   final NotificationScheduler? notificationScheduler;
   final String? notificationInitializationError;
@@ -32,6 +35,8 @@ class ProfileScreen extends StatefulWidget {
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
+    this.schoolDataStorage,
+    this.onOpenTemplates,
     required this.onDataCleared,
     this.notificationScheduler,
     this.notificationInitializationError,
@@ -113,6 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     required String occupation,
     required int trainingYear,
     String? wahlqualifikation,
+    List<String>? vertiefungswahlqualifikationen,
   }) async {
     await ProfileStorage.save(
       name: name,
@@ -120,6 +126,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       occupation: occupation,
       trainingYear: trainingYear,
       wahlqualifikation: wahlqualifikation,
+      vertiefungswahlqualifikationen:
+          vertiefungswahlqualifikationen ?? const [],
     );
     await widget.onProfileChanged?.call(
       name: name,
@@ -127,6 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       occupation: occupation,
       trainingYear: trainingYear,
       wahlqualifikation: wahlqualifikation,
+      vertiefungswahlqualifikationen: vertiefungswahlqualifikationen,
     );
   }
 
@@ -296,6 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       await ExportService.share(
         widget.dailyEntryStorage,
         widget.templateStorage,
+        schoolDataStorage: widget.schoolDataStorage,
         aiReportCache: widget.aiReportCache,
       );
     } catch (_) {
@@ -408,7 +418,22 @@ class _ProfileScreenState extends State<ProfileScreen>
           onChangeTime: _changeTime,
           onToggleWeekday: _toggleWeekday,
         ),
-        const SizedBox(height: 24),
+        if (widget.onOpenTemplates != null) ...[
+          AppSettingsSection(
+            title: 'Tätigkeiten',
+            description: 'Passe deine eigenen Tätigkeitsvorlagen an.',
+            children: [
+              ListTile(
+                key: const ValueKey('manage_activity_templates'),
+                leading: const Icon(Icons.library_books_outlined),
+                title: const Text('Tätigkeitsvorlagen'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: widget.onOpenTemplates,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+        ],
         ProfileThemeSection(
           current: widget.themePreset,
           onChanged: widget.onThemeChanged,
@@ -451,7 +476,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ? 'Daten werden gelöscht ...'
                     : 'Alle Daten löschen',
               ),
-              subtitle: const Text('Entfernt Profil, Einträge und Vorlagen.'),
+              subtitle: const Text(
+                'Entfernt Profil, Einträge, Schuldaten und Vorlagen.',
+              ),
               textColor: Theme.of(context).colorScheme.error,
               iconColor: Theme.of(context).colorScheme.error,
               enabled: !_isDeleting,

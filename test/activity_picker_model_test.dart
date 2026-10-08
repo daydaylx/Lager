@@ -87,6 +87,26 @@ void main() {
       expect(ids, isNot(contains('wareneingang_01')));
     });
 
+    test('Kaufmann nutzt den Einzelhandelskatalog ohne Lagerbereiche', () {
+      final model = _model(
+        occupation: TrainingOccupation.kaufmannEinzelhandel,
+        areas: const {TrainingArea.verkaufsflaeche},
+        trainingYear: 3,
+        wahlqualifikation: Wahlqualifikation.beratungVonKunden.storageKey,
+      );
+
+      expect(model.categories, [
+        ActivityCategory.verkaufsflaeche,
+        ActivityCategory.allgemein,
+      ]);
+      expect(_groupActivityIds(model), contains('verkauf_flaeche_01'));
+      expect(_groupActivityIds(model), isNot(contains('wareneingang_01')));
+      expect(
+        model.recommendationContext,
+        'Wahlqualifikation: Beratung von Kunden',
+      );
+    });
+
     test('alle Verkäufer-Wahlqualifikationen werden als Kontext angezeigt', () {
       for (final wahlqualifikation in Wahlqualifikation.values) {
         final model = _model(

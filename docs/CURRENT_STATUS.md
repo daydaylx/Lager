@@ -1,6 +1,35 @@
 # CURRENT_STATUS.md — Agent-Handoff
 
-Stand: 2026-08-15 (Verkäufer-Alltagserweiterungen ergänzt)
+Stand: 2026-10-08 (Schul-Ausbau Phasen 28–33 lokal verifiziert)
+
+---
+
+## Aktueller Arbeitsstand: Berufsschul-Ausbau Phasen 28–33 ✅
+
+- Berufsprofil, DE-SN-Curriculum, getrennte Schulpersistenz, Vier-Tab-Navigation,
+  Schule-Startscreen und Check-in sind umgesetzt; Regressionstests ergänzt.
+- `DailyEntry` und sein Hive-Adapter blieben unverändert. Schultage, Aufgaben
+  und Leistungsnachweise liegen in eigenen Boxen; der Coordinator synchronisiert
+  den kompatiblen Berichtssnapshot und schützt vorhandene andere Tagestypen.
+- Curriculumquellen: Sächsische Lehrpläne `/795` und `/434` sowie KMK-
+  Rahmenlehrpläne für Fachlagerist, Fachkraft Lagerlogistik und Einzelhandel.
+  Nicht belegte allgemeine Fächer/Jahrgangszuordnungen wurden nicht erfunden.
+- `flutter analyze`: 0 Issues. Vollständiges `flutter test` bestanden; der
+  optionale OpenRouter-Live-Smoke-Test wurde ohne private Defines übersprungen.
+- `flutter build apk --debug`: erfolgreich nach 584,2 Sekunden; APK
+  `build/app/outputs/flutter-apk/app-debug.apk` (99,036,182 Bytes). Zwei
+  SDK-/Flutter-Warnungen waren nicht build-blockierend.
+- `git diff --check` war sauber. Der vom Nutzer im Terminal ausgeführte
+  `scripts/verify.sh`-Lauf endete erfolgreich: 345 Tests bestanden, einer
+  übersprungen, Debug-APK gebaut. Der Hygiene-Check wurde ebenfalls aufgerufen,
+  aber seine Erfolgsausgabe wurde nicht mitgeteilt.
+- `project_check({ profile: "verify" })` wurde versucht, startete jedoch nicht:
+  Die Dependency-Suche erreichte das Limit von 512 Verzeichnissen durch die
+  lokale Toolchain unter `.tooling/`. Das Prüfprofil selbst lief daher nicht.
+- Offen bleiben Phase 19 (manuelle Release-QA auf einem Android-Gerät) sowie
+  Phase 27 (private Modell-/Key-, ZDR-/Budget- und Gerätetests).
+- Nächster Schritt: Pflichtprofil abschließen, Diff/Git-Status final prüfen und
+  die ausdrücklich beauftragten Commit-/Push-Schritte ausführen.
 
 ---
 

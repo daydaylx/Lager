@@ -18,7 +18,13 @@ OR_KEY="$(python3 -c "import json;print(json.load(open('$CONFIG'))['OPENROUTER_A
 
 TEST_FILE="${1:-test/openrouter_live_smoke_test.dart}"
 
-exec /home/d/flutter/bin/flutter test "$TEST_FILE" \
+FLUTTER_BIN="${FLUTTER_BIN:-$PWD/.tooling/flutter/bin/flutter}"
+if [[ ! -x "$FLUTTER_BIN" ]]; then
+  echo "Fehler: Flutter SDK nicht gefunden oder nicht ausführbar: $FLUTTER_BIN" >&2
+  exit 127
+fi
+
+exec "$FLUTTER_BIN" test "$TEST_FILE" \
   --dart-define=OPENROUTER_ENABLED="$OR_ENABLED" \
   --dart-define=OPENROUTER_MODEL_ID="$OR_MODEL" \
   --dart-define=OPENROUTER_API_KEY="$OR_KEY"

@@ -18,9 +18,12 @@ import '../../core/storage/default_activity_state_storage.dart';
 import '../../core/storage/daily_entry_storage.dart';
 import '../../core/storage/activity_template_storage.dart';
 import '../../core/report/daily_report_generator.dart';
+import '../../core/school/services/school_entry_coordinator.dart';
+import '../../core/school/storage/school_data_storage.dart';
 import '../../shared/widgets/app_ui.dart';
 import 'activity_picker_model.dart';
 import 'activity_recommender.dart';
+import '../school/school_check_in_screen.dart';
 import 'today_entry_draft.dart';
 import 'widgets/absence_sheet.dart';
 import 'widgets/activity_picker_section.dart';
@@ -34,6 +37,8 @@ import 'widgets/today_flow.dart';
 class TodayScreen extends StatefulWidget {
   final DailyEntryStorage storage;
   final ActivityTemplateStorage templateStorage;
+  final SchoolDataStorage? schoolStorage;
+  final VoidCallback? onSchoolDataChanged;
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final DateTime? date;
   final DateTime? currentDate;
@@ -49,6 +54,8 @@ class TodayScreen extends StatefulWidget {
     super.key,
     required this.storage,
     required this.templateStorage,
+    this.schoolStorage,
+    this.onSchoolDataChanged,
     this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     this.date,
     this.currentDate,
@@ -421,7 +428,69 @@ class _TodayScreenState extends State<TodayScreen> {
         ..._adhocActivities,
       };
 
+  Future<void> _openStructuredSchoolFlow() async {
+    final schoolStorage = widget.schoolStorage;
+    final occupation = _occupation;
+    final trainingYear = widget.trainingYear;
+    if (schoolStorage == null || trainingYear == null) {
+      return;
+    }
+    if (!schoolStorage.isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Der Schulbereich ist nicht verfügbar. Deine bisherigen Einträge bleiben erhalten.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final replacesExistingDay =
+        _savedEntry != null && _savedEntry!.dayType != DayType.berufsschule;
+    if (_hasUnsavedChanges || replacesExistingDay) {
+      final confirmed = await _confirmDiscard(
+        replacesExistingDay ? 'Bestehenden Tag ersetzen?' : 'Änderungen verwerfen?',
+        replacesExistingDay
+            ? 'Der bisherige Tagesbericht wird durch den Berufsschultag ersetzt.'
+            : 'Deine noch nicht gespeicherten Angaben werden verworfen.',
+      );
+      if (!confirmed || !mounted) return;
+    }
+
+    final coordinator = SchoolEntryCoordinator(
+      schoolStorage: schoolStorage,
+      dailyEntryStorage: widget.storage,
+    );
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => SchoolCheckInScreen(
+          date: _today,
+          occupation: occupation,
+          trainingYear: trainingYear,
+          storage: schoolStorage,
+          dailyEntryStorage: widget.storage,
+          templateStorage: widget.templateStorage,
+          coordinator: coordinator,
+          allowReplacingExistingDayType: replacesExistingDay,
+        ),
+      ),
+    );
+    if (saved == true && mounted) {
+      await _loadEntry();
+      widget.onSchoolDataChanged?.call();
+      final entry = await widget.storage.loadByDate(_today);
+      if (entry != null) widget.reportCoordinator?.ensureEnhanced(entry);
+    }
+  }
+
   Future<void> _selectDayTypeForFlow(DayType dayType) async {
+    if (dayType == DayType.berufsschule &&
+        widget.schoolStorage != null &&
+        widget.trainingYear != null) {
+      await _openStructuredSchoolFlow();
+      return;
+    }
     final wasSelected = _selectedDayType == dayType;
     await _confirmAndSelectDayType(dayType);
     if (!mounted || _selectedDayType != dayType) return;
@@ -519,7 +588,13 @@ class _TodayScreenState extends State<TodayScreen> {
     });
   }
 
-  void _editActivities() {
+  Future<void> _editActivities() async {
+    if (_selectedDayType == DayType.berufsschule &&
+        widget.schoolStorage != null &&
+        widget.trainingYear != null) {
+      await _openStructuredSchoolFlow();
+      return;
+    }
     if (_selectedDayType == DayType.betrieb) {
       setState(() => _flowStep = TodayFlowStep.area);
       return;
@@ -528,7 +603,15 @@ class _TodayScreenState extends State<TodayScreen> {
     setState(() => _flowStep = TodayFlowStep.activities);
   }
 
-  void _editDetails() => setState(() => _flowStep = TodayFlowStep.review);
+  Future<void> _editDetails() async {
+    if (_selectedDayType == DayType.berufsschule &&
+        widget.schoolStorage != null &&
+        widget.trainingYear != null) {
+      await _openStructuredSchoolFlow();
+      return;
+    }
+    setState(() => _flowStep = TodayFlowStep.review);
+  }
 
   Widget _buildActivities(BuildContext context) {
     if (_selectedDayType == DayType.betrieb && _selectedAreas.isEmpty) {
@@ -1001,7 +1084,19 @@ class _TodayScreenState extends State<TodayScreen> {
     setState(() => _isSaving = true);
 
     try {
-      await widget.storage.save(entry);
+      final schoolStorage = widget.schoolStorage;
+      final schoolEntry = schoolStorage?.isAvailable == true
+          ? await schoolStorage!.loadEntry(entry.date)
+          : null;
+      if (schoolEntry != null && entry.dayType != DayType.berufsschule) {
+        await SchoolEntryCoordinator(
+          schoolStorage: schoolStorage!,
+          dailyEntryStorage: widget.storage,
+        ).replaceWithDailyEntry(entry);
+        widget.onSchoolDataChanged?.call();
+      } else {
+        await widget.storage.save(entry);
+      }
       if (mounted) {
         HapticFeedback.mediumImpact();
         setState(() {

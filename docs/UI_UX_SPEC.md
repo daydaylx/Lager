@@ -155,14 +155,27 @@ Tabs:
 
 1. Heute
 2. Woche
-3. Vorlagen
+3. Schule
 4. Profil
+
+Die Vorlagenverwaltung ist über einen klaren Einstieg im Profil erreichbar.
 
 Begründung:
 
 Die App ist klein und wird regelmäßig genutzt. Eine Bottom Navigation ist schneller als ein Hamburger-Menü.
 
 Ein Hamburger-Menü wäre hier unnötig versteckt und für den Alltag schlechter.
+
+### Schule
+
+Der Schul-Startscreen zeigt den heutigen Berufsschultag, offene Aufgaben und
+anstehende Leistungsnachweise sowie vorhandene Schultage. Der Check-in ist in
+vier Schritte gegliedert: Lernfelder/Fach auswählen, Themen erfassen, optionale
+Aufgabe oder Leistungsnachweis ergänzen, prüfen und speichern. Schulspezifische
+allgemeine Fächer können mit eigenem Namen erfasst werden; die Offline-Registry
+behauptet dafür keine unbelegte Jahrgangszuordnung. Eine bestehende
+Betriebs-/Abwesenheitsart darf nicht stillschweigend durch einen Schultag ersetzt
+werden.
 
 ---
 

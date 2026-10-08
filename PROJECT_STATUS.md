@@ -1,23 +1,28 @@
 # PROJECT_STATUS.md
 
-Zuletzt aktualisiert: 2026-08-14
+Zuletzt aktualisiert: 2026-10-08
 
 ## Aktueller Stand
 
-**Phasen 0–20 im Code abgeschlossen. Der Reminder-Stack wurde am 2026-07-19 release-stabil überarbeitet (R8-Fix, atomare V2-Persistenz, exakte Alarme mit Fallback, Laufzeitstatus und sofortige Testfunktion). Phase 21 (Agenten-Qualität) Infrastruktur besteht. Phase 27 ergänzt eine optional deaktivierte OpenRouter-Berichtsnachbearbeitung mit lokalem Fallback; Modell-ID, Key und Budget sind bewusst nicht im Repository gesetzt. Phase 19 (Release-QA) bleibt offen: die vollständige manuelle Geräte-Checkliste ist noch nicht abgeschlossen.**
+**Phasen 0–20 im Code abgeschlossen. Der Reminder-Stack wurde am 2026-07-19 release-stabil überarbeitet. Phase 21 (Agenten-Qualität) Infrastruktur besteht. Phase 27 ergänzt eine optional deaktivierte OpenRouter-Berichtsnachbearbeitung mit lokalem Fallback; Modell-ID, Key und Budget sind bewusst nicht im Repository gesetzt. Die zusätzlich beauftragten Phasen 28–33 ergänzen Profil, Offline-Curriculum und Berufsschulablauf und wurden lokal mit Analyze, vollständiger Testsuite und Debug-APK-Build verifiziert. Phase 19 (Release-QA auf echtem Android-Gerät) und private Phase-27-Nachweise bleiben offen.**
 
 ### Release-QA-Status (eindeutig)
 
 | Aspekt                          | Status                                           |
 | ------------------------------- | ------------------------------------------------ |
 | Code fertig                     | ja (Phase 0–20, +Phase 21 Infra)                  |
-| Automatisierte Checks (CI)      | bestanden — analyze 0, test grün, debug-APK baut |
-| Debug-APK gebaut                | ja                                               |
+| Automatisierte Checks (lokal)   | Analyze 0 Issues, vollständige Testsuite bestanden, Debug-APK gebaut; CI nach Push ausstehend |
+| Debug-APK gebaut                | ja — 99.0 MB (lokaler Build, 2026-10-08)         |
 | Release-APK gebaut/signiert     | ja (v1/v2, lokaler Upload-Keystore)              |
 | Manuelle Android-QA            | **teilweise** (Release-Update, Status, Testposting und Boot-Receiver geprüft) |
 | Bekannte manuelle Risiken       | Theme-Persistenz, Reminder unter Samsung, Backup-Sperre am Gerät |
 
-Der offene Punkt ist manuelles Testen, kein Code-Mangel.
+Offen bleiben die manuelle Release-QA auf einem Android-Gerät und die privaten Phase-27-Nachweise mit Modell/Key. Die lokale automatische Verifikation für Phasen 28–33 ist abgeschlossen.
+
+Der Stand der zusätzlich beauftragten Phasen 28–33 ist noch nicht als
+abgeschlossen verifiziert. Lernfeldnamen/Jahrgänge wurden mit den sächsischen
+Lehrplanseiten geprüft; konkrete allgemeine Fächer ohne Quellenbeleg werden
+nicht angeboten.
 
 Neu in Phase 25: Der TodayScreen ist ein geführter Check-in (Tagtyp → Bereich
 bei Betrieb → vollflächige Tätigkeitsauswahl → Prüfen & Speichern). Gespeicherte
@@ -54,6 +59,8 @@ waren nach dem Umbau erfolgreich.
   - `lib/core/ai/` — deaktivierbare Compile-Time-Konfiguration, Positivlisten-Payload, isolierter OpenRouter-Client, separater Cache, Hintergrundkoordinator und Bericht-Resolver
   - `lib/core/services/export_service.dart` — JSON-Export aller Daten via System-Share-Sheet
   - `lib/core/week_utils.dart` — ISO-Kalenderwoche und Wochenstart
+- `lib/core/domain/curriculum_registry.dart` und `lib/core/school/` — statische DE-SN-Lernfelder, separate Schultage/Aufgaben/Leistungsnachweise und Snapshot-Koordination
+- `lib/features/school/` — Berufsschul-Startscreen und vierstufiger Check-in
   - `lib/features/onboarding/onboarding_screen.dart` — zweistufiger kompakter Erststart
   - `lib/features/today/today_screen.dart` — persistenter Tageseintrag, Screen-State, Laden/Speichern, Tageswechsel und Berichtskarte
   - `lib/features/today/activity_picker_model.dart` — Tätigkeitsauswahl-Logik für Suche, häufig genutzt, Untergruppen, Ausbildungsjahr-Empfehlungen und historische IDs
@@ -68,8 +75,8 @@ waren nach dem Umbau erfolgreich.
 - Phase 22 Daily-Check-in-Redesign: Heute-Sprache und Save-Flow entschärft, Bereichs-Carousel, weiche Progression, Wochen-Dot-Strip statt Prozent, leichtere Tageskarte/SaveBar/NavBar und wärmeres `lagerTeal`; alle Goldens aktualisiert
   - `lib/shared/widgets/app_ui.dart` — gemeinsame Abschnitts-, Status- und Empty-State-Bausteine
 - `lib/shared/widgets/profile_form.dart` — gemeinsame Profilmaske für Onboarding und Profil
-- `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr und Onboarding-Flag lokal
-- `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge und eigene Tätigkeiten dauerhaft
+- `shared_preferences` — speichert Name, Betrieb, Ausbildungsberuf, Ausbildungsjahr, Wahlqualifikationen und Onboarding-Flag lokal
+- `hive_ce` / `hive_ce_flutter` — speichert Tageseinträge, eigene Tätigkeiten und Schuldaten dauerhaft
 - `flutter_local_notifications` / `flutter_timezone` — lokale Erinnerungen in Gerätezeitzone
 - `http` / `crypto` — isolierter optionaler Report-Client und SHA-256-Fingerprint; ohne private Define-Datei keine Netzwerkverbindung
 - `app_settings` — öffnet Android-Benachrichtigungseinstellungen direkt aus der App
@@ -103,8 +110,8 @@ waren nach dem Umbau erfolgreich.
 | `flutter create --platforms=android .`   | Erfolgreich, android/ generiert                            |
 | `flutter pub get`                        | Erfolgreich, Abhängigkeiten aufgelöst                      |
 | `flutter analyze`                        | 0 Issues                                                   |
-| `flutter test`                           | 251/251 Tests bestanden                                    |
-| `flutter build apk --debug`              | Erfolgreich, Debug-APK 113 MB (2026-07-19)                 |
+| `flutter test`                           | vollständige Testsuite bestanden; OpenRouter-Live-Smoke mangels privater Defines übersprungen |
+| `flutter build apk --debug`              | Erfolgreich, Debug-APK 99,036,182 Bytes (2026-10-08)      |
 | `flutter build apk --release`            | Erfolgreich signiert erzeugt, 24.5 MB (2026-07-19)         |
 | Release-Signatur                         | `apksigner`: v1/v2 verifiziert, lokales Release-Zertifikat |
 | Zusammengeführtes Release-Manifest       | Package-ID und Backup-Sperre bestätigt                     |

@@ -10,6 +10,9 @@ import '../core/storage/default_activity_state_storage.dart';
 import '../core/storage/hive_activity_template_storage.dart';
 import '../core/storage/hive_daily_entry_storage.dart';
 import '../core/storage/theme_preset_storage.dart';
+import '../core/school/storage/hive_school_data_storage.dart';
+import '../core/school/storage/in_memory_school_data_storage.dart';
+import '../core/school/storage/school_data_storage.dart';
 import '../shared/widgets/app_ui.dart';
 import 'app.dart';
 import 'theme.dart';
@@ -17,6 +20,7 @@ import 'theme.dart';
 class BootstrapData {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final SchoolDataStorage schoolDataStorage;
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final StoredProfile profile;
   final ThemePreset themePreset;
@@ -27,6 +31,9 @@ class BootstrapData {
     required this.dailyEntryStorage,
     required this.templateStorage,
     required this.defaultActivityStateStorage,
+    this.schoolDataStorage = const UnavailableSchoolDataStorage(
+      'Der Schulbereich wurde nicht initialisiert.',
+    ),
     required this.profile,
     required this.themePreset,
     this.aiReportCache = const DisabledAiReportCache(),
@@ -55,6 +62,14 @@ class AppBootstrap extends StatefulWidget {
 Future<BootstrapData> loadBootstrapData() async {
   final dailyEntryStorage = await HiveDailyEntryStorage.open();
   final templateStorage = await HiveActivityTemplateStorage.open();
+  SchoolDataStorage schoolDataStorage;
+  try {
+    schoolDataStorage = await HiveSchoolDataStorage.open();
+  } catch (_) {
+    schoolDataStorage = const UnavailableSchoolDataStorage(
+      'Die lokalen Schuldaten konnten nicht geöffnet werden.',
+    );
+  }
   final profile = await ProfileStorage.load();
   final themePreset = await ThemePresetStorage.load();
   AiReportCache aiReportCache = const DisabledAiReportCache();
@@ -67,6 +82,7 @@ Future<BootstrapData> loadBootstrapData() async {
     dailyEntryStorage: dailyEntryStorage,
     templateStorage: templateStorage,
     defaultActivityStateStorage: const DefaultActivityStateStorage(),
+    schoolDataStorage: schoolDataStorage,
     profile: profile,
     themePreset: themePreset,
     aiReportCache: aiReportCache,
@@ -116,6 +132,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
       return BerichtsheftApp(
         dailyEntryStorage: data.dailyEntryStorage,
         templateStorage: data.templateStorage,
+        schoolDataStorage: data.schoolDataStorage,
         defaultActivityStateStorage: data.defaultActivityStateStorage,
         initialOnboardingCompleted:
             ProfileStorage.isOnboardingComplete(profile),
@@ -124,6 +141,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
         initialOccupation: profile.occupation,
         initialTrainingYear: profile.trainingYear,
         initialWahlqualifikation: profile.wahlqualifikation,
+        initialVertiefungswahlqualifikationen:
+            profile.vertiefungswahlqualifikationen,
         initialThemePreset: data.themePreset,
         aiReportCache: data.aiReportCache,
         openRouterConfig: data.openRouterConfig,

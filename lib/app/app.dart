@@ -14,11 +14,14 @@ import '../core/storage/daily_entry_storage.dart';
 import '../core/storage/default_activity_state_storage.dart';
 import '../core/storage/reminder_storage.dart';
 import '../core/storage/theme_preset_storage.dart';
+import '../core/school/storage/in_memory_school_data_storage.dart';
+import '../core/school/storage/school_data_storage.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
 import '../features/templates/templates_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/school/school_home_screen.dart';
 import '../shared/widgets/profile_form.dart';
 
 typedef AppClock = DateTime Function();
@@ -26,6 +29,7 @@ typedef AppClock = DateTime Function();
 class BerichtsheftApp extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final SchoolDataStorage? schoolDataStorage;
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final bool initialOnboardingCompleted;
   final String? initialName;
@@ -33,6 +37,7 @@ class BerichtsheftApp extends StatefulWidget {
   final String? initialOccupation;
   final int? initialTrainingYear;
   final String? initialWahlqualifikation;
+  final List<String> initialVertiefungswahlqualifikationen;
   final NotificationScheduler? notificationScheduler;
   final AiReportCache aiReportCache;
   final OpenRouterConfig openRouterConfig;
@@ -43,6 +48,7 @@ class BerichtsheftApp extends StatefulWidget {
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
+    this.schoolDataStorage,
     this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     required this.initialOnboardingCompleted,
     this.initialName,
@@ -50,6 +56,7 @@ class BerichtsheftApp extends StatefulWidget {
     this.initialOccupation,
     this.initialTrainingYear,
     this.initialWahlqualifikation,
+    this.initialVertiefungswahlqualifikationen = const [],
     this.notificationScheduler,
     this.aiReportCache = const DisabledAiReportCache(),
     this.openRouterConfig = OpenRouterConfig.disabled,
@@ -63,11 +70,13 @@ class BerichtsheftApp extends StatefulWidget {
 
 class _BerichtsheftAppState extends State<BerichtsheftApp> {
   late bool _onboardingCompleted;
+  late final SchoolDataStorage _schoolDataStorage;
   String? _name;
   String? _company;
   String? _occupation;
   int? _trainingYear;
   String? _wahlqualifikation;
+  List<String> _vertiefungswahlqualifikationen = const [];
   late final NotificationScheduler _notificationScheduler;
   late final AppShortcutService _appShortcutService;
   late final ReportEnhancementCoordinator _reportCoordinator;
@@ -78,11 +87,15 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
   void initState() {
     super.initState();
     _onboardingCompleted = widget.initialOnboardingCompleted;
+    _schoolDataStorage =
+        widget.schoolDataStorage ?? InMemorySchoolDataStorage();
     _name = widget.initialName;
     _company = widget.initialCompany;
     _occupation = widget.initialOccupation;
     _trainingYear = widget.initialTrainingYear;
     _wahlqualifikation = widget.initialWahlqualifikation;
+    _vertiefungswahlqualifikationen =
+        widget.initialVertiefungswahlqualifikationen;
     _themePreset = widget.initialThemePreset;
     _notificationScheduler =
         widget.notificationScheduler ?? FlutterLocalNotificationScheduler();
@@ -113,13 +126,16 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     required String occupation,
     required int trainingYear,
     String? wahlqualifikation,
+    List<String>? vertiefungswahlqualifikationen,
   }) async {
+    final vertiefungen = vertiefungswahlqualifikationen ?? const <String>[];
     await ProfileStorage.save(
       name: name,
       company: company,
       occupation: occupation,
       trainingYear: trainingYear,
       wahlqualifikation: wahlqualifikation,
+      vertiefungswahlqualifikationen: vertiefungen,
       completeOnboarding: true,
     );
 
@@ -131,6 +147,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
         _occupation = occupation;
         _trainingYear = trainingYear;
         _wahlqualifikation = wahlqualifikation;
+        _vertiefungswahlqualifikationen = vertiefungen;
       });
     }
   }
@@ -141,6 +158,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
     required String occupation,
     required int trainingYear,
     String? wahlqualifikation,
+    List<String>? vertiefungswahlqualifikationen,
   }) async {
     if (!mounted) return;
     setState(() {
@@ -149,13 +167,19 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
       _occupation = occupation;
       _trainingYear = trainingYear;
       _wahlqualifikation = wahlqualifikation;
+      _vertiefungswahlqualifikationen =
+          vertiefungswahlqualifikationen ?? const [];
     });
   }
 
   Future<void> _resetAll() async {
+    if (!_schoolDataStorage.isAvailable) {
+      throw StateError('Der Schulbereich ist nicht verfügbar.');
+    }
     await _notificationScheduler.cancelAll();
     await widget.dailyEntryStorage.clearAll();
     await widget.templateStorage.clearAll();
+    await _schoolDataStorage.clearAll();
     await const DefaultActivityStateStorage().clearAll();
     try {
       await _reportCoordinator.clearAll();
@@ -172,6 +196,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
         _occupation = null;
         _trainingYear = null;
         _wahlqualifikation = null;
+        _vertiefungswahlqualifikationen = const [];
         _themePreset = ThemePreset.lagerTeal;
       });
     }
@@ -192,6 +217,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
           ? MainShell(
               dailyEntryStorage: widget.dailyEntryStorage,
               templateStorage: widget.templateStorage,
+              schoolDataStorage: _schoolDataStorage,
               defaultActivityStateStorage: widget.defaultActivityStateStorage,
               onDataCleared: _resetAll,
               notificationScheduler: _notificationScheduler,
@@ -212,6 +238,9 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
               initialCompany: _company,
               initialOccupation: _occupation,
               initialTrainingYear: _trainingYear,
+              initialWahlqualifikation: _wahlqualifikation,
+              initialVertiefungswahlqualifikationen:
+                  _vertiefungswahlqualifikationen,
               onComplete: _completeOnboarding,
             ),
       debugShowCheckedModeBanner: false,
@@ -222,6 +251,7 @@ class _BerichtsheftAppState extends State<BerichtsheftApp> {
 class MainShell extends StatefulWidget {
   final DailyEntryStorage dailyEntryStorage;
   final ActivityTemplateStorage templateStorage;
+  final SchoolDataStorage schoolDataStorage;
   final DefaultActivityStateStorage defaultActivityStateStorage;
   final Future<void> Function() onDataCleared;
   final NotificationScheduler notificationScheduler;
@@ -241,6 +271,7 @@ class MainShell extends StatefulWidget {
     super.key,
     required this.dailyEntryStorage,
     required this.templateStorage,
+    required this.schoolDataStorage,
     this.defaultActivityStateStorage = const DefaultActivityStateStorage(),
     required this.onDataCleared,
     required this.notificationScheduler,
@@ -264,6 +295,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
   int _weekRefreshSignal = 0;
+  int _schoolRefreshSignal = 0;
   int _templateRefreshSignal = 0;
   String? _notificationInitializationError;
   bool _isReconcilingNotifications = false;
@@ -303,6 +335,30 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (initial != null) {
       _handleShortcutAction(initial);
     }
+  }
+
+  void _notifySchoolDataChanged() {
+    if (!mounted) return;
+    setState(() {
+      _schoolRefreshSignal++;
+      _weekRefreshSignal++;
+    });
+  }
+
+  Future<void> _openTemplates() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) => TemplatesScreen(
+          storage: widget.templateStorage,
+          defaultActivityStateStorage: widget.defaultActivityStateStorage,
+          dailyEntryStorage: widget.dailyEntryStorage,
+          occupation: widget.occupation,
+          onTemplatesChanged: () {
+            setState(() => _templateRefreshSignal++);
+          },
+        ),
+      ),
+    );
   }
 
   void _handleShortcutAction(AppShortcutAction action) {
@@ -409,6 +465,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           TodayScreen(
             storage: widget.dailyEntryStorage,
             templateStorage: widget.templateStorage,
+            schoolStorage: widget.schoolDataStorage,
+            onSchoolDataChanged: _notifySchoolDataChanged,
             defaultActivityStateStorage: widget.defaultActivityStateStorage,
             templateRefreshSignal: _templateRefreshSignal,
             protectBackNavigation: _currentIndex == 0,
@@ -430,18 +488,23 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             reportCoordinator: widget.reportCoordinator,
             reportResolver: widget.reportResolver,
           ),
-          TemplatesScreen(
-            storage: widget.templateStorage,
-            defaultActivityStateStorage: widget.defaultActivityStateStorage,
+          SchoolHomeScreen(
+            storage: widget.schoolDataStorage,
             dailyEntryStorage: widget.dailyEntryStorage,
+            templateStorage: widget.templateStorage,
             occupation: widget.occupation,
-            onTemplatesChanged: () {
-              setState(() => _templateRefreshSignal++);
-            },
+            trainingYear: widget.trainingYear,
+            currentDate: _currentDate,
+            refreshSignal: _schoolRefreshSignal,
+            onOpenProfile: () => setState(() => _currentIndex = 3),
+            onNavigateToToday: () => setState(() => _currentIndex = 0),
+            onEntrySaved: _notifySchoolDataChanged,
           ),
           ProfileScreen(
             dailyEntryStorage: widget.dailyEntryStorage,
             templateStorage: widget.templateStorage,
+            schoolDataStorage: widget.schoolDataStorage,
+            onOpenTemplates: _openTemplates,
             onDataCleared: widget.onDataCleared,
             notificationScheduler: widget.notificationScheduler,
             notificationInitializationError: _notificationInitializationError,
@@ -460,6 +523,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             if (index == 1) {
               _weekRefreshSignal++;
             }
+            if (index == 2) {
+              _schoolRefreshSignal++;
+            }
           });
         },
         destinations: const [
@@ -475,9 +541,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             label: AppStrings.tabWeek,
           ),
           NavigationDestination(
-            icon: Icon(Icons.library_books_outlined),
-            selectedIcon: Icon(Icons.library_books),
-            label: AppStrings.tabTemplates,
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: AppStrings.tabSchool,
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

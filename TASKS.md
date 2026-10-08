@@ -2,7 +2,7 @@
 
 ## Aktuelle Phase
 
-**Phase 27: Optionale OpenRouter-Berichtsnachbearbeitung** 🔨 — Implementierung läuft ohne private Modell-/Key-Konfiguration; die App bleibt bis zur späteren Aktivierung vollständig lokal. Phase 19 (Release-QA auf echtem Android-Gerät) bleibt separat offen.
+**Phase 27: Optionale OpenRouter-Berichtsnachbearbeitung** 🔨 — Die Funktion bleibt ohne private Modell-/Key-Konfiguration deaktiviert; private ZDR-/Budget- und Gerätetests sind offen. Der zusätzlich beauftragte Schul-Ausbauplan für Phasen 28–33 ist implementiert und lokal verifiziert (Analyze 0 Issues, Tests bestanden, Debug-APK gebaut). Phase 19 (Release-QA auf echtem Android-Gerät) bleibt separat offen.
 
 ---
 
@@ -677,6 +677,48 @@ deaktiviert; Modell-ID, API-Schlüssel und Budget werden nachträglich gesetzt.
   Gerätetest nach dem nachträglichen Setzen der privaten Konfiguration
   nachweisen. Automatisiert: `flutter analyze` 0 Issues, 300 Tests und
   Debug-APK erfolgreich.
+
+---
+
+## Beauftragter Ausbauplan: Phasen 28–33 — Berufsschule ✅
+
+Umsetzung gemäß `Lager_Schulzeit_Ausbauplan/`; Analyse, vollständige Testsuite
+und Debug-APK wurden mit der lokalen Toolchain erfolgreich verifiziert.
+
+- [x] **Phase 28 — Ausbildungsprofil:** Kaufmann/Kauffrau im Einzelhandel mit
+  Jahren 1–3; Grund-Wahlqualifikation und genau drei gültige
+  Vertiefungswahlqualifikationen. Verkäuferprofile bleiben ohne Migration
+  lesbar; bestehende Berufs- und Speicher-IDs bleiben erhalten.
+- [x] **Phase 29 — Curriculum:** Offline-Registry `DE-SN` mit Lernfeldern nach
+  Beruf und Jahr; allgemeine/benutzerdefinierte Unit-Typen vorhanden. Die
+  offiziellen Lehrplanseiten nennen keine konkreten allgemeinen Fächer mit
+  Jahrgangszuordnung, daher wurden solche Angaben nicht erfunden; im Check-in
+  kann ein schulspezifisches allgemeines Fach wie Wirtschaftskunde frei benannt
+  werden. Quellen:
+  Sächsische Lehrpläne `https://www.schulportal.sachsen.de/lplandb/lehrplan/795`
+  und `/434`; KMK-Rahmenlehrpläne für
+  [Fachlagerist](https://www.kmk.org/fileadmin/Dateien/pdf/Bildung/BeruflicheBildung/rlp/fachlagerist.pdf),
+  [Fachkraft Lagerlogistik](https://www.kmk.org/fileadmin/Dateien/pdf/Bildung/BeruflicheBildung/rlp/FKLagerlogistik.pdf)
+  und [Einzelhandel](https://www.kmk.org/fileadmin/Dateien/pdf/Bildung/BeruflicheBildung/rlp/KfmEinzelhandelVerkaeufer04-06-17idF16-09-16-E.pdf).
+- [x] **Phase 30 — Persistenz:** getrennte Hive-Boxen für Schultage, Aufgaben
+  und Leistungsnachweise; `DailyEntry` und sein Hive-Adapter bleiben
+  unverändert. Der Coordinator schützt andere Tagestypen und hält einen
+  kompatiblen Berichtsheft-Snapshot synchron.
+- [x] **Phase 31 — Navigation:** Tabs Heute, Woche, Schule und Profil;
+  Vorlagenverwaltung bleibt über Profil erreichbar.
+- [x] **Phase 32 — Schule-Startscreen:** heutiger Schultag, Aufgaben,
+  Leistungsnachweise und vorhandene Einträge.
+- [x] **Phase 33 — Check-in:** vier Schritte für Lerneinheiten, Themen,
+  optionale Aufgaben/Nachweise/Notiz und Speichern; bestehende andere
+  Tagestypen werden nicht still überschrieben.
+- [x] Regressionstests für Profilkompatibilität, Curriculum, Hive-Sortierung,
+  Koordinator, Export, Navigation und School-Widgets ergänzt.
+- [x] `flutter analyze` — 0 Issues; vollständiges `flutter test` bestanden.
+  Der optionale OpenRouter-Live-Smoke-Test wurde mangels privater Defines wie
+  vorgesehen übersprungen.
+- [x] `flutter build apk --debug` erfolgreich; APK unter
+  `build/app/outputs/flutter-apk/app-debug.apk` erzeugt.
+- [x] Doku- und Diff-Abgleich abgeschlossen.
 
 ---
 

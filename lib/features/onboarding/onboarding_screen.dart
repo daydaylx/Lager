@@ -6,6 +6,8 @@ class OnboardingScreen extends StatefulWidget {
   final String? initialCompany;
   final String? initialOccupation;
   final int? initialTrainingYear;
+  final String? initialWahlqualifikation;
+  final List<String> initialVertiefungswahlqualifikationen;
   final ProfileSubmitCallback onComplete;
 
   const OnboardingScreen({
@@ -14,6 +16,8 @@ class OnboardingScreen extends StatefulWidget {
     this.initialCompany,
     this.initialOccupation,
     this.initialTrainingYear,
+    this.initialWahlqualifikation,
+    this.initialVertiefungswahlqualifikationen = const [],
     required this.onComplete,
   });
 
@@ -80,6 +84,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     initialCompany: widget.initialCompany,
                     initialOccupation: widget.initialOccupation,
                     initialTrainingYear: widget.initialTrainingYear,
+                    initialWahlqualifikation: widget.initialWahlqualifikation,
+                    initialVertiefungswahlqualifikationen:
+                        widget.initialVertiefungswahlqualifikationen,
                     submitLabel: 'Loslegen',
                     submitIcon: Icons.arrow_forward,
                     onSubmit: widget.onComplete,

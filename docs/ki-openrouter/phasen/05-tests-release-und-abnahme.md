@@ -44,10 +44,10 @@ Race-Sicherheit, Offline-Fallback und privater Android-Release nachgewiesen sind
 5. Stelle sicher, dass CI keine echte API aufruft und keinen Schlüssel benötigt.
 6. Führe die vollständigen Repository-Checks aus:
    - `scripts/check_repo_hygiene.sh`
-   - `/home/d/flutter/bin/flutter pub get`
-   - `/home/d/flutter/bin/flutter analyze`
-   - `/home/d/flutter/bin/flutter test`
-   - `/home/d/flutter/bin/flutter build apk --debug`
+   - `./.tooling/flutter/bin/flutter pub get`
+   - `./.tooling/flutter/bin/flutter analyze`
+   - `./.tooling/flutter/bin/flutter test`
+   - `./.tooling/flutter/bin/flutter build apk --debug`
 7. Erzeuge anschließend lokal einen signierten privaten Release-Build mit der
    ignorierten OpenRouter-Konfiguration. Lade dieses APK nicht als öffentliches
    Artefakt hoch.

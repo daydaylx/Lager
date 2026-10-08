@@ -33,8 +33,7 @@ class OccupationConfig {
     return result.toList(growable: false);
   }
 
-  bool isActivityInOccupation(String id) =>
-      occupation == TrainingOccupation.verkaeufer
-          ? id.startsWith('verkauf_')
-          : !id.startsWith('verkauf_');
+  bool isActivityInOccupation(String id) => activityIdPrefix.isEmpty
+      ? !id.startsWith('verkauf_')
+      : id.startsWith(activityIdPrefix);
 }

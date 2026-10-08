@@ -1,6 +1,6 @@
 # VALIDATION_MATRIX.md — Mindestprüfungen pro Änderungstyp
 
-Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
+Flutter-Pfad: `.tooling/flutter/bin/flutter` (`FLUTTER_BIN` überschreibbar; siehe `README.md`)
 
 ---
 
@@ -22,6 +22,7 @@ Flutter-Pfad: `/home/d/flutter/bin/flutter` (nicht im System-PATH)
 | ThemePreset / Theme-Persistenz ändern     | `flutter analyze` + `flutter test`                                       | App-Neustart und Datenlöschung manuell prüfen                                                                                                                                                     |
 | Berichtsgenerator ändern                  | `flutter analyze` + `flutter test test/daily_report_generator_test.dart` | `flutter test`                                                                                                                                                                                    |
 | Optionale OpenRouter-Berichtsnachbearbeitung | `flutter pub get` + Hygiene + `flutter analyze` + Client-/Payload-/Cache-Tests | vollständige Tests + Debug-APK; später mit privatem Key ZDR-/Budget- und Geräteprüfung, niemals in CI                                                                                           |
+| Berufsschule / Curriculum / separate Schulpersistenz | `flutter analyze` + Curriculum-, Coordinator- und Hive-Storage-Tests | vollständige `flutter test`-Suite + Debug-APK; besonders prüfen: DailyEntry-Adapter unverändert, private Schulnotiz nicht im Bericht, Sortierung/Box-Reopen und Schutz anderer Tagestypen |
 | Export-Funktion (manuell)                 | `flutter analyze` + manueller Gerätetest                                 | Eintrag erstellen → Profil-Tab → „Daten exportieren" tippen → Share-Sheet erscheint → „In Downloads speichern" wählen → Datei-App öffnen → `berichtsheft_export_*.json` vorhanden → Inhalt lesbar |
 | Golden bewusst aktualisieren              | Änderung visuell prüfen                                                  | `flutter test test/ui_layout_test.dart --update-goldens`                                                                                                                                          |
 | Nur Dokumentation ändern                  | Links, Pfade und Aussagen gegen ausführbare Quellen prüfen               | bei Befehlsänderungen betroffene Befehle ausführen                                                                                                                                                |
@@ -52,31 +53,33 @@ muss, bevor gemergt werden darf.
 ## Befehle
 
 ```bash
+FLUTTER_BIN="${FLUTTER_BIN:-.tooling/flutter/bin/flutter}"
+
 # Pflicht nach jeder Dart-Änderung
-/home/d/flutter/bin/flutter analyze
+"$FLUTTER_BIN" analyze
 
 # Nach Feature-Implementierung
-/home/d/flutter/bin/flutter test
+"$FLUTTER_BIN" test
 
 # Nach pubspec.yaml-Änderung (zuerst)
-/home/d/flutter/bin/flutter pub get
+"$FLUTTER_BIN" pub get
 
 # Einzelnen Test ausführen
-/home/d/flutter/bin/flutter test test/hive_daily_entry_storage_test.dart
-/home/d/flutter/bin/flutter test test/hive_activity_template_storage_test.dart
-/home/d/flutter/bin/flutter test test/ui_layout_test.dart
+"$FLUTTER_BIN" test test/hive_daily_entry_storage_test.dart
+"$FLUTTER_BIN" test test/hive_activity_template_storage_test.dart
+"$FLUTTER_BIN" test test/ui_layout_test.dart
 
 # App starten (Gerät/Emulator muss verbunden sein)
-/home/d/flutter/bin/flutter run
+"$FLUTTER_BIN" run
 
 # Android-Konfiguration und Debug-Artefakt prüfen
-/home/d/flutter/bin/flutter build apk --debug
+"$FLUTTER_BIN" build apk --debug
 
 # Ohne android/key.properties: bewusst unsignierten Release-Fallback prüfen
-/home/d/flutter/bin/flutter build apk --release
+"$FLUTTER_BIN" build apk --release
 
 # Mit android/key.properties: signierten Release-Build lokal prüfen
-/home/d/flutter/bin/flutter build apk --release
+"$FLUTTER_BIN" build apk --release
 ```
 
 ---

@@ -100,101 +100,14 @@ Die einzige Quelle für aktive Phase und offene Aufgaben ist `TASKS.md`.
 
 ## Documentation Freshness Rule
 
-This rule applies to all coding agents working in this repository.
+Vor jeder Übergabe prüfen, ob die Änderung Doku oder Agenten-Kontext berührt, und nur dann aktualisieren:
 
-Before handoff, every agent must check whether its changes require updates to project documentation or agent context files.
+- **Aktualisieren bei:** geänderten Setup-/Build-/Test-Befehlen, Struktur oder wichtigen Pfaden, Architektur oder Datenmodell, UI/Navigation, Persistenz und Export, Datenschutz/Berechtigungen/Secrets, CI/Release, Agenten-Workflow oder Nicht-Zielen, Status oder abgeschlossener Arbeit, Entscheidungen, die als ADR in `DECISIONS.md` gehören.
+- **Nicht aktualisieren bei:** kleinen internen Details, bereits korrekter Doku oder Dopplung einer anderen kanonischen Quelle. Doku kompakt halten, nichts „der Vollständigkeit halber“ ergänzen.
+- **Welche Dateien:** nur vorhandene und betroffene. Kandidaten sind `README.md`, die Tool-Dateien (`CLAUDE.md`, `GEMINI.md`, `CODEX.md`, `opencode.json`, `.cursor/rules/agents.mdc`, `.github/copilot-instructions.md`), `docs/*` (u. a. `CODEMAP`, `AGENT_CONTEXT_PACKS`, `CURRENT_STATUS`, `VALIDATION_MATRIX`, `UI_UX_SPEC`, `DATA_MODEL`, `PRIVACY_CONTEXT`, `QA_REMINDER_CHECKLIST`), `DECISIONS.md`, `PROJECT_STATUS.md`, `TASKS.md`.
+- **Handoff:** Jede Übergabe enthält den Abschnitt „Documentation Freshness Check“ mit Ergebnis `No documentation update needed`, `Documentation updated` oder `Documentation update still required`. Vorlage: `docs/AGENT_HANDOFF_TEMPLATE.md`.
 
-### Required check
-
-After any code, config, UI, data model, build, test, deployment, security, privacy, or workflow change, review the current diff and decide whether documentation must be updated.
-
-Check the relevant existing files, such as:
-
-- `README.md`
-- `AGENTS.md`
-- `CLAUDE.md`
-- `GEMINI.md`
-- `CODEX.md`
-- `opencode.json`
-- `.cursor/rules/agents.mdc`
-- `.github/copilot-instructions.md`
-- `docs/CODEMAP.md`
-- `docs/AGENT_CONTEXT_PACKS.md`
-- `docs/CURRENT_STATUS.md`
-- `docs/VALIDATION_MATRIX.md`
-- `docs/UI_UX_SPEC.md`
-- `docs/DATA_MODEL.md`
-- `docs/PRIVACY_CONTEXT.md`
-- `docs/QA_REMINDER_CHECKLIST.md`
-- `DECISIONS.md`
-- `PROJECT_STATUS.md`
-- `TASKS.md`
-
-Only update files that exist and are relevant to the current change.
-
-### Documentation must be updated when
-
-Update documentation if the change affects:
-
-- setup, installation, or development workflow
-- build, test, lint, typecheck, smoke, or deployment commands
-- repository structure or important file paths
-- architecture, module boundaries, or data flow
-- UI, design system, navigation, or critical screens
-- data model, storage, schema, migrations, settings, or export behavior
-- API/provider behavior
-- security, privacy, permissions, secrets, logs, or local data handling
-- deployment, hosting, CI, or release process
-- agent workflow, context packs, validation matrix, or no-go rules
-- current status, known issues, or completed work
-- product or architecture decisions that should be captured as ADRs
-
-### Documentation should not be updated when
-
-Do not update documentation if:
-
-- the change is only a small internal implementation detail
-- existing documentation remains accurate
-- no documented command, path, behavior, architecture, or rule changed
-- the update would only add noise
-- the information would duplicate another canonical source
-
-Keep documentation compact, current, and useful. Do not add documentation just for completeness.
-
-### Required handoff section
-
-Every implementation handoff must include:
-
-```md
-## Documentation Freshness Check
-
-| Area                                   | Docs affected? | Action               |
-| -------------------------------------- | -------------: | -------------------- |
-| README / setup                         |         yes/no | updated / not needed |
-| Agent context                          |         yes/no | updated / not needed |
-| Validation matrix                      |         yes/no | updated / not needed |
-| UI / data / security / deployment docs |         yes/no | updated / not needed |
-
-Result:
-
-- `No documentation update needed`
-- or `Documentation updated`
-- or `Documentation update still required`
-```
-
-### Source of truth
-
-If documentation and executable project sources disagree, trust executable sources first:
-
-1. Code
-2. Build/config files
-3. Scripts
-4. CI/workflow files
-5. `AGENTS.md`
-6. Active documentation under `docs/`
-7. Tool-specific compatibility files such as `CLAUDE.md`, `GEMINI.md`, Copilot/Cursor/Cline/Kilo rules
-
-Tool-specific files should stay thin and should not duplicate long project documentation from `AGENTS.md` or `docs/`.
+**Quelle der Wahrheit bei Widerspruch** (von oben nach unten): Code → Build-/Konfigurationsdateien → Skripte → CI-Workflows → `AGENTS.md` → `docs/` → tool-spezifische Dateien. Tool-Dateien bleiben dünn und duplizieren keine langen Inhalte aus `AGENTS.md` oder `docs/`.
 
 ---
 
@@ -242,14 +155,14 @@ final color = theme.colorScheme.primary;
 
 ## Flutter-Befehle
 
-Flutter ist unter `/home/d/flutter/bin/flutter` installiert — **nicht** im System-PATH.
+Flutter muss im PATH liegen oder mit vollem Pfad aufgerufen werden (Stand 2026-10-07 auf diesem Rechner nicht installiert).
 
 ```bash
-/home/d/flutter/bin/flutter pub get       # nach pubspec-Änderungen
-/home/d/flutter/bin/flutter analyze       # nach jeder Dart-Änderung — muss 0 Issues zeigen
-/home/d/flutter/bin/flutter test          # nach Feature-Implementierung
-/home/d/flutter/bin/flutter run           # App starten (Gerät/Emulator)
-/home/d/flutter/bin/flutter build apk --debug  # Android-Konfiguration prüfen
+flutter pub get       # nach pubspec-Änderungen
+flutter analyze       # nach jeder Dart-Änderung — muss 0 Issues zeigen
+flutter test          # nach Feature-Implementierung
+flutter run           # App starten (Gerät/Emulator)
+flutter build apk --debug  # Android-Konfiguration prüfen
 ```
 
 ---

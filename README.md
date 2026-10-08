@@ -33,11 +33,26 @@ Toolchain- und Dependency-Upgrades werden nur gemeinsam in einer separat
 geplanten Modernisierung durchgeführt.
 
 ```bash
-/home/d/flutter/bin/flutter pub get
-/home/d/flutter/bin/flutter run
+export PATH="$PWD/.tooling/flutter/bin:$PATH"
+flutter pub get
+flutter run
 ```
 
-Flutter liegt unter `/home/d/flutter/bin/flutter` — nicht im System-PATH.
+Für die lokale Verifikation sind diese Tools in `.tooling/` abgelegt:
+
+- Flutter SDK `3.32.1` (Dart `3.8.1`), `.tooling/flutter`
+- Eclipse Temurin JDK `17.0.20.1+1`, `.tooling/jdk-17`
+- Android SDK Command-line Tools, Paketrevision `15859902` (`sdkmanager` `22.0`)
+- Android SDK Platforms `33` (Revision `3`), `34` (Revision `3`), `35` (Revision `2`) und `37.0` (Revision `2`)
+- Android Build Tools `34.0.0`, `35.0.0` und `36.0.0`, Platform Tools `37.0.1`
+- Android NDK `27.0.12077973` und CMake `3.22.1` (vom Android-Build benötigt)
+- Android- und Gradle-Nutzerverzeichnisse samt Gradle-Wrapper-Distribution `8.12` liegen unter `.tooling/`
+
+`scripts/verify.sh` richtet `JAVA_HOME`, `ANDROID_SDK_ROOT`, `ANDROID_USER_HOME`
+und `GRADLE_USER_HOME` auf diese lokalen Pfade ein. Andere Installationsorte
+lassen sich über `FLUTTER_BIN`, `JAVA_HOME` und `ANDROID_SDK_ROOT` vorgeben.
+Die Android-SDK-Lizenzen wurden für diese lokale Arbeitskopie akzeptiert. Der
+gesamte Ordner `.tooling/` ist git-ignoriert und wird nicht eingecheckt.
 
 Zielplattform: Android. iOS wird nicht aktiv unterstützt.
 
@@ -50,7 +65,7 @@ und eigene Werte für `OPENROUTER_ENABLED`, `OPENROUTER_MODEL_ID` und
 `OPENROUTER_API_KEY` setzt. Starte einen privaten Build dann mit:
 
 ```bash
-/home/d/flutter/bin/flutter run --dart-define-from-file=config/openrouter.private.json
+flutter run --dart-define-from-file=config/openrouter.private.json
 ```
 
 Die Datei, ihr Schlüssel und ein damit gebautes APK dürfen weder committet noch

@@ -13,15 +13,32 @@ import '../models/daily_entry.dart';
 import '../profile_storage.dart';
 import '../storage/activity_template_storage.dart';
 import '../storage/daily_entry_storage.dart';
+import '../school/storage/school_data_storage.dart';
 
 class ExportService {
   static Future<String> generateJson(
     DailyEntryStorage entryStorage,
     ActivityTemplateStorage templateStorage, {
+    SchoolDataStorage? schoolDataStorage,
     AiReportCache aiReportCache = const DisabledAiReportCache(),
   }) async {
     final entries = await entryStorage.loadAll();
     final customs = await templateStorage.loadCustom();
+    final schoolEntries = schoolDataStorage == null
+        ? const <Map<String, Object?>>[]
+        : (await schoolDataStorage.loadEntries())
+            .map((entry) => entry.toJson())
+            .toList(growable: false);
+    final schoolTasks = schoolDataStorage == null
+        ? const <Map<String, Object?>>[]
+        : (await schoolDataStorage.loadTasks())
+            .map((task) => task.toJson())
+            .toList(growable: false);
+    final schoolAssessments = schoolDataStorage == null
+        ? const <Map<String, Object?>>[]
+        : (await schoolDataStorage.loadAssessments())
+            .map((assessment) => assessment.toJson())
+            .toList(growable: false);
     final profile = await ProfileStorage.load();
     final serializedEntries = <Map<String, Object?>>[];
     for (final entry in entries) {
@@ -45,6 +62,7 @@ class ExportService {
     }
 
     final data = {
+      'schemaVersion': 2,
       'exportedAt': DateTime.now().toIso8601String(),
       'appVersion': kAppVersion,
       'profile': {
@@ -53,8 +71,13 @@ class ExportService {
         'occupation': profile.occupation,
         'trainingYear': profile.trainingYear,
         'wahlqualifikation': profile.wahlqualifikation,
+        'vertiefungswahlqualifikationen':
+            profile.vertiefungswahlqualifikationen,
       },
       'entries': serializedEntries,
+      'schoolEntries': schoolEntries,
+      'schoolTasks': schoolTasks,
+      'schoolAssessments': schoolAssessments,
       'customActivities': customs
           .map((template) => {
                 'id': template.id,
@@ -72,11 +95,13 @@ class ExportService {
   static Future<void> share(
     DailyEntryStorage entryStorage,
     ActivityTemplateStorage templateStorage, {
+    SchoolDataStorage? schoolDataStorage,
     AiReportCache aiReportCache = const DisabledAiReportCache(),
   }) async {
     final json = await generateJson(
       entryStorage,
       templateStorage,
+      schoolDataStorage: schoolDataStorage,
       aiReportCache: aiReportCache,
     );
     final dir = await getTemporaryDirectory();

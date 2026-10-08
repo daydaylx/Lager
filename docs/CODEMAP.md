@@ -1,6 +1,6 @@
 # CODEMAP.md — Schnellreferenz Projektstruktur
 
-Flutter Android-App „Berichtsheft-Merker" für Lagerlogistik und Verkäufer/innen. Aktueller Arbeitsstand:
+Flutter Android-App „Berichtsheft-Merker" für Lagerlogistik, Verkäufer/innen und Kaufleute im Einzelhandel. Aktueller Arbeitsstand:
 `docs/CURRENT_STATUS.md`.
 
 ---
@@ -28,6 +28,8 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `today/widgets/`                           | ✅ fertig | UI-Bausteine: `TodayFlow` (Check-in-Schritte, Tätigkeitsauswahl und Übersicht), `TodayHeader`, `DayTypeRow`, `AbsenceSheet`, `SaveBar`, `AreaGrid`, `SpecialFlagsAndNoteSection`, `ActivityPickerSection` |
 | `today/widgets/report_card.dart`           | ✅ fertig | Lokale oder gültig nachbearbeitete Berichtskarte mit Status, optionalem „KI-optimiert“-Chip und Kopier-Button                             |
 | `week/week_screen.dart`                    | ✅ fertig | Wochenliste, Zusammenfassung und kopierbare Tagesberichte                                                                                  |
+| `school/school_home_screen.dart`           | in Arbeit | Schul-Startscreen mit heutigen Einträgen, Aufgaben und Leistungsnachweisen                                                                |
+| `school/school_check_in_screen.dart`       | in Arbeit | Vierstufiger strukturierter Berufsschul-Check-in                                                                                           |
 | `templates/templates_screen.dart`          | ✅ fertig | Suche, hinzufügen, filtern, deaktivieren/reaktivieren                                                                                      |
 | `profile/profile_screen.dart`              | ✅ fertig | Profil-Orchestrierung, Datenverwaltung, Export/Delete und Section-Wiring                                                                   |
 | `profile/profile_reminder_controller.dart` | ✅ fertig | Reminder laden/speichern, Berechtigung, Rollback und Edit-Regeln                                                                           |
@@ -72,6 +74,9 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | `storage/reminder_storage.dart`               | Reminder-Einstellungen in SharedPreferences            |
 | `storage/theme_preset_storage.dart`           | Gewähltes ThemePreset in SharedPreferences             |
 | `storage/preferences_write.dart`              | Prüft SharedPreferences-Schreibergebnisse              |
+| `school/storage/school_data_storage.dart`     | Separates Interface für Schultage, Aufgaben und Nachweise |
+| `school/storage/hive_school_data_storage.dart` | Drei lokale JSON-Boxen `school_entries`, `school_tasks`, `school_assessments` |
+| `school/services/school_entry_coordinator.dart` | Koordiniert strukturierte Schulquelle und DailyEntry-Snapshot |
 
 ### Berufsspezifische Domain-Konfiguration
 
@@ -79,8 +84,9 @@ lib/app/theme.dart           → ThemePreset + buildThemeForPreset(), M3-Kompone
 | --- | --- |
 | `domain/occupation.dart` | Persistente Berufe, zulässige Ausbildungsjahre und vier Wahlqualifikationen |
 | `domain/occupation_config.dart` | Bereiche, Kategorien, Prefix, Schul-Themen und Empfehlungsregeln je Beruf |
-| `domain/occupation_registry.dart` | Zentrale Registry für Lagerlogistik und Verkäufer/in |
-| `data/verkaeufer_activities.dart` | 138 additive Verkäufer-Tätigkeiten mit `verkauf_*`-IDs |
+| `domain/occupation_registry.dart` | Zentrale Registry für Lagerlogistik, Verkäufer/in und Kaufmann/-frau im Einzelhandel |
+| `domain/curriculum_unit.dart`, `domain/curriculum_registry.dart` | Curriculum-Typen und statische DE-SN-Lernfelder nach Beruf/Jahr |
+| `data/verkaeufer_activities.dart` | 138 additive Einzelhandels-Tätigkeiten mit `verkauf_*`-IDs |
 | `data/default_activities.dart` | Unveränderter Lagerkatalog plus Verkäufer-Katalog |
 
 ### KI-Berichtsnachbearbeitung
@@ -188,6 +194,10 @@ App-Start:
 | Datei                                      | Getestet                                                           |
 | ------------------------------------------ | ------------------------------------------------------------------ |
 | `widget_test.dart`                         | Onboarding, Navigation, Profil, Reminder-SnackBar                  |
+| `curriculum_registry_test.dart`             | DE-SN-Lernfelder, Jahrgänge und stabile Curriculum-IDs              |
+| `school_entry_coordinator_test.dart`        | Snapshot, Typ-Schutz und Speicherkonsistenz                         |
+| `hive_school_data_storage_test.dart`        | Reopen, Sortierung, Fehlertoleranz, Update und Löschung              |
+| `school_home_screen_test.dart`, `school_check_in_screen_test.dart` | Schul-Startscreen und geführter Check-in |
 | `today_screen_test.dart`                   | Formular, Speicherung, Suche, Untergruppen, Empfehlungen           |
 | `today_entry_draft_test.dart`              | Heute-Draft: Pflichtfelder, Entry-Erzeugung, Notiz/Flags           |
 | `activity_picker_model_test.dart`          | Tätigkeitsauswahl: Gruppen, Suche, Custom-/historische IDs         |

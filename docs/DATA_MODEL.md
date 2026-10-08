@@ -3,15 +3,19 @@
 Dieses Dokument beschreibt die aktuell implementierten Dart-Datenstrukturen und
 Persistenzverträge. Der ausführbare Code bleibt die Quelle der Wahrheit.
 
-**Status:** `DailyEntry` und eigene Tätigkeiten werden mit Hive CE persistiert;
-Profil, Onboarding, Reminder und Theme-Preset liegen in SharedPreferences.
-Abgeleitete optionale KI-Berichte liegen getrennt in einer eigenen Hive-Box und
-verändern weder `DailyEntry` noch seinen Adapter.
+**Status:** `DailyEntry`, eigene Tätigkeiten und strukturierte Schul-Einträge,
+Aufgaben und Leistungsnachweise werden mit Hive CE persistiert; Profil,
+Onboarding, Reminder und Theme-Preset liegen in SharedPreferences. Abgeleitete
+optionale KI-Berichte liegen getrennt in einer eigenen Hive-Box und verändern
+weder `DailyEntry` noch seinen Adapter.
 
 Vollständiger Tätigkeitskatalog in `lib/core/data/default_activities.dart`:
 132 unveränderte Lagerlogistik-IDs plus 138 Verkäufer-IDs im ausschließlich
 `verkauf_*`-Namespace. Verkäufer-Berufsschulthemen werden im Picker auf Jahr 1
 bzw. 2 begrenzt; historische Einträge und eigene Tätigkeiten bleiben auflösbar.
+Die Offline-Curriculum-Registry bildet sächsische Lernfelder berufs- und
+jahrgangsbezogen ab. Allgemeine Fachnamen/Jahrgangszuordnungen werden nicht
+ergänzt, wenn die offiziellen Quellen sie nicht benennen.
 
 ---
 
@@ -133,6 +137,7 @@ typedef StoredProfile = ({
   String? occupation,
   int? trainingYear,
   String? wahlqualifikation,
+  List<String> vertiefungswahlqualifikationen,
   bool onboardingCompleted,
 });
 ```
@@ -149,6 +154,7 @@ Gültige Ausbildungsberufe:
 | `fachlagerist` | Fachlagerist/in | 1, 2 |
 | `fachkraft_lagerlogistik` | Fachkraft für Lagerlogistik | 1, 2, 3 |
 | `verkaeufer` | Verkäufer/in | 1, 2 |
+| `kaufmann_einzelhandel` | Kaufmann/Kauffrau im Einzelhandel | 1, 2, 3 |
 
 ---
 
@@ -171,6 +177,12 @@ lib/core/
     occupation.dart            ← Berufe, Jahre und Wahlqualifikationen
     occupation_config.dart     ← Berufskonfiguration
     occupation_registry.dart   ← zentrale Registry
+    curriculum_unit.dart       ← statische Curriculum- und Fachtypen
+    curriculum_registry.dart   ← DE-SN-Lernfelder nach Beruf/Jahr
+  school/
+    models/                    ← SchoolEntry, SchoolTask, SchoolAssessment
+    storage/                   ← Hive- und In-Memory-Schulspeicher
+    services/                  ← Synchronisation zum DailyEntry-Snapshot
   ai/
     ai_report_cache.dart
     hive_ai_report_cache.dart
@@ -201,6 +213,9 @@ Hive-CE-Boxen:
 | `'entries'` | `Box<DailyEntry>` | Alle Tageseinträge, Schlüssel = Datum als String `'yyyy-MM-dd'` |
 | `'custom_templates'` | `Box<ActivityTemplate>` | Eigene Tätigkeiten mit stabilem Schlüssel und Aktivstatus |
 | `'ai_reports'` | `Box<String>` | Abgeleitete Berichte, Fingerprint, Modell-/Prompt-Version, Status und begrenzte Retry-Metadaten |
+| `'school_entries'` | `Box<String>` | Strukturierte Schultage und private Schulnotiz als JSON |
+| `'school_tasks'` | `Box<String>` | Aufgaben mit optionaler Fälligkeit und Status |
+| `'school_assessments'` | `Box<String>` | Leistungsnachweise mit Datum, Art und optionalem Ergebnis |
 
 **DailyEntryStorage-Schnittstelle:**
 - `loadByDate(DateTime date)` — Lädt Eintrag für ein bestimmtes Datum
@@ -244,7 +259,7 @@ angeboten.
 
 - Profil und Onboarding: `onboarding_completed`, `profile_name`,
   `profile_company`, `training_occupation`, `training_year`,
-  `wahlqualifikation`
+  `wahlqualifikation`, `vertiefungswahlqualifikationen`
 - Reminder: `reminder_enabled`, `reminder_times`, `reminder_weekdays`
 - Darstellung: `theme_preset`
 
@@ -258,7 +273,7 @@ normalisiert. `theme_preset` speichert den stabilen Namen des `ThemePreset`.
 | DayType                          | Bereiche erforderlich?  | Tätigkeiten wählbar?         |
 | -------------------------------- | ----------------------- | ---------------------------- |
 | betrieb                          | ja, mindestens einer    | ja                           |
-| berufsschule                     | nein                    | ja (Kategorie: berufsschule) |
+| berufsschule                     | nein                    | ja; strukturierte Schuldaten liegen zusätzlich separat in `SchoolEntry` |
 | frei / urlaub / krank / feiertag | nein                    | nein                         |
 | sonstiges                        | nein                    | nein; Besonderheiten/Notiz   |
 

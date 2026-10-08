@@ -15,6 +15,10 @@ import 'package:berichtsheft_merker/core/models/activity_template.dart';
 import 'package:berichtsheft_merker/core/models/adhoc_activity.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/services/export_service.dart';
+import 'package:berichtsheft_merker/core/school/models/school_assessment.dart';
+import 'package:berichtsheft_merker/core/school/models/school_entry.dart';
+import 'package:berichtsheft_merker/core/school/models/school_task.dart';
+import 'package:berichtsheft_merker/core/school/storage/in_memory_school_data_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 
@@ -71,7 +75,11 @@ void main() {
       );
       final data = jsonDecode(json) as Map<String, dynamic>;
 
+      expect(data['schemaVersion'], 2);
       expect(data['entries'], isEmpty);
+      expect(data['schoolEntries'], isEmpty);
+      expect(data['schoolTasks'], isEmpty);
+      expect(data['schoolAssessments'], isEmpty);
       expect(data['customActivities'], isEmpty);
       expect(data['exportedAt'], isA<String>());
       expect(data['appVersion'], kAppVersion);
@@ -285,6 +293,54 @@ void main() {
       expect(ai['sourceFingerprint'], request.sourceFingerprint);
       expect(json, isNot(contains('private-test-key')));
       expect(json, isNot(contains('Authorization')));
+    });
+
+    test('Schuldaten einschließlich privater Notizen werden exportiert', () async {
+      final date = DateTime(2026, 9, 22);
+      final now = DateTime(2026, 9, 22, 8);
+      final schoolStorage = InMemorySchoolDataStorage();
+      await schoolStorage.saveEntry(
+        SchoolEntry(
+          id: SchoolEntry.idForDate(date),
+          date: date,
+          blocks: const [
+            SchoolBlock(
+              curriculumUnitId: 'lf8',
+              customUnitTitle: 'LF 8 · Güter verladen',
+              topics: ['Ladungssicherung'],
+            ),
+          ],
+          privateNote: 'Nur in meinem Export',
+          taskId: 'task_1',
+          assessmentId: 'assessment_1',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await schoolStorage.saveTask(
+        SchoolTask(id: 'task_1', title: 'Arbeitsblatt', createdAt: now),
+      );
+      await schoolStorage.saveAssessment(
+        SchoolAssessment(
+          id: 'assessment_1',
+          title: 'Klassenarbeit',
+          date: DateTime(2026, 10, 2),
+        ),
+      );
+
+      final json = await ExportService.generateJson(
+        InMemoryDailyEntryStorage(),
+        InMemoryActivityTemplateStorage(),
+        schoolDataStorage: schoolStorage,
+      );
+      final data = jsonDecode(json) as Map<String, dynamic>;
+      expect((data['schoolEntries'] as List).single['privateNote'],
+          'Nur in meinem Export');
+      expect((data['schoolTasks'] as List).single['title'], 'Arbeitsblatt');
+      expect(
+        (data['schoolAssessments'] as List).single['title'],
+        'Klassenarbeit',
+      );
     });
 
     test('JSON ist mit 2-Leerzeichen-Einrückung formatiert', () async {

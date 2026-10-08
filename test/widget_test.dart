@@ -9,6 +9,8 @@ import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/models/daily_entry.dart';
 import 'package:berichtsheft_merker/core/models/reminder_settings.dart';
 import 'package:berichtsheft_merker/core/services/notification_service.dart';
+import 'package:berichtsheft_merker/core/school/models/school_entry.dart';
+import 'package:berichtsheft_merker/core/school/storage/in_memory_school_data_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_activity_template_storage.dart';
 import 'package:berichtsheft_merker/core/storage/in_memory_daily_entry_storage.dart';
 import 'package:berichtsheft_merker/features/onboarding/onboarding_screen.dart';
@@ -240,6 +242,71 @@ void main() {
     );
   });
 
+  testWidgets('Kaufmannprofil erlaubt Jahr 3 und getrennte Vertiefungen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      BerichtsheftApp(
+        dailyEntryStorage: InMemoryDailyEntryStorage(),
+        templateStorage: InMemoryActivityTemplateStorage(),
+        initialOnboardingCompleted: false,
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('onboarding_continue')));
+    await tester.pumpAndSettle();
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey(TrainingOccupationValues.kaufmannEinzelhandel)),
+    );
+
+    expect(find.byKey(const ValueKey('training_year_1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('training_year_3')), findsOneWidget);
+    expect(
+      find.byKey(
+        const ValueKey(
+          'vertiefung_beratungVonKundenInKomplexenSituationen',
+        ),
+      ),
+      findsOneWidget,
+    );
+
+    await tapVisible(tester, find.byKey(const ValueKey('training_year_3')));
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('wahlqualifikation_beratungVonKunden')),
+    );
+    for (final key in const [
+      'vertiefung_beratungVonKundenInKomplexenSituationen',
+      'vertiefung_marketingmassnahmen',
+      'vertiefung_onlinehandel',
+    ]) {
+      await tapVisible(tester, find.byKey(ValueKey(key)));
+    }
+    await tapVisible(
+      tester,
+      find.byKey(const ValueKey('profile_submit_button')),
+    );
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString(PreferenceKeys.trainingOccupation),
+      TrainingOccupationValues.kaufmannEinzelhandel,
+    );
+    expect(preferences.getInt(PreferenceKeys.trainingYear), 3);
+    expect(
+      preferences.getStringList(
+        PreferenceKeys.vertiefungswahlqualifikationen,
+      ),
+      const [
+        'beratungVonKundenInKomplexenSituationen',
+        'marketingmassnahmen',
+        'onlinehandel',
+      ],
+    );
+  });
+
   testWidgets('ungültiges altes Ausbildungsjahr muss korrigiert werden', (
     WidgetTester tester,
   ) async {
@@ -400,7 +467,9 @@ void main() {
     expect(submitButtonAfter.onPressed, isNotNull);
   });
 
-  testWidgets('Alle vier Tabs sind erreichbar', (WidgetTester tester) async {
+  testWidgets('Heute, Woche, Schule und Profil sind erreichbar', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
@@ -416,14 +485,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('week_number')), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.tabTemplates));
+    await tester.tap(find.text(AppStrings.tabSchool));
     await tester.pumpAndSettle();
-    expect(find.text('Vorlagen'), findsWidgets);
-    expect(find.text('Alle'), findsOneWidget);
+    expect(find.text('Schule'), findsWidgets);
 
     await tester.tap(find.text(AppStrings.tabProfile));
     await tester.pumpAndSettle();
     expect(find.text('Dein Profil'), findsOneWidget);
+    final templatesTile = find.byKey(const ValueKey('manage_activity_templates'));
+    final profileScrollable = find.ancestor(
+      of: find.byKey(const ValueKey('profile_header')),
+      matching: find.byType(Scrollable),
+    );
+    await tester.drag(profileScrollable, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    await tester.tap(templatesTile);
+    await tester.pumpAndSettle();
+    expect(find.text('Vorlagen'), findsWidgets);
+    expect(find.text('Alle'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
   });
 
   testWidgets('Notification-Tap öffnet den Heute-Tab', (tester) async {
@@ -590,14 +671,26 @@ void main() {
     expect(find.text('Samstag, 13. Juni'), findsOneWidget);
   });
 
-  testWidgets('Alle Daten löschen bricht geplante Erinnerungen ab', (
+  testWidgets('Alle Daten löschen bricht Reminder ab und leert Schuldaten', (
     WidgetTester tester,
   ) async {
     final scheduler = NoOpNotificationScheduler();
+    final schoolStorage = InMemorySchoolDataStorage();
+    final schoolDate = DateTime(2026, 6, 12);
+    await schoolStorage.saveEntry(
+      SchoolEntry(
+        id: SchoolEntry.idForDate(schoolDate),
+        date: schoolDate,
+        blocks: const [],
+        createdAt: schoolDate,
+        updatedAt: schoolDate,
+      ),
+    );
     await tester.pumpWidget(
       BerichtsheftApp(
         dailyEntryStorage: InMemoryDailyEntryStorage(),
         templateStorage: InMemoryActivityTemplateStorage(),
+        schoolDataStorage: schoolStorage,
         initialOnboardingCompleted: true,
         notificationScheduler: scheduler,
       ),
@@ -624,6 +717,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(scheduler.cancelAllCalls, 1);
+    expect(await schoolStorage.loadEntries(), isEmpty);
     expect(find.byType(OnboardingScreen), findsOneWidget);
   });
 }

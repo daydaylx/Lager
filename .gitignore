@@ -40,6 +40,9 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Android Studio / Kotlin Gradle plugin metadata
+/android/.kotlin/
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
@@ -50,6 +53,9 @@ config/openrouter.private.json
 
 # JS-Tooling-Verzeichnisse gehören nicht ins Repo
 node_modules/
+
+# Lokale Flutter-/Android-/Java-SDKs, Gradle-Caches und Prüfprotokolle
+.tooling/
 
 # Lokale Agenten-Artefakte
 .pi-subagents/

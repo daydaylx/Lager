@@ -26,6 +26,8 @@ class ProfileEditScreen extends StatelessWidget {
             initialOccupation: profile.occupation,
             initialTrainingYear: profile.trainingYear,
             initialWahlqualifikation: profile.wahlqualifikation,
+            initialVertiefungswahlqualifikationen:
+                profile.vertiefungswahlqualifikationen,
             submitLabel: 'Profil speichern',
             submitIcon: Icons.save_outlined,
             onSubmit: ({
@@ -34,6 +36,7 @@ class ProfileEditScreen extends StatelessWidget {
               required occupation,
               required trainingYear,
               wahlqualifikation,
+              vertiefungswahlqualifikationen,
             }) async {
               await onSave(
                 name: name,
@@ -41,6 +44,8 @@ class ProfileEditScreen extends StatelessWidget {
                 occupation: occupation,
                 trainingYear: trainingYear,
                 wahlqualifikation: wahlqualifikation,
+                vertiefungswahlqualifikationen:
+                    vertiefungswahlqualifikationen,
               );
               if (context.mounted) {
                 Navigator.of(context).pop(true);

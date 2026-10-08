@@ -22,8 +22,11 @@ Zeitstempel, andere Einträge, Geräteinformationen oder Debugdaten.
 
 | Daten             | Speicherort           | Datei                                            |
 | ----------------- | --------------------- | ------------------------------------------------ |
-| Tageseinträge     | Hive CE Box `entries` | `lib/core/storage/hive_daily_entry_storage.dart` |
+| Tageseinträge | Hive CE Box `entries` | `lib/core/storage/hive_daily_entry_storage.dart` |
 | Eigene Tätigkeiten | Hive CE Box `custom_templates` | `lib/core/storage/hive_activity_template_storage.dart` |
+| Schultage und private Schulnotizen | Hive CE Box `school_entries` | `lib/core/school/storage/hive_school_data_storage.dart` |
+| Schulaufgaben | Hive CE Box `school_tasks` | `lib/core/school/storage/hive_school_data_storage.dart` |
+| Leistungsnachweise | Hive CE Box `school_assessments` | `lib/core/school/storage/hive_school_data_storage.dart` |
 | Ausbildungsprofil | SharedPreferences     | `lib/core/profile_storage.dart`                  |
 | Onboarding-Flag   | SharedPreferences     | `lib/core/constants.dart` (Key)                  |
 | Erinnerungseinstellungen | SharedPreferences | `lib/core/storage/reminder_storage.dart`       |
@@ -46,10 +49,13 @@ dem Gerät geplant, verwenden die Gerätezeitzone und benötigen keinen Netzwerk
 Android-Cloud-Backup und Gerätetransfer sind in
 `android/app/src/main/AndroidManifest.xml` sowie den XML-Regeln unter
 `android/app/src/main/res/xml/` deaktiviert. Dadurch werden Profil,
-Einstellungen, Tageseinträge und eigene Tätigkeiten nicht durch Android in die
-Cloud oder auf ein neues Gerät übertragen.
+Einstellungen, Tageseinträge, eigene Tätigkeiten und Schuldaten nicht durch
+Android in die Cloud oder auf ein neues Gerät übertragen. Schuldaten werden
+beim JSON-Export lokal auf ausdrückliche Nutzeraktion mit exportiert; private
+Schulnotizen gelangen nicht in die optionale Berichtsnachbearbeitung.
 
-„Alle Daten löschen“ leert SharedPreferences und beide Hive-Boxen. Die
+„Alle Daten löschen“ leert SharedPreferences und die Datenboxen für
+Tageseinträge, eigene Tätigkeiten, Schuldaten und optionale KI-Berichte. Die
 Hive-Dateien werden danach komprimiert, damit gelöschte Inhalte nicht unnötig
 in freien Dateibereichen verbleiben.
 

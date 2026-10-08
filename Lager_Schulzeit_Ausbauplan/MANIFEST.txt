@@ -1,0 +1,14 @@
+Lager Schulzeit Ausbauplan
+
+Enthalten:
+- Produktziel und Nicht-Ziele
+- Gesamtroadmap Phase 28–41
+- Zielarchitektur
+- Datenmodell
+- Migration/Kompatibilität
+- detaillierte Phasenbeschreibungen
+- Abnahmekriterien
+- Testmatrix
+- Agenten-Arbeitsauftrag Phase 28–33
+- Handoff-Template
+- fachliche Quellen

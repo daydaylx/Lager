@@ -9,6 +9,7 @@ class OccupationRegistry {
     TrainingOccupation.fachlagerist: _lagerConfig,
     TrainingOccupation.fachkraftLagerlogistik: _lagerConfig,
     TrainingOccupation.verkaeufer: _verkaeuferConfig,
+    TrainingOccupation.kaufmannEinzelhandel: _verkaeuferConfig,
   };
 
   static List<TrainingOccupation> get allOccupations =>
