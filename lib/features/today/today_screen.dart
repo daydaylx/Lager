@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/activity_utils.dart';
 import '../../core/ai/report_enhancement_coordinator.dart';
 import '../../core/ai/resolved_report.dart';
 import '../../core/data/default_activities.dart';
-import '../../core/data/lager_jokes.dart';
+import '../../core/data/joke_picker.dart';
 import '../../core/domain/domain.dart';
 import '../../core/enums/activity_category.dart';
 import '../../core/enums/day_type.dart';
@@ -1196,7 +1197,10 @@ class _TodayScreenState extends State<TodayScreen> {
   Future<void> _showJokeSheet() async {
     if (!mounted) return;
 
-    final joke = jokeForDate(_today);
+    final preferences = await SharedPreferences.getInstance();
+    final jokePicker = JokePicker(preferences: preferences);
+    final joke = await jokePicker.nextJoke();
+    if (!mounted) return;
     final theme = Theme.of(context);
 
     await showModalBottomSheet<void>(
@@ -1225,7 +1229,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Witz des Tages',
+                    'Zufälliger Witz',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

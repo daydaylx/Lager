@@ -1,7 +1,7 @@
-/// Statische, allgemein gehaltene Witze für das Belohnungssystem nach dem Speichern.
-///
-/// Die Witze werden deterministisch per Datum ausgewählt:
-/// `jokeForDate(DateTime.now())` gibt für dasselbe Datum immer denselben Witz zurück.
+import 'dark_jokes.dart';
+import 'deine_mutter_jokes.dart';
+
+/// Statische Witze für das Belohnungssystem nach dem Speichern.
 const List<String> kLagerJokes = [
   // Alltag
   'Warum war der Kalender so beliebt? Er hatte jeden Tag einen Termin mit allen.',
@@ -322,15 +322,6 @@ const List<String> kLagerJokes = [
   'Sagt der Schlüssel: „Ich passe.“ Antwortet das Schloss: „Dann sind wir uns einig.“',
   'Fragt die Sonne: „Warum lächelst du?“ Sagt der Tag: „Du bist aufgegangen.“',
   'Sagt der Feierabend: „Ich bin da.“ Antwortet der Stress: „Dann bin ich weg.“',
+  ...kDarkJokes,
+  ...kDeineMutterJokes,
 ];
-
-/// Gibt einen deterministischen Witz für das übergebene Datum zurück.
-///
-/// Gleiches Datum → gleicher Witz. Die Tagesnummer wird über UTC-Kalendertage
-/// berechnet, damit Sommerzeit- und Zeitzonenwechsel keinen Witz überspringen.
-String jokeForDate(DateTime date) {
-  final day = DateTime.utc(date.year, date.month, date.day);
-  final firstDayOfYear = DateTime.utc(date.year);
-  final dayOfYear = day.difference(firstDayOfYear).inDays + 1; // 1–366
-  return kLagerJokes[(dayOfYear - 1) % kLagerJokes.length];
-}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:berichtsheft_merker/core/enums/day_type.dart';
 import 'package:berichtsheft_merker/core/enums/activity_category.dart';
 import 'package:berichtsheft_merker/core/enums/special_flag.dart';
@@ -101,6 +102,7 @@ class ControlledWeekStorage implements DailyEntryStorage {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('zeigt sieben Tageskarten mit Status und Fortschritt', (
     WidgetTester tester,
   ) async {

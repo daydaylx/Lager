@@ -31,6 +31,7 @@ Zeitstempel, andere Einträge, Geräteinformationen oder Debugdaten.
 | Onboarding-Flag   | SharedPreferences     | `lib/core/constants.dart` (Key)                  |
 | Erinnerungseinstellungen | SharedPreferences | `lib/core/storage/reminder_storage.dart`       |
 | Farbtheme | SharedPreferences | `lib/core/storage/theme_preset_storage.dart` |
+| Witz-Rotation (verbleibende Indizes) | SharedPreferences | `lib/core/data/joke_picker.dart` |
 
 ---
 
