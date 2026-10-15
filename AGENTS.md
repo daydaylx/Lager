@@ -76,9 +76,12 @@ Die einzige Quelle für aktive Phase und offene Aufgaben ist `TASKS.md`.
 8. **Docs aktuell halten.** Nach Phase-Abschluss `PROJECT_STATUS.md`, `TASKS.md` und `docs/CURRENT_STATUS.md` aktualisieren.
 9. **Fremde Änderungen schützen.** Bestehende uncommittete Änderungen nie
    verwerfen, überschreiben oder ungefragt in den eigenen Scope aufnehmen.
-10. **Git-Aktionen nur auf Auftrag.** Nicht ungefragt committen, pushen, resetten,
-    auschecken oder Dateien stagen. Destruktive Git-Befehle sind ohne explizite
-    Freigabe verboten.
+10. **Git-Aktionen: klein und sofort.** Nach jedem abgeschlossenen Teilschritt
+    in kleinen, thematisch getrennten Commits festhalten und direkt pushen, auf
+    einem Feature-Branch statt direkt auf `main` (siehe Pull Requests). Nur
+    eigene Dateien gezielt stagen (nie `git add -A`). Destruktive Git-Befehle
+    (`reset --hard`, `clean`, `checkout -- <Datei>`, Force-Push, Umschreiben
+    gepushter Commits) sind ohne explizite Freigabe verboten.
 11. **Toolchain nicht nebenbei aktualisieren.** Flutter, Dart, Gradle, AGP,
     Kotlin, NDK und Dependencies nur im Rahmen einer separat geplanten
     Modernisierung ändern.
