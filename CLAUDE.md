@@ -24,8 +24,9 @@ Sparsam einsetzen — kleine lokale Änderungen und gezielte Suchen direkt erled
 ## Git-Sicherheit
 
 Auch wenn lokale Tool-Berechtigungen Git-Befehle erlauben, gelten die Grenzen aus
-`AGENTS.md`: ohne ausdrücklichen Auftrag nichts stagen, committen, pushen,
-resetten oder auschecken.
+`AGENTS.md`: kleine thematische Commits und direkter Push auf Feature-Branches,
+nur eigene Dateien stagen; ohne ausdrücklichen Auftrag kein Reset, kein
+Force-Push und kein Checkout über fremde Änderungen.
 
 ---
 
